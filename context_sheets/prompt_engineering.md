@@ -368,5 +368,3 @@ const response = await this.anthropic.messages.create({
 - User feedback collection after app generation
 - Analysis of common failure patterns
 - Comparative testing of different prompt strategies
-
-**Commit Message:** "Add prompt engineering context sheet documenting system prompt design, user prompt strategies, and best practices for the Claude Mini App Generator."

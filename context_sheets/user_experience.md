@@ -305,5 +305,3 @@ sequenceDiagram
    - Themes and appearance settings
    - Default window size preferences
    - Custom templates for generation
-
-**Commit Message:** "Add user experience context sheet documenting interface components, user flows, and interaction patterns for the Claude Mini App Generator."

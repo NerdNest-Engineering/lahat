@@ -351,5 +351,3 @@ win.on('closed', () => {
    - Implement security auditing and logging
    - Provide audit trails for sensitive operations
    - Enable detection of suspicious activity
-
-**Commit Message:** "Add security architecture context sheet detailing threat model, security measures, and best practices for the Claude Mini App Generator."
