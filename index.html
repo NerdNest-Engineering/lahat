@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self';
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Lahat - Mini App Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">Lahat - Mini App Generator</div>
+    <div class="content">
+      <div class="app-header">
+        <h1>Lahat</h1>
+        <p class="app-description">Create mini desktop applications using natural language prompts</p>
+      </div>
+
+      <!-- API Key Setup Section -->
+      <div id="api-key-section" class="section">
+        <h2>Claude API Setup</h2>
+        <div class="api-key-container">
+          <input type="password" id="api-key-input" placeholder="Enter your Claude API key" />
+          <button id="save-api-key-button">Save API Key</button>
+        </div>
+        <p class="api-key-status" id="api-key-status">No API key set. Please enter your Claude API key to continue.</p>
+      </div>
+
+      <!-- App Generation Section -->
+      <div id="app-generation-section" class="section hidden">
+        <h2>Create a Mini App</h2>
+        <div class="input-group">
+          <label for="app-name-input">App Name</label>
+          <input type="text" id="app-name-input" placeholder="Enter a name for your app" />
+        </div>
+        <div class="input-group">
+          <label for="app-prompt-input">Describe Your App</label>
+          <textarea id="app-prompt-input" placeholder="Describe the mini application you want to create..." rows="4"></textarea>
+        </div>
+        <div class="generation-controls">
+          <button id="generate-app-button">Generate Mini App</button>
+          <div id="generation-status" class="hidden">
+            <div class="spinner"></div>
+            <span id="generation-status-text">Generating your mini app...</span>
+          </div>
+        </div>
+        <div id="generation-preview" class="hidden">
+          <h3>Generation Preview</h3>
+          <pre id="generation-output"></pre>
+        </div>
+      </div>
+
+      <!-- App Management Section -->
+      <div id="app-management-section" class="section hidden">
+        <h2>Your Mini Apps</h2>
+        <div class="app-controls">
+          <button id="refresh-apps-button">Refresh</button>
+          <button id="open-app-directory-button">Open App Directory</button>
+        </div>
+        <div id="app-list-container">
+          <div id="app-list"></div>
+          <div id="no-apps-message" class="hidden">
+            <p>You haven't created any mini apps yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- App Details Modal -->
+      <div id="app-details-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-app-name">App Name</h2>
+            <button id="close-modal-button">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="app-details">
+              <p><strong>Created:</strong> <span id="modal-app-created"></span></p>
+              <p><strong>Versions:</strong> <span id="modal-app-versions"></span></p>
+            </div>
+            <div class="app-actions">
+              <button id="open-app-button">Open App</button>
+              <button id="update-app-button">Update App</button>
+              <button id="export-app-button">Export App</button>
+              <button id="delete-app-button" class="danger">Delete App</button>
+            </div>
+            <div id="update-app-form" class="hidden">
+              <h3>Update App</h3>
+              <textarea id="update-prompt-input" placeholder="Describe the changes you want to make..." rows="4"></textarea>
+              <div class="update-controls">
+                <button id="submit-update-button">Submit Update</button>
+                <button id="cancel-update-button">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js" type="module"></script>
+</body>
+</html>

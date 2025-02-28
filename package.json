@@ -1,0 +1,36 @@
+{
+  "type": "module",
+  "name": "lahat",
+  "version": "1.0.0",
+  "description": "An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dorky-Robot/lahat"
+  },
+  "keywords": [
+    "electron",
+    "claude",
+    "anthropic",
+    "ai",
+    "app-generator",
+    "lahat"
+  ],
+  "author": "Dorky Robot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dorky-Robot/lahat/issues"
+  },
+  "homepage": "https://github.com/Dorky-Robot/lahat",
+  "devDependencies": {
+    "electron": "^34.1.1"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.38.0",
+    "electron-store": "^8.1.0"
+  }
+}
