@@ -1,8 +1,8 @@
-# Claude Mini App Generator: User Experience
+# Lahat: User Experience
 
 ## User Journey Overview
 
-The Claude Mini App Generator provides a streamlined experience for creating, managing, and using mini desktop applications through natural language prompts. This document outlines the user experience flow, interface components, and interaction patterns.
+Lahat provides a streamlined experience for creating, managing, and using mini desktop applications through natural language prompts. This document outlines the user experience flow, interface components, and interaction patterns.
 
 ```mermaid
 graph LR

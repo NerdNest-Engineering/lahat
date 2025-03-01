@@ -1,8 +1,8 @@
-# Claude Mini App Generator: Overview
+# Lahat: Overview
 
 ## Project Overview
 
-- **Purpose:** The Claude Mini App Generator is an Electron application that enables users to create self-contained mini desktop applications using natural language prompts processed by Claude AI.
+- **Purpose:** Lahat is an Electron application that enables users to create self-contained mini desktop applications using natural language prompts processed by Claude AI.
 
 - **Goals:** 
   - Simplify application creation through natural language descriptions

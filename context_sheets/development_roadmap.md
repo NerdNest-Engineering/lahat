@@ -1,8 +1,8 @@
-# Claude Mini App Generator: Development Roadmap
+# Lahat: Development Roadmap
 
 ## Current Status and Future Vision
 
-The Claude Mini App Generator has established a solid foundation as a tool for creating self-contained mini desktop applications through natural language prompts. This roadmap outlines the planned development trajectory, prioritizing features that enhance usability, expand capabilities, and improve the overall quality of generated applications.
+Lahat has established a solid foundation as a tool for creating self-contained mini desktop applications through natural language prompts. This roadmap outlines the planned development trajectory, prioritizing features that enhance usability, expand capabilities, and improve the overall quality of generated applications.
 
 ```mermaid
 gantt
@@ -161,6 +161,19 @@ The third phase will introduce advanced features that significantly expand the c
   - Improved code quality and maintainability
   - Higher success rate for complex applications
 
+#### 3.4 MCP Integration
+
+- **Goal**: Implement Model Context Protocol (MCP) support to extend mini app capabilities with external tools and services
+- **Tasks**:
+  - [ ] Add MCP server support to the application
+  - [ ] Create interfaces for connecting to external tools and APIs
+  - [ ] Implement security measures for MCP connections
+  - [ ] Develop documentation for creating custom MCP tools
+- **Success Metrics**:
+  - Successful integration with external services
+  - Enhanced capabilities of generated mini apps
+  - User adoption of MCP-enabled features
+
 ## Technical Debt Management
 
 Alongside new feature development, the following technical debt items will be addressed:
@@ -280,4 +293,4 @@ The success of the development roadmap will be measured by:
 
 ## Conclusion
 
-The Claude Mini App Generator development roadmap outlines a path from the current foundation to a comprehensive platform for creating, sharing, and collaborating on mini desktop applications. By focusing on user needs, quality improvements, and strategic expansion of capabilities, the application will evolve to support a wider range of use cases while maintaining its core simplicity and accessibility.
+The Lahat development roadmap outlines a path from the current foundation to a comprehensive platform for creating, sharing, and collaborating on mini desktop applications. By focusing on user needs, quality improvements, and strategic expansion of capabilities, the application will evolve to support a wider range of use cases while maintaining its core simplicity and accessibility.

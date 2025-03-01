@@ -1,8 +1,8 @@
-# Claude Mini App Generator: Security Architecture
+# Lahat: Security Architecture
 
 ## Security Overview
 
-The Claude Mini App Generator is designed with security as a core principle, implementing multiple layers of protection to ensure the safe generation and execution of mini applications. This document outlines the security architecture, potential threats, and mitigation strategies employed throughout the application.
+Lahat is designed with security as a core principle, implementing multiple layers of protection to ensure the safe generation and execution of mini applications. This document outlines the security architecture, potential threats, and mitigation strategies employed throughout the application.
 
 ```mermaid
 graph TD

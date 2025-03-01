@@ -1,8 +1,8 @@
-# Claude Mini App Generator: Technical Architecture
+# Lahat: Technical Architecture
 
 ## System Architecture Overview
 
-The Claude Mini App Generator is built on Electron, providing a cross-platform desktop application that integrates with Claude AI to generate mini applications. The architecture follows a modular design with clear separation of concerns between the main process, renderer process, and generated mini apps.
+Lahat is built on Electron, providing a cross-platform desktop application that integrates with Claude AI to generate mini applications. The architecture follows a modular design with clear separation of concerns between the main process, renderer process, and generated mini apps.
 
 ```mermaid
 graph TD
@@ -10,7 +10,6 @@ graph TD
     A --> C[Window Management]
     A --> D[IPC Handlers]
     A --> E[Claude API Client]
-    A --> F[LLM Client]
     A --> G[App Storage]
     
     H[Renderer Process] --> I[User Interface]
@@ -21,7 +20,6 @@ graph TD
     D <--> H
     
     E --> M[Claude API]
-    F --> N[Ollama API]
     
     C --> O[Main Window]
     C --> P[Mini App Windows]
@@ -47,18 +45,13 @@ graph TD
    - Handles streaming responses
    - Manages conversation history
 
-3. **LLM Client (`llmClient.js`)**
-   - Provides alternative LLM integration via Ollama
-   - Handles communication with local LLMs
-   - Processes prompts and responses
-
-4. **App Storage (`store.js`)**
+3. **App Storage (`store.js`)**
    - Manages persistent storage using electron-store
    - Stores API keys securely
    - Tracks recent apps and settings
    - Provides schema validation
 
-5. **Window Management**
+4. **Window Management**
    - Creates and manages the main application window
    - Creates and manages mini app windows
    - Handles window lifecycle events
@@ -124,7 +117,7 @@ sequenceDiagram
 ## File Structure
 
 ```
-electron/
+/
 ├── main.js                 # Main process entry point
 ├── preload.cjs             # Preload script for main window
 ├── miniAppPreload.cjs      # Preload script for mini app windows
@@ -132,15 +125,15 @@ electron/
 ├── index.html              # Main window HTML
 ├── styles.css              # Application styles
 ├── claudeClient.js         # Claude API client
-├── llmClient.js            # Ollama LLM client
 ├── store.js                # Electron store configuration
 ├── context_sheets/         # Documentation
 │   ├── README.md           # Context sheet documentation
-│   ├── overview.md         # Application overview
+│   ├── claude_mini_app_generator.md # Project overview
+│   ├── development_roadmap.md # Development roadmap
+│   ├── prompt_engineering.md # Prompt engineering strategies
+│   ├── security.md         # Security architecture
 │   ├── technical_architecture.md  # This file
-│   └── ...                 # Other context sheets
-└── tools/                  # Development tools
-    └── context_sheet_creator.yml  # Context sheet creator config
+│   └── user_experience.md  # User experience design
 ```
 
 ## Technical Implementation Details
@@ -186,7 +179,7 @@ async generateApp(prompt, conversationId = null) {
 
 ### Mini App Window Creation
 
-Mini app windows are created with specific security settings:
+Mini app windows are created with specific security settings and positioning:
 
 ```javascript
 // From main.js
@@ -200,6 +193,9 @@ function createMiniAppWindow(appName, htmlContent, filePath, conversationId) {
     titleBarStyle: 'hiddenInset',
     title: appName,
     backgroundColor: '#ffffff',
+    // Add specific position parameters to ensure window is visible
+    x: 100,
+    y: 100,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -322,7 +318,6 @@ const store = new Store({ schema });
 - **Electron:** v34.1.1 or higher
 - **Dependencies:**
   - @anthropic-ai/sdk: ^0.38.0
-  - ollama: ^0.5.13
   - electron-store: ^8.1.0
 
 ## Performance Considerations
@@ -336,6 +331,7 @@ const store = new Store({ schema });
    - Windows are created on demand and cleaned up when closed
    - Resources are managed to prevent memory leaks
    - Temporary files are deleted when no longer needed
+   - Windows are positioned at specific coordinates (x: 100, y: 100) to ensure visibility
 
 3. **Error Handling**
    - Comprehensive error handling throughout the application
@@ -358,3 +354,7 @@ const store = new Store({ schema });
    - Streamlined build process
    - Automated releases
    - Platform-specific optimizations
+
+4. **Planned Integrations**
+   - Local LLM integration via Ollama (as mentioned in the development roadmap)
+   - MCP (Model Context Protocol) support for extending mini app capabilities

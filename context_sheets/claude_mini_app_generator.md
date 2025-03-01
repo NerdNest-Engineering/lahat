@@ -1,7 +1,7 @@
-# Claude Mini App Generator
+# Lahat
 
 ## Project Overview
-- **Purpose:** Create an Electron application that integrates with Claude to generate mini desktop applications based on user prompts.
+- **Purpose:** Lahat is an Electron application that integrates with Claude to generate mini desktop applications based on user prompts.
 - **Goals:** Enable users to describe applications in natural language and have Claude generate self-contained HTML/CSS/JS files that can be served as Electron windows.
 - **Target Audience:** Developers, prototypers, and non-technical users who want to quickly create simple applications without coding.
 

@@ -1,8 +1,8 @@
-# Claude Mini App Generator: Prompt Engineering
+# Lahat: Prompt Engineering
 
 ## Prompt Engineering Overview
 
-The Claude Mini App Generator relies heavily on effective prompt engineering to produce high-quality, functional mini applications. This document outlines the prompt engineering strategies, system prompt design, and best practices for optimizing Claude's ability to generate self-contained HTML/CSS/JS applications.
+Lahat relies heavily on effective prompt engineering to produce high-quality, functional mini applications. This document outlines the prompt engineering strategies, system prompt design, and best practices for optimizing Claude's ability to generate self-contained HTML/CSS/JS applications.
 
 ```mermaid
 graph TD
