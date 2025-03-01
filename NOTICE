@@ -1,0 +1,16 @@
+Lahat
+Copyright (c) 2025 Dorky Robot
+
+This product includes software developed by Dorky Robot (https://github.com/Dorky-Robot/lahat).
+
+Lahat is an Electron application that integrates with Claude to generate mini desktop applications 
+based on natural language prompts. It allows users to describe the app they want, and Claude will 
+generate a self-contained HTML/CSS/JS implementation.
+
+This software uses the following open source packages:
+- Electron (https://www.electronjs.org/) - MIT License
+- @anthropic-ai/sdk - Anthropic's Claude API SDK
+- electron-store - MIT License
+
+For detailed licensing information of dependencies, please refer to the node_modules directory 
+or the package.json file.
