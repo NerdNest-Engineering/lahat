@@ -25,6 +25,8 @@ IMPORTANT GUIDELINES:
 6. Ensure the UI is clean, intuitive, and responsive.
 7. Include appropriate error handling and user feedback.
 8. Add comments to explain complex logic or functionality.
+9. CRITICAL: You MUST include a transparent draggable region at the top of the window for the Electron app. Add this to your HTML body as the first element: <div style="height: 38px; width: 100%; position: fixed; top: 0; left: 0; -webkit-app-region: drag; z-index: 1000;"></div>
+10. Make sure your content has enough top padding (at least 38px) to account for the draggable region.
 
 RESPONSE FORMAT:
 Your response must be a valid HTML document starting with <!DOCTYPE html> and containing all necessary elements. Do not include any explanations or markdown formatting outside the HTML code.
@@ -38,9 +40,13 @@ EXAMPLE OUTPUT:
   <title>Mini Application</title>
   <style>
     /* CSS styles here */
+    body {
+      padding-top: 38px; /* Add padding for the drag region */
+    }
   </style>
 </head>
 <body>
+  <div style="height: 38px; width: 100%; position: fixed; top: 0; left: 0; -webkit-app-region: drag; z-index: 1000;"></div>
   <!-- HTML content here -->
   <script>
     // JavaScript code here
@@ -50,6 +56,51 @@ EXAMPLE OUTPUT:
 
     this.appStoragePath = path.join(app.getPath('userData'), 'generated-apps');
     this.ensureAppStorageDirectory();
+    this.fixExistingMetadataFiles();
+  }
+
+  // Fix existing metadata files to use relative paths instead of absolute paths
+  async fixExistingMetadataFiles() {
+    try {
+      console.log('Fixing existing metadata files...');
+      const files = await fs.readdir(this.appStoragePath);
+      const metaFiles = files.filter(file => file.endsWith('.meta.json'));
+      
+      for (const metaFile of metaFiles) {
+        const metaPath = path.join(this.appStoragePath, metaFile);
+        const metaContent = await fs.readFile(metaPath, 'utf-8');
+        let metadata;
+        
+        try {
+          metadata = JSON.parse(metaContent);
+        } catch (error) {
+          console.error(`Error parsing metadata file ${metaFile}:`, error);
+          continue;
+        }
+        
+        let modified = false;
+        
+        // Fix file paths in versions
+        if (metadata.versions && Array.isArray(metadata.versions)) {
+          for (const version of metadata.versions) {
+            if (version.filePath && version.filePath.includes(this.appStoragePath)) {
+              // Extract just the filename from the full path
+              version.filePath = path.basename(version.filePath);
+              modified = true;
+            }
+          }
+        }
+        
+        if (modified) {
+          console.log(`Fixing metadata file: ${metaFile}`);
+          await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2));
+        }
+      }
+      
+      console.log('Metadata files fixed');
+    } catch (error) {
+      console.error('Error fixing metadata files:', error);
+    }
   }
 
   async ensureAppStorageDirectory() {
@@ -99,6 +150,8 @@ EXAMPLE OUTPUT:
     const filename = `${safeAppName}_${timestamp}.html`;
     const filePath = path.join(this.appStoragePath, filename);
     
+    console.log('Saving generated app to:', filePath);
+    
     // Save the HTML content
     try {
       await fs.writeFile(filePath, htmlContent);
@@ -113,7 +166,7 @@ EXAMPLE OUTPUT:
         versions: [
           {
             timestamp,
-            filePath
+            filePath: filename // Store just the filename, not the full path
           }
         ]
       };
@@ -214,13 +267,15 @@ EXAMPLE OUTPUT:
           const versionFilename = `${baseFilename}_v${metadata.versions.length + 1}.html`;
           const versionPath = path.join(this.appStoragePath, versionFilename);
           
+          console.log('Updating app, saving to:', versionPath);
+          
           // Save the new version
           await fs.writeFile(versionPath, htmlContent);
           
           // Update metadata
           metadata.versions.push({
             timestamp,
-            filePath: versionFilename,
+            filePath: versionFilename, // Store just the filename, not the full path
             prompt
           });
           

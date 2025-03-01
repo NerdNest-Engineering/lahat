@@ -30,6 +30,39 @@ const schema = {
       defaultWindowHeight: 600,
       theme: 'light'
     }
+  },
+  windowConfig: {
+    type: 'object',
+    properties: {
+      main: {
+        type: 'object',
+        properties: {
+          x: { type: 'number' },
+          y: { type: 'number' },
+          width: { type: 'number' },
+          height: { type: 'number' }
+        }
+      },
+      'api-setup': {
+        type: 'object',
+        properties: {
+          x: { type: 'number' },
+          y: { type: 'number' },
+          width: { type: 'number' },
+          height: { type: 'number' }
+        }
+      },
+      'app-creation': {
+        type: 'object',
+        properties: {
+          x: { type: 'number' },
+          y: { type: 'number' },
+          width: { type: 'number' },
+          height: { type: 'number' }
+        }
+      }
+    },
+    default: {}
   }
 };
 
