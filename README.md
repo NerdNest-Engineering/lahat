@@ -89,6 +89,7 @@ Future development plans for Lahat include:
 - **Enhanced Customization**: More options for customizing the appearance and behavior of generated apps
 - **Templates & Examples**: Library of template prompts and example apps to help users get started
 - **Collaborative Features**: Sharing and collaborative development of mini apps
+- **MCP Integration**: Support for the Model Context Protocol to connect mini apps with external tools and services
 
 ## Contributing
 
@@ -104,4 +105,13 @@ Please make sure your code follows the existing style and includes appropriate t
 
 ## License
 
-ISC
+Apache License 2.0
+
+Lahat is licensed under the Apache License 2.0, which allows you to:
+- Use the software for any purpose
+- Distribute and modify the software
+- Distribute modified versions
+- Patent rights are explicitly granted
+     
+This license is ideal for Lahat's dual goals of allowing free usage while 
+supporting potential commercial applications.
