@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self';
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Create a Mini App</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles/app-creation.css">
+</head>
+<body>
+  <div class="drag-region"></div>
+  <div class="window">
+    <div class="titlebar">Create a Mini App</div>
+    <div class="content">
+      <!-- App Generation Section -->
+      <div id="app-generation-section" class="section">
+        <h2>Create a Mini App</h2>
+        <div class="input-group">
+          <label for="app-name-input">App Name</label>
+          <input type="text" id="app-name-input" placeholder="Enter a name for your app" />
+        </div>
+        <div class="input-group">
+          <label for="app-prompt-input">Describe Your App</label>
+          <textarea id="app-prompt-input" placeholder="Describe the mini application you want to create..." rows="4"></textarea>
+        </div>
+        <div class="generation-controls">
+          <button id="generate-app-button">Generate Mini App</button>
+          <div id="generation-status" class="hidden">
+            <div class="spinner"></div>
+            <span id="generation-status-text">Generating your mini app...</span>
+          </div>
+        </div>
+        <div id="generation-preview" class="hidden">
+          <h3>Generation Preview</h3>
+          <pre id="generation-output"></pre>
+        </div>
+      </div>
+
+      <!-- Update App Form (for when updating an existing app) -->
+      <div id="update-app-form" class="hidden section">
+        <h3>Update App</h3>
+        <textarea id="update-prompt-input" placeholder="Describe the changes you want to make..." rows="4"></textarea>
+        <div class="update-controls">
+          <button id="submit-update-button">Submit Update</button>
+          <button id="cancel-update-button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderers/app-creation.js" type="module"></script>
+</body>
+</html>

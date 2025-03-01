@@ -1,0 +1,54 @@
+/* API Setup Window Specific Styles */
+
+/* Center content vertically */
+.window .content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* API Key Section */
+#api-key-section {
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.api-key-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.api-key-container input {
+  flex: 1;
+}
+
+.api-key-status {
+  margin: 10px 0 0 0;
+  font-size: 14px;
+  color: var(--dark-gray);
+}
+
+.api-key-help {
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--dark-gray);
+  text-align: center;
+}
+
+.api-key-help p {
+  margin: 5px 0;
+}
+
+/* Save button */
+#save-api-key-button {
+  background: var(--primary-color);
+  color: white;
+}
+
+#save-api-key-button:hover {
+  background: var(--primary-dark);
+}
