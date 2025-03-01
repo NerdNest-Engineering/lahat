@@ -10,13 +10,29 @@
   --dark-gray: #5f6368;
   --border-radius: 8px;
   --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --drag-region-height: 38px; /* Height for the draggable region */
+}
+
+/* Draggable region for window dragging */
+.drag-region {
+  height: var(--drag-region-height);
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  -webkit-app-region: drag;
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+/* Ensure elements inside the drag region aren't draggable */
+.drag-region * {
+  -webkit-app-region: no-drag;
 }
 
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   background: white;
-  padding-top: 38px; /* Space for native titlebar */
   color: #202124;
 }
 
@@ -106,13 +122,14 @@ textarea {
   max-width: 1200px;
   margin: 0 auto;
   background: white;
-  height: calc(100vh - 38px);
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 .content {
   padding: 20px;
+  padding-top: calc(20px + var(--drag-region-height)); /* Add padding to account for drag region */
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -121,18 +138,7 @@ textarea {
 }
 
 .titlebar {
-  display: none; /* Hide custom titlebar since we're using native one */
-}
-
-/* App Header */
-.app-header {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.app-description {
-  color: var(--dark-gray);
-  margin-top: 0;
+  display: none; /* Hide custom titlebar since we're using drag region */
 }
 
 /* Sections */

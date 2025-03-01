@@ -5,6 +5,56 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld(
   'electronAPI', 
   {
+    // Window management
+    openWindow: async (type, params = {}) => {
+      try {
+        return await ipcRenderer.invoke('open-window', { type, params });
+      } catch (error) {
+        console.error('Error opening window:', error);
+        throw error;
+      }
+    },
+    closeCurrentWindow: () => {
+      try {
+        ipcRenderer.invoke('close-current-window');
+      } catch (error) {
+        console.error('Error closing window:', error);
+        throw error;
+      }
+    },
+    getWindowParams: async () => {
+      try {
+        return await ipcRenderer.invoke('get-window-params');
+      } catch (error) {
+        console.error('Error getting window params:', error);
+        throw error;
+      }
+    },
+    
+    // Inter-window communication
+    notifyAppUpdated: () => {
+      try {
+        ipcRenderer.invoke('notify-app-updated');
+      } catch (error) {
+        console.error('Error notifying app updated:', error);
+        throw error;
+      }
+    },
+    notifyApiKeyUpdated: () => {
+      try {
+        ipcRenderer.invoke('notify-api-key-updated');
+      } catch (error) {
+        console.error('Error notifying API key updated:', error);
+        throw error;
+      }
+    },
+    onAppUpdated: (callback) => {
+      ipcRenderer.on('app-updated', () => callback());
+    },
+    onApiKeyUpdated: (callback) => {
+      ipcRenderer.on('api-key-updated', () => callback());
+    },
+    
     // Claude API key management
     setApiKey: async (apiKey) => {
       try {
