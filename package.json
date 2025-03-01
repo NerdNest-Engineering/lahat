@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "lahat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts",
   "main": "main.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "lahat"
   ],
   "author": "Dorky Robot",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/Dorky-Robot/lahat/issues"
   },
