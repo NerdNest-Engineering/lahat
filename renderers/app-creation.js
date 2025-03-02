@@ -10,6 +10,7 @@ const generateButton = document.getElementById('generate-button');
 const generationStatus = document.getElementById('generation-status');
 const generationStatusText = document.getElementById('generation-status-text');
 const titleDescriptionPreview = document.querySelector('.preview-section');
+const previewHeader = titleDescriptionPreview.querySelector('h3');
 const generationPreview = document.getElementById('generation-preview');
 const generationOutput = document.getElementById('generation-output');
 
@@ -120,6 +121,13 @@ generateButton.addEventListener('click', async () => {
   const buttonContainer = document.querySelector('.button-container');
   buttonContainer.classList.add('hidden');
   
+  // Change preview section to "generating" state
+  previewHeader.innerHTML = 'We are building... <div class="spinner"></div>';
+  
+  // Make title and description read-only
+  generatedTitle.readOnly = true;
+  generatedDescription.readOnly = true;
+  
   // Show loading indicator
   generationStatus.classList.remove('hidden');
   generationStatusText.textContent = 'Generating mini app...';
@@ -147,11 +155,21 @@ generateButton.addEventListener('click', async () => {
       alert(`Error generating mini app: ${result.error}`);
       // Show the button container again if there was an error
       buttonContainer.classList.remove('hidden');
+      
+      // Restore preview section to original state
+      previewHeader.textContent = 'We will build...';
+      generatedTitle.readOnly = false;
+      generatedDescription.readOnly = false;
     }
   } catch (error) {
     alert(`Error: ${error.message}`);
     // Show the button container again if there was an error
     buttonContainer.classList.remove('hidden');
+    
+    // Restore preview section to original state
+    previewHeader.textContent = 'We will build...';
+    generatedTitle.readOnly = false;
+    generatedDescription.readOnly = false;
   } finally {
     // Hide loading indicator
     generationStatus.classList.add('hidden');
