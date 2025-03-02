@@ -42,6 +42,8 @@ graph TD
   - Mini App Window Manager: Creates and manages windows for generated apps
   - App Storage: Saves generated applications for future use
 
+For a detailed view of the mini app generation process, see the [Mini App Generation Sequence](mini_app_generation_sequence.md) document, which provides a comprehensive sequence diagram and explanation of the entire workflow.
+
 ## Current Features
 
 - **API Key Management:**

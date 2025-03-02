@@ -37,6 +37,8 @@ graph TD
   - Content Security Policy (CSP) for generated applications
   - Sandboxed execution of generated code
 
+For a detailed explanation of the mini app generation process, including the complete sequence diagram and code flow, see the [Mini App Generation Sequence](mini_app_generation_sequence.md) document.
+
 ## Current Features
 - **Prompt Interface:**
   - Text input area for describing the desired mini application

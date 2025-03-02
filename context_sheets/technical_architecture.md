@@ -73,6 +73,8 @@ graph TD
 
 ## Communication Flow
 
+The application uses a multi-step process for mini app generation, with detailed communication between components. A simplified overview is shown below:
+
 ```mermaid
 sequenceDiagram
     participant Renderer as Renderer Process
@@ -96,6 +98,8 @@ sequenceDiagram
     Main->>Preload: Send 'generation-status' event
     Preload->>Renderer: Update UI with status
 ```
+
+For a comprehensive view of the mini app generation process, including the two-step workflow (title/description generation followed by app generation), see the [Mini App Generation Sequence](mini_app_generation_sequence.md) document.
 
 ## Data Flow
 
@@ -130,6 +134,7 @@ sequenceDiagram
 │   ├── README.md           # Context sheet documentation
 │   ├── claude_mini_app_generator.md # Project overview
 │   ├── development_roadmap.md # Development roadmap
+│   ├── mini_app_generation_sequence.md # Detailed mini app generation process
 │   ├── prompt_engineering.md # Prompt engineering strategies
 │   ├── security.md         # Security architecture
 │   ├── technical_architecture.md  # This file

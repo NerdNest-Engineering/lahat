@@ -52,6 +52,11 @@ async function initializeApp() {
       if (titleDescriptionPreview.classList.contains('hidden')) {
         titleDescriptionPreview.classList.remove('hidden');
       }
+      
+      // Update the preview header to normal state once we start getting results
+      if (previewHeader.innerHTML.includes('We are building')) {
+        previewHeader.textContent = 'We will build...';
+      }
     } else {
       // Store the final values
       currentTitle = chunk.title || generatedTitle.value;
@@ -78,11 +83,19 @@ nextButton.addEventListener('click', async () => {
     return;
   }
   
-  // Show loading indicator
+  // Hide the button container
+  const buttonContainer = step1.querySelector('.button-container');
+  buttonContainer.classList.add('hidden');
+  
+  // Show loading indicator with enhanced visibility
   generationStatus.classList.remove('hidden');
   generationStatusText.textContent = 'Generating title and description...';
   
-  // Reset the preview
+  // Show the preview section with a loading message
+  titleDescriptionPreview.classList.remove('hidden');
+  previewHeader.innerHTML = 'We are building... <div class="spinner"></div>';
+  
+  // Reset the preview fields
   generatedTitle.value = '';
   generatedDescription.value = '';
   
@@ -106,12 +119,21 @@ nextButton.addEventListener('click', async () => {
       step2.classList.add('active');
     } else {
       alert(`Error generating title and description: ${result.error}`);
+      // Show the button container again if there was an error
+      buttonContainer.classList.remove('hidden');
     }
   } catch (error) {
     alert(`Error: ${error.message}`);
+    // Show the button container again if there was an error
+    buttonContainer.classList.remove('hidden');
   } finally {
     // Hide loading indicator
     generationStatus.classList.add('hidden');
+    
+    // Reset preview header if we're still in step 1 (error occurred)
+    if (step1.classList.contains('active')) {
+      previewHeader.textContent = 'We will build...';
+    }
   }
 });
 
