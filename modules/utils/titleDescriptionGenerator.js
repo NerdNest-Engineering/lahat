@@ -53,6 +53,8 @@ User input: "${input}"`;
       const text = chunk.delta.text || '';
       accumulatedContent += text;
       
+      console.log('Received chunk:', text);
+      
       // Try to extract title and description as they come in
       const titleMatch = accumulatedContent.match(/TITLE:\s*(.*?)(?:\n|$)/i);
       const descriptionMatch = accumulatedContent.match(/DESCRIPTION:\s*(.*)/is);
@@ -60,21 +62,23 @@ User input: "${input}"`;
       const currentTitle = titleMatch ? titleMatch[1].trim() : "";
       const currentDescription = descriptionMatch ? descriptionMatch[1].trim() : "";
       
-      // Only call onChunk if we have new content
-      if (currentTitle !== title || currentDescription !== description) {
-        title = currentTitle;
-        description = currentDescription;
+      // Always call onChunk with the current state to ensure UI updates
+      // This ensures we're sending updates even if the title/description hasn't changed
+      if (onChunk) {
+        onChunk({
+          title: currentTitle,
+          description: currentDescription,
+          done: false,
+          content: text
+        });
         
-        // Call the callback with the current state
-        if (onChunk) {
-          onChunk({
-            title,
-            description,
-            done: false,
-            content: text
-          });
-        }
+        // Add a larger delay to ensure the UI has time to update
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
+      
+      // Update our local variables
+      title = currentTitle;
+      description = currentDescription;
     }
   }
   

@@ -68,6 +68,21 @@
   border-radius: var(--border-radius);
   padding: 20px;
   margin-bottom: 20px;
+  /* Ensure the preview section is visible */
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+  position: relative;
+  min-height: 150px; /* Ensure there's space for content */
+}
+
+/* Streaming content containers */
+.preview-section > div:not(h3) {
+  margin: 10px 0;
+  padding: 5px;
+  background-color: rgba(240, 240, 240, 0.5);
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
 }
 
 .preview-section h3 {
@@ -80,11 +95,18 @@
 }
 
 .preview-section h3 .spinner {
-  display: inline-block;
+  display: inline-block !important; /* Force display */
   width: 16px;
   height: 16px;
   margin-left: 5px;
   vertical-align: middle;
+  border: 3px solid rgba(66, 133, 244, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+  /* Ensure the spinner is visible */
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Editable Title and Description */

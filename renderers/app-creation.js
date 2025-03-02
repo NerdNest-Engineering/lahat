@@ -34,33 +34,114 @@ async function initializeApp() {
     return;
   }
   
+  // Add a debug indicator to show when chunks are received
+  const debugIndicator = document.createElement('div');
+  debugIndicator.style.position = 'fixed';
+  debugIndicator.style.top = '10px';
+  debugIndicator.style.right = '10px';
+  debugIndicator.style.width = '10px';
+  debugIndicator.style.height = '10px';
+  debugIndicator.style.borderRadius = '50%';
+  debugIndicator.style.backgroundColor = 'red';
+  debugIndicator.style.zIndex = '9999';
+  document.body.appendChild(debugIndicator);
+  
+  // Create direct DOM elements for displaying streaming content
+  const streamingTitleContainer = document.createElement('div');
+  streamingTitleContainer.style.fontWeight = 'bold';
+  streamingTitleContainer.style.fontSize = '24px';
+  streamingTitleContainer.style.color = 'var(--primary-color)';
+  streamingTitleContainer.style.marginBottom = '10px';
+  streamingTitleContainer.style.padding = '10px';
+  streamingTitleContainer.style.backgroundColor = 'rgba(240, 240, 240, 0.5)';
+  streamingTitleContainer.style.borderRadius = '4px';
+  streamingTitleContainer.style.border = '1px solid rgba(0, 0, 0, 0.1)';
+  streamingTitleContainer.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+  streamingTitleContainer.style.minHeight = '30px';
+  streamingTitleContainer.id = 'streaming-title';
+  
+  const streamingDescriptionContainer = document.createElement('div');
+  streamingDescriptionContainer.style.fontSize = '16px';
+  streamingDescriptionContainer.style.lineHeight = '1.5';
+  streamingDescriptionContainer.style.padding = '10px';
+  streamingDescriptionContainer.style.backgroundColor = 'rgba(240, 240, 240, 0.5)';
+  streamingDescriptionContainer.style.borderRadius = '4px';
+  streamingDescriptionContainer.style.border = '1px solid rgba(0, 0, 0, 0.1)';
+  streamingDescriptionContainer.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+  streamingDescriptionContainer.style.minHeight = '60px';
+  streamingDescriptionContainer.id = 'streaming-description';
+  
+  // Create a container for the streaming elements
+  const streamingContainer = document.createElement('div');
+  streamingContainer.style.marginTop = '20px';
+  streamingContainer.style.display = 'flex';
+  streamingContainer.style.flexDirection = 'column';
+  streamingContainer.style.gap = '10px';
+  
+  // Add the streaming elements to the container
+  streamingContainer.appendChild(streamingTitleContainer);
+  streamingContainer.appendChild(streamingDescriptionContainer);
+  
+  // Add the container to the preview section
+  titleDescriptionPreview.appendChild(streamingContainer);
+  
   // Set up event listener for title/description chunks
   window.electronAPI.onTitleDescriptionChunk((chunk) => {
+    console.log('Received title/description chunk:', chunk);
+    
+    // Flash the debug indicator when a chunk is received
+    debugIndicator.style.backgroundColor = 'green';
+    setTimeout(() => {
+      debugIndicator.style.backgroundColor = 'red';
+    }, 100);
+    
     if (!chunk.done) {
-      // Update the UI with the current state
-      if (chunk.title) {
-        generatedTitle.value = chunk.title;
-        currentTitle = chunk.title;
-      }
-      
-      if (chunk.description) {
-        generatedDescription.value = chunk.description;
-        currentDescription = chunk.description;
-      }
-      
-      // Show the preview section if it's hidden
-      if (titleDescriptionPreview.classList.contains('hidden')) {
-        titleDescriptionPreview.classList.remove('hidden');
-      }
-      
-      // Update the preview header to normal state once we start getting results
-      if (previewHeader.innerHTML.includes('We are building')) {
-        previewHeader.textContent = 'We will build...';
-      }
+      // Use setTimeout with zero delay to push DOM updates to the end of the event queue
+      setTimeout(() => {
+        // Update the UI with the current state using direct DOM manipulation
+        if (chunk.title) {
+          // Update both the input field and our streaming container
+          generatedTitle.value = chunk.title;
+          currentTitle = chunk.title;
+          streamingTitleContainer.textContent = chunk.title;
+          
+          // Make sure the streaming container is visible
+          streamingTitleContainer.style.display = 'block';
+        }
+        
+        if (chunk.description) {
+          // Update both the textarea and our streaming container
+          generatedDescription.value = chunk.description;
+          currentDescription = chunk.description;
+          streamingDescriptionContainer.textContent = chunk.description;
+          
+          // Make sure the streaming container is visible
+          streamingDescriptionContainer.style.display = 'block';
+        }
+        
+        // Show the preview section if it's hidden
+        if (titleDescriptionPreview.classList.contains('hidden')) {
+          titleDescriptionPreview.classList.remove('hidden');
+        }
+        
+        // Only update the preview header to normal state once we have actual content
+        if (previewHeader.innerHTML.includes('We are building') && 
+            (chunk.title || chunk.description)) {
+          // Ensure we've received actual content before changing the header
+          previewHeader.textContent = 'We will build...';
+        }
+        
+        // Force a document reflow to ensure updates are visible
+        document.body.offsetHeight;
+      }, 0);
     } else {
       // Store the final values
       currentTitle = chunk.title || generatedTitle.value;
       currentDescription = chunk.description || generatedDescription.value;
+      
+      // Hide our streaming containers once done
+      streamingTitleContainer.style.display = 'none';
+      streamingDescriptionContainer.style.display = 'none';
     }
   });
   
@@ -99,11 +180,17 @@ nextButton.addEventListener('click', async () => {
   generatedTitle.value = '';
   generatedDescription.value = '';
   
+  // Force a small delay to ensure the UI updates before making the API call
+  // This ensures the loading state is visible to the user
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
   try {
+    console.log('Starting title and description generation...');
     // Generate title and description
     const result = await window.electronAPI.generateTitleAndDescription({
       input: currentInput
     });
+    console.log('Title and description generation completed:', result);
     
     if (result.success) {
       // The UI has already been updated via chunks

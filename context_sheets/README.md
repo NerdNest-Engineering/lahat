@@ -1,4 +1,61 @@
-# Lahat: Overview
+# Lahat: Documentation
+
+<!-- SUMMARY -->
+This repository contains documentation for the Lahat application, which enables users to create self-contained mini desktop applications using natural language prompts processed by Claude AI.
+<!-- /SUMMARY -->
+
+## Documentation Overview
+
+The Lahat documentation has been reorganized into a structured format with separate folders for different aspects of the application:
+
+- **Architecture**: Documents related to the system design and technical implementation
+- **Development**: Documents related to the development process and implementation details
+- **User Experience**: Documents related to the user interface and experience design
+- **Changes**: Documents recording specific changes and implementations
+
+For a complete index of all documentation, see the [Documentation Index](index.md).
+
+## Using This Documentation
+
+Each document includes a "RELATED DOCUMENTS" section that indicates which other documents provide helpful context:
+
+```markdown
+<!-- RELATED DOCUMENTS -->
+related '../architecture/technical_architecture.md'
+related './code_organization.md'
+<!-- /RELATED DOCUMENTS -->
+```
+
+When reading a document, you may want to also review its related documents to gain additional context.
+
+## Document Template
+
+When creating new documentation, use the following template:
+
+```markdown
+# Document Title
+
+<!-- SUMMARY -->
+Brief summary of the document's content and purpose.
+<!-- /SUMMARY -->
+
+<!-- RELATED DOCUMENTS -->
+related '../path/to/related/document.md'
+related '../path/to/another/document.md'
+<!-- /RELATED DOCUMENTS -->
+
+## Section 1
+
+Content for section 1...
+
+## Section 2
+
+Content for section 2...
+
+## Conclusion
+
+Concluding remarks...
+```
 
 ## Project Overview
 
@@ -35,14 +92,7 @@ graph TD
     D --> L[Electron BrowserWindow]
 ```
 
-- **Platform:** Electron with JavaScript, HTML, and CSS
-- **Core Components:**
-  - Main Electron Process: Manages application lifecycle and window creation
-  - Claude API Client: Handles communication with Claude AI
-  - Mini App Window Manager: Creates and manages windows for generated apps
-  - App Storage: Saves generated applications for future use
-
-For a detailed view of the mini app generation process, see the [Mini App Generation Sequence](mini_app_generation_sequence.md) document, which provides a comprehensive sequence diagram and explanation of the entire workflow.
+For a detailed view of the mini app generation process, see the [Mini App Generation Sequence](architecture/mini_app_generation_sequence.md) document, which provides a comprehensive sequence diagram and explanation of the entire workflow.
 
 ## Current Features
 
@@ -66,47 +116,6 @@ For a detailed view of the mini app generation process, see the [Mini App Genera
   - Native window controls
   - Secure IPC communication
 
-## Security Architecture
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant MainApp
-    participant Claude
-    participant AppSandbox
-    
-    rect rgb(75, 158, 255)
-        Note over User,MainApp: Input Validation
-        User->>MainApp: Submit App Prompt
-        MainApp->>MainApp: Validate Input
-    end
-    
-    rect rgb(102, 187, 106)
-        Note over MainApp,Claude: Secure API Communication
-        MainApp->>Claude: Send Validated Prompt
-        Claude->>MainApp: Return Generated Code
-    end
-    
-    rect rgb(255, 167, 38)
-        Note over MainApp,AppSandbox: Code Sanitization
-        MainApp->>MainApp: Sanitize Generated Code
-        MainApp->>MainApp: Apply CSP Headers
-    end
-    
-    rect rgb(255, 82, 82)
-        Note over MainApp,AppSandbox: Sandboxed Execution
-        MainApp->>AppSandbox: Load in Isolated Context
-        AppSandbox->>User: Display Mini App
-    end
-```
-
-- **Key Security Measures:**
-  - Secure storage of API keys using electron-store
-  - Content Security Policy for all windows
-  - Sandboxed execution of generated mini apps
-  - Context isolation and disabled nodeIntegration
-  - Input validation and sanitization
-
 ## Implementation Status
 
 - **Completed:**
@@ -115,6 +124,9 @@ sequenceDiagram
   - Mini app generation and management
   - User interface for app creation and management
   - Security measures for sandboxed execution
+  - Window sheets architecture implementation
+  - Main.js refactoring into modules
+  - 2-step app creation wizard
 
 - **In Progress:**
   - Enhanced error handling and recovery
@@ -126,59 +138,3 @@ sequenceDiagram
   - Integration with local LLMs via Ollama
   - Enhanced customization options for generated apps
   - Collaborative features for team environments
-
-## Natural Language Processing Strategy
-
-- **Prompt Engineering:**
-  - Structured system prompt for Claude
-  - Clear instructions for generating self-contained HTML/CSS/JS
-  - Guidelines for security, functionality, and user experience
-
-- **Response Processing:**
-  - Streaming response handling for real-time feedback
-  - Parsing and validation of generated HTML
-  - Storage of conversation context for iterative improvements
-
-## Development Approach
-
-- **Guiding Principles:**
-  - **KISS:** Keep the application simple and focused on core functionality
-  - **YAGNI:** Implement only what is needed, avoiding speculative features
-  - **DRY:** Reuse code and components where possible
-  - **Security First:** Prioritize security in all aspects of the application
-  - **User-Centered:** Design for intuitive use and clear feedback
-
-- **Development Workflow:**
-  - Iterative development with regular testing
-  - Context sheets for documentation and planning
-  - Focus on maintainable, well-structured code
-
-## Known Limitations
-
-- **Generation Quality:**
-  - Quality of generated apps depends on Claude's capabilities
-  - Complex applications may require multiple iterations
-  - Some edge cases may produce invalid or incomplete code
-
-- **Performance:**
-  - Generation process may take time for complex applications
-  - API rate limits may affect usage during heavy use
-
-- **Security:**
-  - While sandboxed, generated code still runs locally
-  - Users should review generated code before extensive use
-
-## Future Directions
-
-- **Enhanced Generation:**
-  - Improved prompt engineering for better results
-  - Support for more complex application types
-  - Integration with component libraries
-
-- **Collaboration:**
-  - Sharing and importing generated apps
-  - Team workspaces for collaborative development
-
-- **Extensions:**
-  - Plugin system for additional functionality
-  - Integration with development workflows and tools
