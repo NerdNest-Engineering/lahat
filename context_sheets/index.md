@@ -30,6 +30,7 @@ Documents related to the development process and implementation details:
 
 | Document | Description |
 |----------|-------------|
+| [Project Overview](development/project_overview.md) | Comprehensive overview of the application, features, and development strategy |
 | [Development Roadmap](development/development_roadmap.md) | Current status and future development plans |
 | [Code Organization](development/code_organization.md) | Module structure and code organization |
 | [Prompt Engineering](development/prompt_engineering.md) | Claude prompt design and optimization |

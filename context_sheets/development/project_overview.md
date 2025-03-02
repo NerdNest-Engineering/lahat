@@ -1,9 +1,30 @@
-# Lahat
+# Lahat: Project Overview
+
+<!-- SUMMARY -->
+This document provides a comprehensive overview of the Lahat application, including its purpose, architecture, features, implementation details, and development strategy.
+<!-- /SUMMARY -->
+
+<!-- RELATED DOCUMENTS -->
+related '../architecture/technical_architecture.md'
+related '../architecture/security.md'
+related '../development/development_roadmap.md'
+related '../user_experience/user_experience.md'
+<!-- /RELATED DOCUMENTS -->
 
 ## Project Overview
+
 - **Purpose:** Lahat is an Electron application that integrates with Claude to generate mini desktop applications based on user prompts.
-- **Goals:** Enable users to describe applications in natural language and have Claude generate self-contained HTML/CSS/JS files that can be served as Electron windows.
-- **Target Audience:** Developers, prototypers, and non-technical users who want to quickly create simple applications without coding.
+- **Goals:** 
+  - Enable users to describe applications in natural language and have Claude generate self-contained HTML/CSS/JS files
+  - Simplify application creation through natural language descriptions
+  - Generate functional, self-contained HTML/CSS/JS applications
+  - Provide an intuitive interface for managing generated applications
+  - Enable iterative refinement of applications through continued conversation
+- **Target Audience:** 
+  - Developers looking for rapid prototyping tools
+  - Non-technical users who want to create simple applications without coding
+  - Educators and students exploring AI-assisted development
+  - Professionals who need quick, custom productivity tools
 
 ## Technical Architecture
 
@@ -37,24 +58,37 @@ graph TD
   - Content Security Policy (CSP) for generated applications
   - Sandboxed execution of generated code
 
-For a detailed explanation of the mini app generation process, including the complete sequence diagram and code flow, see the [Mini App Generation Sequence](mini_app_generation_sequence.md) document.
+For a detailed view of the mini app generation process, see the [Mini App Generation Sequence](../architecture/mini_app_generation_sequence.md) document, which provides a comprehensive sequence diagram and explanation of the entire workflow.
 
 ## Current Features
+
+- **API Key Management:**
+  - Secure storage of Claude API key
+  - Validation of API key on startup
+
 - **Prompt Interface:**
   - Text input area for describing the desired mini application
   - Submit button to send the prompt to Claude
   - Loading indicator during generation
+
 - **App Generation:**
+  - Natural language prompt input
+  - Real-time streaming of Claude's response
   - Claude processes the prompt and generates a self-contained HTML/CSS/JS file
   - System validates and sanitizes the generated code
-  - Generated app is saved to local storage
+  - Automatic creation of mini app windows
+  - Storage of generated app code and metadata
+
 - **App Management:**
   - List of previously generated apps
+  - Opening, updating, and deleting saved apps
+  - Exporting apps as standalone HTML files
   - Ability to launch, edit, or delete saved apps
-  - Export functionality for sharing generated apps
+
 - **Mini App Windows:**
-  - Separate Electron windows for each generated application
+  - Sandboxed execution environment
   - Native window controls (minimize, maximize, close)
+  - Secure IPC communication
   - Option to view source code of the generated app
 
 ## Security Architecture
@@ -103,42 +137,7 @@ sequenceDiagram
   - Implement secure IPC communication between processes
   - Prevent unauthorized access to system resources
 
-## Implementation Checklist
-
-- [ ] **Setup and Configuration**
-  - [ ] Update project dependencies (add Claude API client)
-  - [ ] Configure Claude API integration
-  - [ ] Set up secure storage for generated apps
-
-- [ ] **Main Application UI**
-  - [ ] Design prompt input interface
-  - [ ] Create app gallery/management UI
-  - [ ] Implement loading and error states
-
-- [ ] **Claude Integration**
-  - [ ] Develop Claude API client
-  - [ ] Create prompt engineering for app generation
-  - [ ] Implement streaming response handling
-
-- [ ] **Mini App Generation**
-  - [ ] Design HTML/CSS/JS template structure
-  - [ ] Implement code validation and sanitization
-  - [ ] Create file saving mechanism
-
-- [ ] **Window Management**
-  - [ ] Develop mini app window creation logic
-  - [ ] Implement window management features
-  - [ ] Add source code viewer
-
-- [ ] **Security Implementation**
-  - [ ] Configure CSP for generated apps
-  - [ ] Set up sandboxed execution environment
-  - [ ] Implement input validation
-
-- [ ] **Testing and Refinement**
-  - [ ] Test with various app prompts
-  - [ ] Optimize Claude prompt for better results
-  - [ ] Refine UI/UX based on testing
+For more detailed information on security measures, see the [Security Architecture](../architecture/security.md) document.
 
 ## Natural Language Processing Strategy
 
@@ -157,9 +156,34 @@ sequenceDiagram
   - Maintain conversation context for improvements
   - Learn from successful generations to improve system prompt
 
-## Development Progress
+For more detailed information on prompt engineering, see the [Prompt Engineering](prompt_engineering.md) document.
 
-### Planned Phases
+## Implementation Status
+
+- **Completed:**
+  - Core application architecture
+  - Claude API integration
+  - Mini app generation and management
+  - User interface for app creation and management
+  - Security measures for sandboxed execution
+  - Window sheets architecture implementation
+  - Main.js refactoring into modules
+  - 2-step app creation wizard
+
+- **In Progress:**
+  - Enhanced error handling and recovery
+  - Improved prompt engineering for better app generation
+  - Performance optimizations
+
+- **Planned:**
+  - Templates and examples for common app types
+  - Integration with local LLMs via Ollama
+  - Enhanced customization options for generated apps
+  - Collaborative features for team environments
+
+For a detailed development roadmap, see the [Development Roadmap](development_roadmap.md) document.
+
+## Development Phases
 
 1. **Foundation (Phase 1)**
    - Basic Electron setup with Claude API integration
@@ -198,13 +222,6 @@ sequenceDiagram
   - Secure API key storage
   - Implement rate limiting
   - Validate responses before processing
-
-## Notes
-
-- The quality of generated apps will depend heavily on Claude's capabilities and the effectiveness of prompt engineering
-- Consider implementing templates or examples to guide Claude in generating better applications
-- Focus on creating a simple, intuitive interface that makes app generation accessible to non-technical users
-- The system should provide clear feedback when generation fails or produces unexpected results
 
 ## Known Issues & Limitations
 
