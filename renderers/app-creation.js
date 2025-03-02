@@ -1,23 +1,22 @@
 // DOM Elements
-// App Generation Section
-const appNameInput = document.getElementById('app-name-input');
-const appPromptInput = document.getElementById('app-prompt-input');
-const generateAppButton = document.getElementById('generate-app-button');
+const step1 = document.getElementById('step-1');
+const step2 = document.getElementById('step-2');
+const userInput = document.getElementById('user-input');
+const userInputDisplay = document.getElementById('user-input-display');
+const generatedTitle = document.getElementById('generated-title');
+const generatedDescription = document.getElementById('generated-description');
+const nextButton = document.getElementById('next-button');
+const generateButton = document.getElementById('generate-button');
 const generationStatus = document.getElementById('generation-status');
 const generationStatusText = document.getElementById('generation-status-text');
+const titleDescriptionPreview = document.querySelector('.preview-section');
 const generationPreview = document.getElementById('generation-preview');
 const generationOutput = document.getElementById('generation-output');
 
-// Update App Form
-const updateAppForm = document.getElementById('update-app-form');
-const updatePromptInput = document.getElementById('update-prompt-input');
-const submitUpdateButton = document.getElementById('submit-update-button');
-const cancelUpdateButton = document.getElementById('cancel-update-button');
-
 // State
-let isUpdateMode = false;
-let currentAppId = null;
-let currentAppName = null;
+let currentInput = '';
+let currentTitle = '';
+let currentDescription = '';
 let generationChunks = '';
 
 // Initialize the app
@@ -34,53 +33,109 @@ async function initializeApp() {
     return;
   }
   
-  // Check if we're in update mode
-  const params = await window.electronAPI.getWindowParams();
+  // Set up event listener for title/description chunks
+  window.electronAPI.onTitleDescriptionChunk((chunk) => {
+    if (!chunk.done) {
+      // Update the UI with the current state
+      if (chunk.title) {
+        generatedTitle.value = chunk.title;
+        currentTitle = chunk.title;
+      }
+      
+      if (chunk.description) {
+        generatedDescription.value = chunk.description;
+        currentDescription = chunk.description;
+      }
+      
+      // Show the preview section if it's hidden
+      if (titleDescriptionPreview.classList.contains('hidden')) {
+        titleDescriptionPreview.classList.remove('hidden');
+      }
+    } else {
+      // Store the final values
+      currentTitle = chunk.title || generatedTitle.value;
+      currentDescription = chunk.description || generatedDescription.value;
+    }
+  });
   
-  if (params && params.updateMode) {
-    isUpdateMode = true;
-    currentAppId = params.appId;
-    currentAppName = params.appName;
-    
-    // Show update form
-    updateAppForm.classList.remove('hidden');
-    document.getElementById('app-generation-section').classList.add('hidden');
-    
-    // Set window title
-    document.title = `Update ${currentAppName}`;
-  }
+  // Add event listeners for editable fields
+  generatedTitle.addEventListener('input', (e) => {
+    currentTitle = e.target.value;
+  });
+  
+  generatedDescription.addEventListener('input', (e) => {
+    currentDescription = e.target.value;
+  });
 }
 
-// App Generation
-generateAppButton.addEventListener('click', async () => {
-  const appName = appNameInput.value.trim() || 'Mini App';
-  const prompt = appPromptInput.value.trim();
+// Step 1: Handle user input and generate title/description
+nextButton.addEventListener('click', async () => {
+  currentInput = userInput.value.trim();
   
-  if (!prompt) {
-    alert('Please enter a description for your mini app.');
+  if (!currentInput) {
+    alert('Please enter what you would like to create.');
     return;
   }
   
-  // Reset generation preview
-  generationChunks = '';
-  generationOutput.textContent = '';
-  generationPreview.classList.add('hidden');
-  
-  // Show generation status
+  // Show loading indicator
   generationStatus.classList.remove('hidden');
-  generateAppButton.disabled = true;
+  generationStatusText.textContent = 'Generating title and description...';
+  
+  // Reset the preview
+  generatedTitle.value = '';
+  generatedDescription.value = '';
   
   try {
-    const result = await window.electronAPI.generateMiniApp({
-      appName,
-      prompt
+    // Generate title and description
+    const result = await window.electronAPI.generateTitleAndDescription({
+      input: currentInput
     });
     
     if (result.success) {
-      // Clear inputs
-      appNameInput.value = '';
-      appPromptInput.value = '';
+      // The UI has already been updated via chunks
+      // Just store the final values
+      currentTitle = result.title;
+      currentDescription = result.description;
       
+      // Display the user input
+      userInputDisplay.textContent = currentInput;
+      
+      // Hide step 1, show step 2
+      step1.classList.remove('active');
+      step2.classList.add('active');
+    } else {
+      alert(`Error generating title and description: ${result.error}`);
+    }
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+  } finally {
+    // Hide loading indicator
+    generationStatus.classList.add('hidden');
+  }
+});
+
+// Step 2: Generate the mini app
+generateButton.addEventListener('click', async () => {
+  // Hide the button container
+  const buttonContainer = document.querySelector('.button-container');
+  buttonContainer.classList.add('hidden');
+  
+  // Show loading indicator
+  generationStatus.classList.remove('hidden');
+  generationStatusText.textContent = 'Generating mini app...';
+  
+  // Reset and show generation preview
+  generationChunks = '';
+  generationOutput.textContent = '';
+  generationPreview.classList.remove('hidden');
+  
+  try {
+    const result = await window.electronAPI.generateMiniApp({
+      appName: currentTitle,
+      prompt: currentDescription
+    });
+    
+    if (result.success) {
       // Notify main window to refresh app list
       window.electronAPI.notifyAppUpdated();
       
@@ -90,72 +145,16 @@ generateAppButton.addEventListener('click', async () => {
       }, 2000);
     } else {
       alert(`Error generating mini app: ${result.error}`);
+      // Show the button container again if there was an error
+      buttonContainer.classList.remove('hidden');
     }
   } catch (error) {
     alert(`Error: ${error.message}`);
+    // Show the button container again if there was an error
+    buttonContainer.classList.remove('hidden');
   } finally {
-    // Hide generation status
+    // Hide loading indicator
     generationStatus.classList.add('hidden');
-    generateAppButton.disabled = false;
-  }
-});
-
-// Update App
-submitUpdateButton.addEventListener('click', async () => {
-  const prompt = updatePromptInput.value.trim();
-  
-  if (!prompt) {
-    alert('Please enter a description of the changes you want to make.');
-    return;
-  }
-  
-  try {
-    // Reset generation preview
-    generationChunks = '';
-    generationOutput.textContent = '';
-    generationPreview.classList.add('hidden');
-    
-    // Show generation status
-    generationStatus.classList.remove('hidden');
-    submitUpdateButton.disabled = true;
-    
-    const result = await window.electronAPI.updateMiniApp({
-      appId: currentAppId,
-      prompt
-    });
-    
-    if (result.success) {
-      // Notify main window to refresh app list
-      window.electronAPI.notifyAppUpdated();
-      
-      // Close this window after a short delay
-      setTimeout(() => {
-        window.electronAPI.closeCurrentWindow();
-      }, 2000);
-    } else {
-      alert(`Error updating mini app: ${result.error}`);
-    }
-  } catch (error) {
-    alert(`Error: ${error.message}`);
-  } finally {
-    // Hide generation status
-    generationStatus.classList.add('hidden');
-    submitUpdateButton.disabled = false;
-  }
-});
-
-cancelUpdateButton.addEventListener('click', () => {
-  window.electronAPI.closeCurrentWindow();
-});
-
-// Handle generation status updates
-window.electronAPI.onGenerationStatus((status) => {
-  if (status.status === 'generating' || status.status === 'updating') {
-    generationStatus.classList.remove('hidden');
-    generationStatusText.textContent = status.message;
-  } else if (status.status === 'error') {
-    generationStatus.classList.add('hidden');
-    alert(status.message);
   }
 });
 
@@ -164,7 +163,6 @@ window.electronAPI.onGenerationChunk((chunk) => {
   if (!chunk.done) {
     generationChunks += chunk.content;
     generationOutput.textContent = generationChunks;
-    generationPreview.classList.remove('hidden');
     
     // Auto-scroll to bottom
     generationOutput.scrollTop = generationOutput.scrollHeight;

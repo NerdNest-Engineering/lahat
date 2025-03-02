@@ -3,6 +3,7 @@ import path from 'path';
 import * as fileOperations from '../utils/fileOperations.js';
 import * as apiHandlers from './apiHandlers.js';
 import * as miniAppManager from '../miniAppManager.js';
+import * as titleDescriptionGenerator from '../utils/titleDescriptionGenerator.js';
 import store from '../../store.js';
 
 /**
@@ -311,11 +312,70 @@ async function handleExportMiniApp(event, { appId, filePath }) {
 }
 
 /**
+ * Handle generating title and description for a mini app
+ * @param {Object} event - IPC event
+ * @param {Object} params - Parameters for generating title and description
+ * @returns {Promise<Object>} - Result object with title and description
+ */
+async function handleGenerateTitleAndDescription(event, { input }) {
+  try {
+    const claudeClient = apiHandlers.getClaudeClient();
+    if (!claudeClient) {
+      return {
+        success: false,
+        error: 'Claude API key not set. Please set your API key in settings.'
+      };
+    }
+    
+    // Start streaming status
+    event.sender.send('generation-status', {
+      status: 'generating',
+      message: 'Generating title and description...'
+    });
+    
+    // Generate title and description with streaming
+    const result = await titleDescriptionGenerator.generateTitleAndDescription(
+      input,
+      claudeClient.apiKey,
+      (chunk) => {
+        // Send each chunk to the renderer
+        event.sender.send('title-description-chunk', chunk);
+      }
+    );
+    
+    // Signal completion
+    event.sender.send('generation-status', {
+      status: 'complete',
+      message: 'Title and description generated'
+    });
+    
+    return { 
+      success: true,
+      title: result.title,
+      description: result.description
+    };
+  } catch (error) {
+    event.sender.send('generation-status', {
+      status: 'error',
+      message: `Error: ${error.message}`
+    });
+    
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
  * Register mini app-related IPC handlers
  */
 export function registerHandlers() {
   // Generate mini app
   ipcMain.handle('generate-mini-app', handleGenerateMiniApp);
+  
+  // Generate title and description
+  ipcMain.handle('generate-title-and-description', handleGenerateTitleAndDescription);
   
   // List mini apps
   ipcMain.handle('list-mini-apps', handleListMiniApps);

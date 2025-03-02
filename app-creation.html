@@ -21,37 +21,46 @@
   <div class="window">
     <div class="titlebar">Create a Mini App</div>
     <div class="content">
-      <!-- App Generation Section -->
-      <div id="app-generation-section" class="section">
-        <h2>Create a Mini App</h2>
+      <!-- Step 1: Initial Input -->
+      <div id="step-1" class="step active">
+        <h2>What would you like?</h2>
         <div class="input-group">
-          <label for="app-name-input">App Name</label>
-          <input type="text" id="app-name-input" placeholder="Enter a name for your app" />
+          <input type="text" id="user-input" placeholder="I want tetris" />
         </div>
-        <div class="input-group">
-          <label for="app-prompt-input">Describe Your App</label>
-          <textarea id="app-prompt-input" placeholder="Describe the mini application you want to create..." rows="4"></textarea>
+        <div class="button-container">
+          <button id="next-button" class="next-button">Next</button>
         </div>
-        <div class="generation-controls">
-          <button id="generate-app-button">Generate Mini App</button>
-          <div id="generation-status" class="hidden">
-            <div class="spinner"></div>
-            <span id="generation-status-text">Generating your mini app...</span>
+      </div>
+
+      <!-- Step 2: Preview and Generate -->
+      <div id="step-2" class="step">
+        <h2>What would you like?</h2>
+        <div class="user-input-display">
+          <span id="user-input-display"></span>
+        </div>
+        <div class="preview-section hidden">
+          <h3>We will build...</h3>
+          <div class="editable-title">
+            <input type="text" id="generated-title" placeholder="App Title" />
+          </div>
+          <div class="editable-description">
+            <textarea id="generated-description" rows="6" placeholder="App Description"></textarea>
           </div>
         </div>
+        
+        <!-- Loading Indicator (moved here) -->
+        <div id="generation-status" class="hidden">
+          <div class="spinner"></div>
+          <span id="generation-status-text">Generating mini app...</span>
+        </div>
+        
         <div id="generation-preview" class="hidden">
           <h3>Generation Preview</h3>
           <pre id="generation-output"></pre>
         </div>
-      </div>
-
-      <!-- Update App Form (for when updating an existing app) -->
-      <div id="update-app-form" class="hidden section">
-        <h3>Update App</h3>
-        <textarea id="update-prompt-input" placeholder="Describe the changes you want to make..." rows="4"></textarea>
-        <div class="update-controls">
-          <button id="submit-update-button">Submit Update</button>
-          <button id="cancel-update-button">Cancel</button>
+        
+        <div class="button-container">
+          <button id="generate-button" class="generate-button">Generate</button>
         </div>
       </div>
     </div>

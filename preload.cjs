@@ -137,6 +137,19 @@ contextBridge.exposeInMainWorld(
     },
     onGenerationChunk: (callback) => {
       ipcRenderer.on('generation-chunk', (_event, chunk) => callback(chunk));
+    },
+    
+    // Title and description generation
+    generateTitleAndDescription: async (params) => {
+      try {
+        return await ipcRenderer.invoke('generate-title-and-description', params);
+      } catch (error) {
+        console.error('Error generating title and description:', error);
+        throw error;
+      }
+    },
+    onTitleDescriptionChunk: (callback) => {
+      ipcRenderer.on('title-description-chunk', (_event, chunk) => callback(chunk));
     }
   }
 );
