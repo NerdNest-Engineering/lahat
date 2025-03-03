@@ -7,6 +7,7 @@ This document describes the modular code organization of Lahat, including the mo
 <!-- RELATED DOCUMENTS -->
 related '../architecture/technical_architecture.md'
 related '../architecture/window_sheets_architecture.md'
+related '../changes/20250305-code-cleanup-and-maintainability-improvements.md'
 <!-- /RELATED DOCUMENTS -->
 
 ## Module Structure
@@ -15,24 +16,62 @@ Lahat's codebase follows a modular organization pattern, with clear separation o
 
 ```mermaid
 graph TD
-    A[main.js] --> B[modules/ipc/apiHandlers.js]
-    A --> C[modules/ipc/miniAppHandlers.js]
-    A --> D[modules/ipc/windowHandlers.js]
-    A --> E[modules/windowManager/windowManager.js]
+    A[main.js] --> B[modules/ipc/index.js]
+    A --> E[modules/windowManager/index.js]
+    A --> U[modules/utils/index.js]
+    A --> H[modules/miniAppManager.js]
     
-    B --> F[claudeClient.js]
-    B --> G[store.js]
+    B --> B1[modules/ipc/apiHandlers.js]
+    B --> B2[modules/ipc/miniAppHandlers.js]
+    B --> B3[modules/ipc/windowHandlers.js]
+    B --> B4[modules/ipc/ipcHandler.js]
+    B --> B5[modules/ipc/ipcTypes.js]
     
-    C --> H[modules/miniAppManager.js]
-    C --> I[modules/utils/fileOperations.js]
-    C --> F
-    C --> G
+    E --> E1[modules/windowManager/windowManager.js]
+    E --> E2[modules/windowManager/windowManager-web-components.js]
+    E --> E3[modules/windowManager/windowPool.js]
     
-    D --> E
-    D --> J[electron]
+    U --> U1[modules/utils/errorHandler.js]
+    U --> U2[modules/utils/fileOperations.js]
+    U --> U3[modules/utils/stringUtils.js]
+    U --> U4[modules/utils/dateUtils.js]
+    U --> U5[modules/utils/domUtils.js]
+    U --> U6[modules/utils/validationUtils.js]
+    U --> U7[modules/utils/titleDescriptionGenerator.js]
     
-    H --> E
-    H --> I
+    B1 --> F[claudeClient.js]
+    B1 --> G[store.js]
+    
+    B2 --> H
+    B2 --> U2
+    B2 --> F
+    B2 --> G
+    
+    B3 --> E1
+    B3 --> J[electron]
+    
+    H --> E1
+    H --> U2
+    
+    K[components/core/index.js] --> K1[components/core/base-component.js]
+    K --> K2[components/core/component-registry.js]
+    K --> K3[components/core/dynamic-loader.js]
+    K --> K4[components/core/state-manager.js]
+    K --> K5[components/core/utils.js]
+    
+    L[components/ui/index.js] --> L1[components/ui/cards]
+    L --> L2[components/ui/containers]
+    L --> L3[components/ui/modals]
+    
+    M[renderers/main.js] --> K
+    M --> L
+    
+    N[renderers/api-setup.js] --> K
+    
+    O[renderers/app-creation.js] --> K
+    
+    P[renderers/main-web-components.js] --> K
+    P --> L
 ```
 
 ## Module Responsibilities
@@ -47,37 +86,64 @@ The main entry point for the Electron application, responsible for:
 
 ```javascript
 // Simplified main.js structure
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import * as apiHandlers from './modules/ipc/apiHandlers.js';
-import * as miniAppHandlers from './modules/ipc/miniAppHandlers.js';
-import * as windowHandlers from './modules/ipc/windowHandlers.js';
+import { fileURLToPath } from 'url';
+import store from './store.js';
+import * as windowManager from './modules/windowManager/index.js';
+import * as ipc from './modules/ipc/index.js';
+import { ErrorHandler } from './modules/utils/errorHandler.js';
 
-// Initialize modules
-apiHandlers.initializeClaudeClient();
-
-// Register IPC handlers
-apiHandlers.registerHandlers(ipcMain);
-miniAppHandlers.registerHandlers(ipcMain);
-windowHandlers.registerHandlers(ipcMain);
-
-// Create main window when app is ready
-app.whenReady().then(() => {
-  createMainWindow();
-});
-
-// App lifecycle event handlers
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+// Initialize the application
+function initializeApp() {
+  try {
+    // Initialize window manager
+    windowManager.initializeWindowManager();
+    
+    // Initialize IPC handlers
+    ipc.initializeIpcHandlers();
+    
+    // Initialize Claude client
+    ipc.apiHandlers.initializeClaudeClient();
+    
+    // Create main window when app is ready
+    app.whenReady().then(() => {
+      windowManager.createMainWindow();
+    });
+    
+    // App lifecycle event handlers
+    app.on('window-all-closed', () => {
+      if (process.platform !== 'darwin') {
+        app.quit();
+      }
+    });
+    
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        windowManager.createMainWindow();
+      }
+    });
+  } catch (error) {
+    ErrorHandler.logError('initializeApp', error, ErrorHandler.ERROR_LEVELS.FATAL);
+    console.error('Failed to initialize application:', error);
     app.quit();
   }
+}
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  ErrorHandler.logError('uncaughtException', error, ErrorHandler.ERROR_LEVELS.FATAL);
+  console.error('Uncaught exception:', error);
 });
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createMainWindow();
-  }
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  ErrorHandler.logError('unhandledRejection', reason, ErrorHandler.ERROR_LEVELS.ERROR);
+  console.error('Unhandled promise rejection:', reason);
 });
+
+// Initialize the application
+initializeApp();
 ```
 
 ### 2. modules/miniAppManager.js
@@ -301,6 +367,206 @@ The codebase follows these coding standards:
 5. **JSDoc Comments** - Documentation for functions and complex code
 6. **Functional Approach** - Pure functions where possible
 7. **Explicit Dependencies** - Clear import statements showing dependencies
+
+## New Components and Enhancements
+
+The application has been enhanced with several new components and systems to improve maintainability, reliability, and performance:
+
+### 1. Error Handler
+
+The error handler provides centralized error handling and logging:
+
+```javascript
+// Key functions in errorHandler.js
+export class ErrorHandler {
+  static ERROR_LEVELS = {
+    INFO: 'info',
+    WARNING: 'warning',
+    ERROR: 'error',
+    FATAL: 'fatal'
+  };
+  
+  static logError(context, error, level = ErrorHandler.ERROR_LEVELS.ERROR) {
+    // Implementation...
+  }
+  
+  static formatErrorForUI(error) {
+    // Implementation...
+  }
+  
+  static formatErrorForIPC(error, operation = '') {
+    // Implementation...
+  }
+  
+  static getUserFriendlyMessage(error) {
+    // Implementation...
+  }
+}
+```
+
+### 2. Window Pool
+
+The window pool improves performance by reusing windows:
+
+```javascript
+// Key functions in windowPool.js
+export class WindowPool {
+  constructor(maxPoolSize = 5) {
+    this.pools = new Map();
+    this.maxPoolSize = maxPoolSize;
+  }
+  
+  getWindow(type) {
+    // Implementation...
+  }
+  
+  releaseWindow(type, window) {
+    // Implementation...
+  }
+  
+  createOrGetWindow(type, createFn) {
+    // Implementation...
+  }
+  
+  clear(type = null) {
+    // Implementation...
+  }
+}
+```
+
+### 3. State Manager
+
+The state manager provides a simple state management system:
+
+```javascript
+// Key functions in state-manager.js
+export class StateManager {
+  constructor(initialState = {}) {
+    this.state = { ...initialState };
+    this.listeners = new Map();
+    this.nextListenerId = 1;
+  }
+  
+  get(key = null) {
+    // Implementation...
+  }
+  
+  set(newState) {
+    // Implementation...
+  }
+  
+  subscribe(keys, callback) {
+    // Implementation...
+  }
+}
+```
+
+### 4. Component System
+
+The component system provides a foundation for building web components:
+
+```javascript
+// Key functions in base-component.js
+export class BaseComponent extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._connected = false;
+    this._initialized = false;
+    this._eventListeners = new Map();
+  }
+  
+  // Lifecycle hooks
+  connectedCallback() {
+    // Implementation...
+  }
+  
+  disconnectedCallback() {
+    // Implementation...
+  }
+  
+  attributeChangedCallback(name, oldValue, newValue) {
+    // Implementation...
+  }
+  
+  // Event handling
+  addEventListener(element, type, listener, options = {}) {
+    // Implementation...
+  }
+  
+  trackEventListener(element, type, listener, options = {}) {
+    // Implementation...
+  }
+  
+  // Rendering
+  render(html, css) {
+    // Implementation...
+  }
+}
+```
+
+### 5. IPC Handler
+
+The IPC handler provides a standardized way to register and manage IPC handlers:
+
+```javascript
+// Key functions in ipcHandler.js
+export class IpcHandler {
+  constructor() {
+    this.handlers = new Map();
+  }
+  
+  register(channel, handler) {
+    // Implementation...
+  }
+  
+  unregister(channel) {
+    // Implementation...
+  }
+  
+  registerMultiple(handlers) {
+    // Implementation...
+  }
+  
+  getHandler(channel) {
+    // Implementation...
+  }
+}
+```
+
+### 6. Utility Functions
+
+The utility functions provide common functionality:
+
+```javascript
+// Example utility functions
+// From stringUtils.js
+export function truncateString(str, maxLength, suffix = '...') {
+  // Implementation...
+}
+
+export function slugify(text) {
+  // Implementation...
+}
+
+// From dateUtils.js
+export function formatDate(date, format = 'M/D/YYYY h:mm A') {
+  // Implementation...
+}
+
+export function getRelativeTimeString(date) {
+  // Implementation...
+}
+
+// From validationUtils.js
+export function isValidEmail(email) {
+  // Implementation...
+}
+
+export function isNotEmpty(value) {
+  // Implementation...
+}
+```
 
 ## Future Improvements
 

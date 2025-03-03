@@ -22,21 +22,46 @@ graph TD
     A --> D[IPC Handlers]
     A --> E[Claude API Client]
     A --> G[App Storage]
+    A --> U[Error Handler]
+    
+    C --> C1[Window Manager]
+    C --> C2[Window Pool]
+    
+    D --> D1[API Handlers]
+    D --> D2[Mini App Handlers]
+    D --> D3[Window Handlers]
     
     H[Renderer Process] --> I[User Interface]
     I --> J[API Key Management]
     I --> K[App Generation]
     I --> L[App Management]
     
+    I --> W[Web Components]
+    W --> W1[Core Components]
+    W --> W2[UI Components]
+    
+    W1 --> W11[Base Component]
+    W1 --> W12[Component Registry]
+    W1 --> W13[State Manager]
+    
     D <--> H
     
     E --> M[Claude API]
     
-    C --> O[Main Window]
-    C --> P[Mini App Windows]
+    C1 --> O[Main Window]
+    C1 --> P[Mini App Windows]
+    C1 --> S[API Setup Window]
+    C1 --> T[App Creation Window]
     
     G --> Q[Generated Apps]
     G --> R[App Metadata]
+    
+    V[Utils] --> V1[String Utils]
+    V --> V2[Date Utils]
+    V --> V3[DOM Utils]
+    V --> V4[File Operations]
+    V --> V5[Validation Utils]
+    V --> U
 ```
 
 ## Core Components
@@ -131,25 +156,70 @@ For a comprehensive view of the mini app generation process, including the two-s
 
 ## File Structure
 
+The application follows a modular directory structure that organizes code by functionality:
+
 ```
 /
 ├── main.js                 # Main process entry point
 ├── preload.cjs             # Preload script for main window
 ├── miniAppPreload.cjs      # Preload script for mini app windows
-├── renderer.js             # Renderer process script
-├── index.html              # Main window HTML
-├── styles.css              # Application styles
-├── claudeClient.js         # Claude API client
 ├── store.js                # Electron store configuration
-├── context_sheets/         # Documentation
-│   ├── README.md           # Context sheet documentation
-│   ├── claude_mini_app_generator.md # Project overview
-│   ├── development_roadmap.md # Development roadmap
-│   ├── mini_app_generation_sequence.md # Detailed mini app generation process
-│   ├── prompt_engineering.md # Prompt engineering strategies
-│   ├── security.md         # Security architecture
-│   ├── technical_architecture.md  # This file
-│   └── user_experience.md  # User experience design
+├── claudeClient.js         # Claude API client
+├── components/             # Web components
+│   ├── core/               # Core component functionality
+│   │   ├── base-component.js           # Base component class
+│   │   ├── component-registry.js       # Component registration
+│   │   ├── dynamic-loader.js           # Dynamic component loading
+│   │   ├── state-manager.js            # State management
+│   │   ├── utils.js                    # Component utilities
+│   │   └── error-handling/             # Error handling components
+│   ├── ui/                 # UI components
+│   │   ├── cards/          # Card components
+│   │   ├── containers/     # Container components
+│   │   └── modals/         # Modal components
+│   ├── main/               # Main window components
+│   └── mini-app/           # Mini app components
+├── modules/                # Application modules
+│   ├── ipc/                # IPC communication
+│   │   ├── index.js                    # IPC module entry point
+│   │   ├── apiHandlers.js              # API-related IPC handlers
+│   │   ├── ipcHandler.js               # IPC handler class
+│   │   ├── ipcTypes.js                 # IPC channel definitions
+│   │   ├── miniAppHandlers.js          # Mini app IPC handlers
+│   │   └── windowHandlers.js           # Window IPC handlers
+│   ├── windowManager/      # Window management
+│   │   ├── index.js                    # Window manager entry point
+│   │   ├── windowManager.js            # Window creation and management
+│   │   ├── windowManager-web-components.js # Web component window manager
+│   │   └── windowPool.js               # Window pooling
+│   ├── utils/              # Utility functions
+│   │   ├── index.js                    # Utils entry point
+│   │   ├── dateUtils.js                # Date utilities
+│   │   ├── domUtils.js                 # DOM utilities
+│   │   ├── errorHandler.js             # Error handling
+│   │   ├── fileOperations.js           # File operations
+│   │   ├── stringUtils.js              # String utilities
+│   │   ├── titleDescriptionGenerator.js # Title/description generation
+│   │   └── validationUtils.js          # Validation utilities
+│   └── miniAppManager.js   # Mini app management
+├── renderers/              # Renderer process scripts
+│   ├── main.js             # Main window renderer
+│   ├── api-setup.js        # API setup window renderer
+│   ├── app-creation.js     # App creation window renderer
+│   └── main-web-components.js # Web components renderer
+├── styles/                 # CSS styles
+│   ├── main.css            # Main window styles
+│   ├── api-setup.css       # API setup window styles
+│   └── app-creation.css    # App creation window styles
+├── index.html              # Main window HTML
+├── api-setup.html          # API setup window HTML
+├── app-creation.html       # App creation window HTML
+└── context_sheets/         # Documentation
+    ├── README.md           # Documentation index
+    ├── architecture/       # Architecture documentation
+    ├── development/        # Development documentation
+    ├── user_experience/    # User experience documentation
+    └── changes/            # Change documentation
 ```
 
 ## Technical Implementation Details
@@ -353,6 +423,482 @@ const store = new Store({ schema });
    - Comprehensive error handling throughout the application
    - User-friendly error messages
    - Graceful degradation when services are unavailable
+
+## Recent Architectural Improvements
+
+The application has undergone significant architectural improvements to enhance maintainability, reliability, and performance. These improvements include:
+
+### 1. Enhanced Error Handling
+
+A centralized error handling system has been implemented to provide consistent error reporting and logging across the application:
+
+```javascript
+// From modules/utils/errorHandler.js
+export class ErrorHandler {
+  static ERROR_LEVELS = {
+    INFO: 'info',
+    WARNING: 'warning',
+    ERROR: 'error',
+    FATAL: 'fatal'
+  };
+  
+  static logError(context, error, level = ErrorHandler.ERROR_LEVELS.ERROR) {
+    const timestamp = new Date().toISOString();
+    console.error(`[${timestamp}] [${level.toUpperCase()}] [${context}]:`, error);
+  }
+  
+  static formatErrorForUI(error) {
+    // Format error for UI display
+    return {
+      message: error.message || 'An unknown error occurred',
+      details: error.stack || ''
+    };
+  }
+  
+  static formatErrorForIPC(error, operation = '') {
+    // Format error for IPC response
+    return {
+      success: false,
+      error: error.message || 'An unknown error occurred',
+      operation,
+      timestamp: new Date().toISOString()
+    };
+  }
+  
+  static getUserFriendlyMessage(error) {
+    // Map technical errors to user-friendly messages
+    const errorMap = {
+      'ENOTFOUND': 'Could not connect to the server. Please check your internet connection.',
+      'ECONNREFUSED': 'Connection refused. The server may be down or unreachable.',
+      'ETIMEDOUT': 'Connection timed out. Please try again later.',
+      'UNAUTHORIZED': 'Authentication failed. Please check your API key.',
+      'FORBIDDEN': 'Access denied. You do not have permission to perform this action.',
+      'NOT_FOUND': 'The requested resource was not found.',
+      'INTERNAL_SERVER_ERROR': 'The server encountered an error. Please try again later.'
+    };
+    
+    // Extract error code from message or use the message itself
+    const errorCode = error.code || error.message;
+    
+    return errorMap[errorCode] || error.message || 'An unknown error occurred';
+  }
+}
+```
+
+This error handler is used throughout the application to provide consistent error handling and reporting:
+
+```javascript
+// Example usage in an IPC handler
+try {
+  // Some code that might throw an error
+  const result = await someAsyncOperation();
+  return createSuccessResponse(result);
+} catch (error) {
+  ErrorHandler.logError('handleSomeOperation', error);
+  return ErrorHandler.formatErrorForIPC(error, 'some-operation');
+}
+```
+
+### 2. Utility Function Organization
+
+Utility functions have been organized into specialized modules to make them easier to find and use:
+
+```javascript
+// From modules/utils/index.js
+export * from './errorHandler.js';
+export * from './stringUtils.js';
+export * from './dateUtils.js';
+export * from './validationUtils.js';
+export * from './domUtils.js';
+export * from './fileOperations.js';
+```
+
+Each utility module focuses on a specific type of functionality:
+
+- **stringUtils.js**: String manipulation functions (truncation, slugification, etc.)
+- **dateUtils.js**: Date formatting and manipulation functions
+- **validationUtils.js**: Input validation functions
+- **domUtils.js**: DOM manipulation functions (for renderer processes)
+- **fileOperations.js**: File system operations
+- **errorHandler.js**: Error handling functions
+
+### 3. Component System Enhancements
+
+The application now uses a web component-based architecture for the UI, with a base component class that provides common functionality:
+
+```javascript
+// From components/core/base-component.js
+export class BaseComponent extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._connected = false;
+    this._initialized = false;
+    this._eventListeners = new Map();
+  }
+  
+  // Lifecycle hooks
+  connectedCallback() {
+    this._connected = true;
+    if (!this._initialized) {
+      this._initialized = true;
+      this.initialize();
+    }
+  }
+  
+  disconnectedCallback() {
+    this._connected = false;
+    this.cleanup();
+  }
+  
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      this.onAttributeChanged(name, oldValue, newValue);
+    }
+  }
+  
+  // Event handling
+  addEventListener(element, type, listener, options = {}) {
+    element.addEventListener(type, listener, options);
+  }
+  
+  trackEventListener(element, type, listener, options = {}) {
+    // Store reference to event listener for automatic cleanup
+    if (!this._eventListeners.has(element)) {
+      this._eventListeners.set(element, []);
+    }
+    
+    this._eventListeners.get(element).push({ type, listener, options });
+    element.addEventListener(type, listener, options);
+  }
+  
+  // Rendering
+  render(html, css) {
+    const style = document.createElement('style');
+    style.textContent = css;
+    
+    this.shadowRoot.innerHTML = '';
+    this.shadowRoot.appendChild(style);
+    
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
+    
+    return this.shadowRoot;
+  }
+  
+  // Methods to override
+  initialize() {
+    // Override in subclass
+  }
+  
+  cleanup() {
+    // Remove all tracked event listeners
+    for (const [element, listeners] of this._eventListeners.entries()) {
+      for (const { type, listener, options } of listeners) {
+        element.removeEventListener(type, listener, options);
+      }
+    }
+    
+    this._eventListeners.clear();
+  }
+  
+  onAttributeChanged(name, oldValue, newValue) {
+    // Override in subclass
+  }
+}
+```
+
+A component registry has been added to provide a central place to register and retrieve components:
+
+```javascript
+// From components/core/component-registry.js
+export class ComponentRegistry {
+  constructor() {
+    this.components = new Map();
+    this.pendingRegistrations = new Map();
+  }
+  
+  register(name, componentClass) {
+    if (customElements.get(name)) {
+      console.warn(`Component ${name} is already registered`);
+      return;
+    }
+    
+    try {
+      customElements.define(name, componentClass);
+      this.components.set(name, componentClass);
+      
+      // Resolve any pending promises waiting for this component
+      if (this.pendingRegistrations.has(name)) {
+        const resolvers = this.pendingRegistrations.get(name);
+        resolvers.forEach(resolve => resolve(componentClass));
+        this.pendingRegistrations.delete(name);
+      }
+    } catch (error) {
+      console.error(`Failed to register component ${name}:`, error);
+    }
+  }
+  
+  get(name) {
+    return this.components.get(name);
+  }
+  
+  getAsync(name) {
+    if (this.components.has(name)) {
+      return Promise.resolve(this.components.get(name));
+    }
+    
+    return new Promise(resolve => {
+      if (!this.pendingRegistrations.has(name)) {
+        this.pendingRegistrations.set(name, []);
+      }
+      
+      this.pendingRegistrations.get(name).push(resolve);
+    });
+  }
+}
+
+// Create a singleton instance
+export const registry = new ComponentRegistry();
+```
+
+### 4. State Management
+
+A simple state management system has been implemented to make it easier to share and synchronize state between different parts of the application:
+
+```javascript
+// From components/core/state-manager.js
+export class StateManager {
+  constructor(initialState = {}) {
+    this.state = { ...initialState };
+    this.listeners = new Map();
+    this.nextListenerId = 1;
+  }
+  
+  get(key = null) {
+    if (key === null) {
+      return { ...this.state };
+    }
+    
+    return this.state[key];
+  }
+  
+  set(newState) {
+    const oldState = { ...this.state };
+    const changedKeys = [];
+    
+    // Update state and track changed keys
+    Object.entries(newState).forEach(([key, value]) => {
+      if (this.state[key] !== value) {
+        this.state[key] = value;
+        changedKeys.push(key);
+      }
+    });
+    
+    // If nothing changed, don't notify listeners
+    if (changedKeys.length === 0) {
+      return;
+    }
+    
+    // Notify listeners
+    this.listeners.forEach((listener) => {
+      const { keys, callback } = listener;
+      
+      // If listener is interested in any of the changed keys, notify it
+      if (keys === null || keys.some(key => changedKeys.includes(key))) {
+        callback(this.state, oldState, changedKeys);
+      }
+    });
+  }
+  
+  subscribe(keys, callback) {
+    const id = this.nextListenerId++;
+    this.listeners.set(id, { keys, callback });
+    
+    // Return unsubscribe function
+    return () => {
+      this.listeners.delete(id);
+    };
+  }
+}
+
+// Create a singleton instance
+export const appState = new StateManager({
+  apps: [],
+  selectedAppId: null,
+  isGenerating: false,
+  theme: 'light'
+});
+```
+
+### 5. Window Management
+
+A window pool has been implemented to improve performance when opening multiple windows:
+
+```javascript
+// From modules/windowManager/windowPool.js
+export class WindowPool {
+  constructor(maxPoolSize = 5) {
+    this.pools = new Map();
+    this.maxPoolSize = maxPoolSize;
+  }
+  
+  getWindow(type) {
+    if (!this.pools.has(type)) {
+      return null;
+    }
+    
+    const pool = this.pools.get(type);
+    if (pool.length === 0) {
+      return null;
+    }
+    
+    return pool.pop();
+  }
+  
+  releaseWindow(type, window) {
+    if (!this.pools.has(type)) {
+      this.pools.set(type, []);
+    }
+    
+    const pool = this.pools.get(type);
+    
+    // If the pool is full, destroy the window
+    if (pool.length >= this.maxPoolSize) {
+      window.destroy();
+      return;
+    }
+    
+    // Reset window state
+    window.webContents.loadURL('about:blank');
+    
+    // Add to pool
+    pool.push(window);
+  }
+  
+  createOrGetWindow(type, createFn) {
+    // Try to get a window from the pool
+    const pooledWindow = this.getWindow(type);
+    if (pooledWindow) {
+      return pooledWindow;
+    }
+    
+    // Create a new window
+    return createFn();
+  }
+  
+  clear(type = null) {
+    if (type) {
+      // Clear specific pool
+      if (this.pools.has(type)) {
+        const pool = this.pools.get(type);
+        pool.forEach(window => window.destroy());
+        this.pools.delete(type);
+      }
+    } else {
+      // Clear all pools
+      this.pools.forEach(pool => {
+        pool.forEach(window => window.destroy());
+      });
+      this.pools.clear();
+    }
+  }
+}
+
+// Create a singleton instance
+export const windowPool = new WindowPool();
+```
+
+### 6. IPC Communication
+
+A standardized IPC communication layer has been implemented to make it easier to add new IPC handlers and maintain existing ones:
+
+```javascript
+// From modules/ipc/ipcTypes.js
+export const IpcChannels = {
+  // API related
+  SET_API_KEY: 'set-api-key',
+  CHECK_API_KEY: 'check-api-key',
+  
+  // Mini app related
+  GENERATE_MINI_APP: 'generate-mini-app',
+  GENERATE_TITLE_AND_DESCRIPTION: 'generate-title-and-description',
+  OPEN_MINI_APP: 'open-mini-app',
+  UPDATE_MINI_APP: 'update-mini-app',
+  DELETE_MINI_APP: 'delete-mini-app',
+  
+  // Window related
+  OPEN_WINDOW: 'open-window',
+  CLOSE_CURRENT_WINDOW: 'close-current-window',
+  GET_WINDOW_PARAMS: 'get-window-params',
+  NOTIFY_APP_UPDATED: 'notify-app-updated'
+};
+
+export function createSuccessResponse(data = {}) {
+  return {
+    success: true,
+    ...data,
+    timestamp: new Date().toISOString()
+  };
+}
+
+export function createErrorResponse(error, operation = '') {
+  return {
+    success: false,
+    error: error.message || 'An unknown error occurred',
+    operation,
+    timestamp: new Date().toISOString()
+  };
+}
+```
+
+An IPC handler class has been added to provide a standardized way to register and manage IPC handlers:
+
+```javascript
+// From modules/ipc/ipcHandler.js
+export class IpcHandler {
+  constructor() {
+    this.handlers = new Map();
+  }
+  
+  register(channel, handler) {
+    if (this.handlers.has(channel)) {
+      console.warn(`Handler for channel ${channel} is already registered. Overwriting.`);
+    }
+    
+    this.handlers.set(channel, handler);
+    return this;
+  }
+  
+  unregister(channel) {
+    this.handlers.delete(channel);
+    return this;
+  }
+  
+  registerMultiple(handlers) {
+    Object.entries(handlers).forEach(([channel, handler]) => {
+      this.register(channel, handler);
+    });
+    return this;
+  }
+  
+  getHandler(channel) {
+    return this.handlers.get(channel);
+  }
+  
+  hasHandler(channel) {
+    return this.handlers.has(channel);
+  }
+  
+  getAllChannels() {
+    return Array.from(this.handlers.keys());
+  }
+}
+
+// Create a singleton instance
+export const ipcHandler = new IpcHandler();
+```
 
 ## Technical Debt and Improvement Opportunities
 

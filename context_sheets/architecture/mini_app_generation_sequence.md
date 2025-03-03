@@ -1,5 +1,15 @@
 # Lahat: Mini App Generation Sequence
 
+<!-- SUMMARY -->
+This document details the sequence of operations that occur during the mini app generation process in Lahat, including the two-step workflow of title/description generation followed by app generation.
+<!-- /SUMMARY -->
+
+<!-- RELATED DOCUMENTS -->
+related '../architecture/technical_architecture.md'
+related '../development/code_organization.md'
+related '../changes/20250305-code-cleanup-and-maintainability-improvements.md'
+<!-- /RELATED DOCUMENTS -->
+
 ## Overview
 
 This document details the sequence of operations that occur during the mini app generation process in Lahat. The mini app generation is a multi-step process that involves interaction between the user interface, the main Electron process, the Claude API, and various system components.
@@ -18,6 +28,7 @@ sequenceDiagram
     participant Renderer as Renderer Process<br>(app-creation.js)
     participant IPC as IPC Bridge<br>(preload.cjs)
     participant Main as Main Process<br>(miniAppHandlers.js)
+    participant ErrorHandler as Error Handler<br>(errorHandler.js)
     participant Claude as Claude Client<br>(claudeClient.js)
     participant FileSystem as File System<br>(fileOperations.js)
     participant MiniApp as Mini App Manager<br>(miniAppManager.js)
@@ -40,20 +51,30 @@ sequenceDiagram
     User->>Renderer: Click "Next" button
     Renderer->>IPC: generateTitleAndDescription({input})
     IPC->>Main: invoke('generate-title-and-description', {input})
-    Main->>Claude: generateTitleAndDescription(input, apiKey, onChunk)
     
-    %% Title/Description generation streaming
-    loop Streaming chunks
-        Claude-->>Main: chunk (title/description parts)
-        Main-->>IPC: send('title-description-chunk', chunk)
-        IPC-->>Renderer: onTitleDescriptionChunk(chunk)
-        Renderer-->>User: Update UI with title/description
+    alt Success Path
+        Main->>Claude: generateTitleAndDescription(input, apiKey, onChunk)
+        
+        %% Title/Description generation streaming
+        loop Streaming chunks
+            Claude-->>Main: chunk (title/description parts)
+            Main-->>IPC: send('title-description-chunk', chunk)
+            IPC-->>Renderer: onTitleDescriptionChunk(chunk)
+            Renderer-->>User: Update UI with title/description
+        end
+        
+        Claude-->>Main: Final title and description
+        Main-->>Renderer: {success: true, title, description}
+        Renderer-->>User: Display final title and description
+        Renderer->>Renderer: Show Step 2
+    else Error Path
+        Main->>Claude: generateTitleAndDescription(input, apiKey, onChunk)
+        Claude-->>Main: Error
+        Main->>ErrorHandler: logError('generateTitleAndDescription', error)
+        ErrorHandler-->>Main: Formatted error
+        Main-->>Renderer: {success: false, error: errorMessage}
+        Renderer-->>User: Display error message
     end
-    
-    Claude-->>Main: Final title and description
-    Main-->>Renderer: {success: true, title, description}
-    Renderer-->>User: Display final title and description
-    Renderer->>Renderer: Show Step 2
     
     %% Step 3: User reviews and clicks Generate
     User->>Renderer: Review and edit title/description
@@ -61,44 +82,55 @@ sequenceDiagram
     Renderer->>IPC: generateMiniApp({appName, prompt})
     IPC->>Main: invoke('generate-mini-app', {appName, prompt})
     
-    %% Mini app generation
-    Main->>Claude: generateApp(prompt)
-    
-    loop Streaming chunks
-        Claude-->>Main: streamEvent (HTML content parts)
-        Main-->>IPC: send('generation-chunk', {content, done: false})
-        IPC-->>Renderer: onGenerationChunk(chunk)
-        Renderer-->>User: Update UI with generation progress
+    alt Success Path
+        %% Mini app generation
+        Main->>Claude: generateApp(prompt)
+        
+        loop Streaming chunks
+            Claude-->>Main: streamEvent (HTML content parts)
+            Main-->>IPC: send('generation-chunk', {content, done: false})
+            IPC-->>Renderer: onGenerationChunk(chunk)
+            Renderer-->>User: Update UI with generation progress
+        end
+        
+        Claude-->>Main: Complete HTML content
+        Main-->>IPC: send('generation-chunk', {done: true})
+        
+        %% Save the generated app
+        Main->>Claude: saveGeneratedApp(appName, htmlContent, prompt)
+        Claude->>FileSystem: writeFile(filePath, htmlContent)
+        Claude->>FileSystem: writeFile(metadataPath, metadata)
+        Claude-->>Main: {filename, filePath, metadata}
+        
+        %% Create window for the app
+        Main->>MiniApp: createMiniAppWindow(name, htmlContent, filePath, conversationId)
+        MiniApp->>FileSystem: writeFile(tempFilePath, htmlContent)
+        MiniApp->>MiniApp: createMiniAppWindow()
+        MiniApp->>MiniApp: win.loadFile(tempFilePath)
+        MiniApp-->>Main: {success: true, filePath, windowId}
+        
+        %% Update recent apps list
+        Main->>Main: Update recentApps in store
+        Main-->>Renderer: {success: true, appId, name}
+        
+        %% Notify main window and close creation window
+        Renderer->>IPC: notifyAppUpdated()
+        IPC->>Main: invoke('notify-app-updated')
+        Main-->>Main: Broadcast 'app-updated' event
+        
+        Renderer->>IPC: closeCurrentWindow()
+        IPC->>Main: invoke('close-current-window')
+        Main->>Renderer: Close window
+    else Error Path
+        Main->>Claude: generateApp(prompt)
+        Claude-->>Main: Error
+        Main->>ErrorHandler: logError('handleGenerateMiniApp', error)
+        ErrorHandler-->>Main: Formatted error and user-friendly message
+        Main-->>IPC: send('generation-status', {status: 'error', message})
+        IPC-->>Renderer: onGenerationStatus({status: 'error', message})
+        Renderer-->>User: Display error message
+        Main-->>Renderer: {success: false, error: errorMessage}
     end
-    
-    Claude-->>Main: Complete HTML content
-    Main-->>IPC: send('generation-chunk', {done: true})
-    
-    %% Save the generated app
-    Main->>Claude: saveGeneratedApp(appName, htmlContent, prompt)
-    Claude->>FileSystem: writeFile(filePath, htmlContent)
-    Claude->>FileSystem: writeFile(metadataPath, metadata)
-    Claude-->>Main: {filename, filePath, metadata}
-    
-    %% Create window for the app
-    Main->>MiniApp: createMiniAppWindow(name, htmlContent, filePath, conversationId)
-    MiniApp->>FileSystem: writeFile(tempFilePath, htmlContent)
-    MiniApp->>MiniApp: createMiniAppWindow()
-    MiniApp->>MiniApp: win.loadFile(tempFilePath)
-    MiniApp-->>Main: {success: true, filePath, windowId}
-    
-    %% Update recent apps list
-    Main->>Main: Update recentApps in store
-    Main-->>Renderer: {success: true, appId, name}
-    
-    %% Notify main window and close creation window
-    Renderer->>IPC: notifyAppUpdated()
-    IPC->>Main: invoke('notify-app-updated')
-    Main-->>Main: Broadcast 'app-updated' event
-    
-    Renderer->>IPC: closeCurrentWindow()
-    IPC->>Main: invoke('close-current-window')
-    Main->>Renderer: Close window
 ```
 
 ## Detailed Process Explanation
@@ -551,6 +583,33 @@ The mini app manager handles the creation and management of mini app windows. It
 - File operations for mini app content
 - Window lifecycle events
 - Window reference tracking
+
+### Error Handler (errorHandler.js)
+
+The error handler provides centralized error handling and logging:
+- Consistent error logging with context and severity levels
+- Formatting errors for UI display
+- Formatting errors for IPC responses
+- User-friendly error messages
+
+```javascript
+// Example error handling in miniAppHandlers.js
+try {
+  // Generate mini app...
+  return createSuccessResponse({ 
+    appId: savedApp.metadata.conversationId,
+    name: savedApp.metadata.name
+  });
+} catch (error) {
+  ErrorHandler.logError('handleGenerateMiniApp', error);
+  event.sender.send('generation-status', {
+    status: 'error',
+    message: ErrorHandler.getUserFriendlyMessage(error)
+  });
+  
+  return createErrorResponse(error, 'generate-mini-app');
+}
+```
 
 ## Conclusion
 

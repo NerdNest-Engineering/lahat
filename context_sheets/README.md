@@ -53,12 +53,18 @@ Documents recording specific changes and implementations:
 
 | Document | Description |
 |----------|-------------|
-| [Code Cleanup Recommendations](changes/20250228-code-cleanup-recommendations.md) | Recommendations for code improvements |
-| [Splitting Monolithic UI](changes/20250228-splitting-monolithic-ui.md) | Implementation of window sheets |
-| [Main.js Refactoring Plan](changes/20250301-main-js-refactoring-plan.md) | Plan for refactoring main.js |
-| [Mini App Generation UI Redesign](changes/20250302-mini-app-generation-ui-redesign.md) | Redesign of app creation flow |
-| [Mini App Generation UI Bug Fix](changes/20250303-mini-app-generation-ui-bug-fix.md) | Bug fixes for app creation UI |
-| [Step 1 Transition UI Bug Fix](changes/20250304-step1-transition-ui-bug-fix.md) | Bug fix for step transition |
+| [Code Cleanup and Maintainability Improvements](changes/20250305-code-cleanup-and-maintainability-improvements.md) | Improvements to code organization, error handling, and maintainability |
+
+### Completed Changes
+
+| Document | Description |
+|----------|-------------|
+| [Code Cleanup Recommendations](changes/done/20250228-code-cleanup-recommendations.md) | Recommendations for code improvements |
+| [Splitting Monolithic UI](changes/done/20250228-splitting-monolithic-ui.md) | Implementation of window sheets |
+| [Main.js Refactoring Plan](changes/done/20250301-main-js-refactoring-plan.md) | Plan for refactoring main.js |
+| [Mini App Generation UI Redesign](changes/done/20250302-mini-app-generation-ui-redesign.md) | Redesign of app creation flow |
+| [Mini App Generation UI Bug Fix](changes/done/20250303-mini-app-generation-ui-bug-fix.md) | Bug fixes for app creation UI |
+| [Step 1 Transition UI Bug Fix](changes/done/20250304-step1-transition-ui-bug-fix.md) | Bug fix for step transition |
 
 ## Using This Documentation
 

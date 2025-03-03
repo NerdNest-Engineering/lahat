@@ -7,6 +7,7 @@ This document details the window sheets architecture that separates Lahat's UI i
 <!-- RELATED DOCUMENTS -->
 related '../architecture/technical_architecture.md'
 related '../development/code_organization.md'
+related '../changes/20250305-code-cleanup-and-maintainability-improvements.md'
 <!-- /RELATED DOCUMENTS -->
 
 ## Overview
@@ -142,6 +143,88 @@ const windowParams = new Map();
 // Get parameters for a specific window
 export function getWindowParams(windowId) {
   return windowParams.get(windowId) || {};
+}
+```
+
+### Window Pooling
+
+To improve performance when opening multiple windows, a window pool has been implemented:
+
+```javascript
+// modules/windowManager/windowPool.js
+export class WindowPool {
+  constructor(maxPoolSize = 5) {
+    this.pools = new Map();
+    this.maxPoolSize = maxPoolSize;
+  }
+  
+  getWindow(type) {
+    if (!this.pools.has(type)) {
+      return null;
+    }
+    
+    const pool = this.pools.get(type);
+    if (pool.length === 0) {
+      return null;
+    }
+    
+    return pool.pop();
+  }
+  
+  releaseWindow(type, window) {
+    if (!this.pools.has(type)) {
+      this.pools.set(type, []);
+    }
+    
+    const pool = this.pools.get(type);
+    
+    // If the pool is full, destroy the window
+    if (pool.length >= this.maxPoolSize) {
+      window.destroy();
+      return;
+    }
+    
+    // Reset window state
+    window.webContents.loadURL('about:blank');
+    
+    // Add to pool
+    pool.push(window);
+  }
+  
+  createOrGetWindow(type, createFn) {
+    // Try to get a window from the pool
+    const pooledWindow = this.getWindow(type);
+    if (pooledWindow) {
+      return pooledWindow;
+    }
+    
+    // Create a new window
+    return createFn();
+  }
+}
+```
+
+The window pool is used to reuse windows instead of creating new ones each time:
+
+```javascript
+// Example usage in windowHandlers.js
+async function handleOpenWindow(event, { type, params }) {
+  try {
+    // Get a window from the pool or create a new one
+    const win = await windowPool.createOrGetWindow(type, () => {
+      return windowManager.createWindow(type, { params });
+    });
+    
+    // If the window is from the pool, update its parameters
+    if (params) {
+      windowManager.setWindowParams(win.id, params);
+    }
+    
+    return createSuccessResponse({ windowId: win.id });
+  } catch (error) {
+    ErrorHandler.logError('handleOpenWindow', error);
+    return createErrorResponse(error, 'open-window');
+  }
 }
 ```
 

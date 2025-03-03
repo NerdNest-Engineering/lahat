@@ -1,6 +1,8 @@
-import { ipcMain, shell } from 'electron';
+import { shell, ipcMain } from 'electron';
 import ClaudeClient from '../../claudeClient.js';
 import store from '../../store.js';
+import { IpcChannels, createSuccessResponse, createErrorResponse } from './ipcTypes.js';
+import { ErrorHandler } from '../utils/errorHandler.js';
 
 /**
  * API Handlers Module
@@ -17,10 +19,15 @@ let claudeClient = null;
 export function initializeClaudeClient() {
   const apiKey = store.get('apiKey');
   if (apiKey) {
-    claudeClient = new ClaudeClient(apiKey);
-    // Log the app storage path for troubleshooting
-    console.log('App storage directory:', claudeClient.appStoragePath);
-    return true;
+    try {
+      claudeClient = new ClaudeClient(apiKey);
+      // Log the app storage path for troubleshooting
+      console.log('App storage directory:', claudeClient.appStoragePath);
+      return true;
+    } catch (error) {
+      ErrorHandler.logError('initializeClaudeClient', error);
+      return false;
+    }
   }
   return false;
 }
@@ -49,13 +56,10 @@ async function handleSetApiKey(event, apiKey) {
   try {
     store.set('apiKey', apiKey);
     claudeClient = new ClaudeClient(apiKey);
-    return { success: true };
+    return createSuccessResponse();
   } catch (error) {
-    console.error('Error setting API key:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    ErrorHandler.logError('handleSetApiKey', error);
+    return createErrorResponse(error, 'set-api-key');
   }
 }
 
@@ -64,11 +68,16 @@ async function handleSetApiKey(event, apiKey) {
  * @returns {Promise<Object>} - Result object with API key status
  */
 async function handleCheckApiKey() {
-  const apiKey = store.get('apiKey');
-  return { 
-    hasApiKey: !!apiKey,
-    apiKey: apiKey || ''
-  };
+  try {
+    const apiKey = store.get('apiKey');
+    return createSuccessResponse({ 
+      hasApiKey: !!apiKey,
+      apiKey: apiKey || ''
+    });
+  } catch (error) {
+    ErrorHandler.logError('handleCheckApiKey', error);
+    return createErrorResponse(error, 'check-api-key');
+  }
 }
 
 /**
@@ -80,36 +89,47 @@ async function handleOpenAppDirectory() {
     if (!claudeClient) {
       const initialized = initializeClaudeClient();
       if (!initialized) {
-        return {
-          success: false,
-          error: 'Claude API key not set. Please set your API key in settings.'
-        };
+        return createErrorResponse(
+          'Claude API key not set. Please set your API key in settings.',
+          'open-app-directory'
+        );
       }
     }
     
     await shell.openPath(claudeClient.appStoragePath);
-    return { success: true };
+    return createSuccessResponse();
   } catch (error) {
-    console.error('Error opening app directory:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    ErrorHandler.logError('handleOpenAppDirectory', error);
+    return createErrorResponse(error, 'open-app-directory');
   }
 }
 
 /**
  * Register API-related IPC handlers
+ * @param {Object} ipcHandler - IPC handler instance
  */
-export function registerHandlers() {
-  // Handle API key setup
-  ipcMain.handle('set-api-key', handleSetApiKey);
+export function registerHandlers(ipcHandler) {
+  // If no ipcHandler is provided, use the legacy registration method
+  if (!ipcHandler) {
+    // Handle API key setup
+    ipcMain.handle(IpcChannels.SET_API_KEY, handleSetApiKey);
+    
+    // Check if API key is set
+    ipcMain.handle(IpcChannels.CHECK_API_KEY, handleCheckApiKey);
+    
+    // Open app directory
+    ipcMain.handle(IpcChannels.OPEN_APP_DIRECTORY, handleOpenAppDirectory);
+    
+    console.log('API handlers registered (legacy mode)');
+    return;
+  }
   
-  // Check if API key is set
-  ipcMain.handle('check-api-key', handleCheckApiKey);
-  
-  // Open app directory
-  ipcMain.handle('open-app-directory', handleOpenAppDirectory);
+  // Register handlers with the IPC handler
+  ipcHandler.registerMultiple({
+    [IpcChannels.SET_API_KEY]: handleSetApiKey,
+    [IpcChannels.CHECK_API_KEY]: handleCheckApiKey,
+    [IpcChannels.OPEN_APP_DIRECTORY]: handleOpenAppDirectory
+  });
   
   console.log('API handlers registered');
 }
