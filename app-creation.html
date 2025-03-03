@@ -14,57 +14,22 @@
                  form-action 'none';">
   <title>Create a Mini App</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="styles/app-creation.css">
+  <!-- Note: We no longer need app-creation.css as styles are encapsulated in web components -->
 </head>
 <body>
   <div class="drag-region"></div>
   <div class="window">
     <div class="titlebar">Create a Mini App</div>
     <div class="content">
-      <!-- Step 1: Initial Input -->
-      <div id="step-1" class="step active">
-        <h2>What would you like?</h2>
-        <div class="input-group">
-          <input type="text" id="user-input" placeholder="I want tetris" />
-        </div>
-        <div class="button-container">
-          <button id="next-button" class="next-button">Next</button>
-        </div>
-      </div>
-
-      <!-- Step 2: Preview and Generate -->
-      <div id="step-2" class="step">
-        <h2>What would you like?</h2>
-        <div class="user-input-display">
-          <span id="user-input-display"></span>
-        </div>
-        <div class="preview-section hidden">
-          <h3>We will build...</h3>
-          <div class="editable-title">
-            <input type="text" id="generated-title" placeholder="App Title" />
-          </div>
-          <div class="editable-description">
-            <textarea id="generated-description" rows="6" placeholder="App Description"></textarea>
-          </div>
-        </div>
-        
-        <!-- Loading Indicator (moved here) -->
-        <div id="generation-status" class="hidden">
-          <div class="spinner"></div>
-          <span id="generation-status-text">Generating mini app...</span>
-        </div>
-        
-        <div id="generation-preview" class="hidden">
-          <h3>Generation Preview</h3>
-          <pre id="generation-output"></pre>
-        </div>
-        
-        <div class="button-container">
-          <button id="generate-button" class="generate-button">Generate</button>
-        </div>
-      </div>
+      <!-- Using custom web components -->
+      <app-creation-step-one id="step-1" class="active"></app-creation-step-one>
+      <app-creation-step-two id="step-2"></app-creation-step-two>
+      <generation-status id="generation-status"></generation-status>
+      <generation-preview id="generation-preview"></generation-preview>
     </div>
   </div>
+  
+  <!-- Error container will be created by JavaScript if needed -->
 
   <script src="renderers/app-creation.js" type="module"></script>
 </body>
