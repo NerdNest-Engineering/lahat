@@ -3,6 +3,7 @@
 const appManagementSection = document.getElementById('app-management-section');
 const createAppButton = document.getElementById('create-app-button');
 const createFirstAppButton = document.getElementById('create-first-app-button');
+const importAppButton = document.getElementById('import-app-button');
 const apiSettingsButton = document.getElementById('api-settings-button');
 const refreshAppsButton = document.getElementById('refresh-apps-button');
 const openAppDirectoryButton = document.getElementById('open-app-directory-button');
@@ -102,6 +103,21 @@ createFirstAppButton.addEventListener('click', () => {
   window.electronAPI.openWindow('app-creation');
 });
 
+importAppButton.addEventListener('click', async () => {
+  try {
+    const result = await window.electronAPI.importMiniApp();
+    
+    if (result.success) {
+      alert(`Mini app "${result.name}" imported successfully!`);
+      await loadMiniApps();
+    } else if (!result.canceled) {
+      alert(`Error importing mini app: ${result.error}`);
+    }
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+  }
+});
+
 apiSettingsButton.addEventListener('click', () => {
   window.electronAPI.openWindow('api-setup');
 });
@@ -189,12 +205,13 @@ updateAppButton.addEventListener('click', () => {
   appDetailsModal.classList.add('hidden');
 });
 
-// Export app
+// Export app as package (zip)
 exportAppButton.addEventListener('click', async () => {
   try {
     const result = await window.electronAPI.exportMiniApp({
       appId: currentAppId,
-      filePath: currentAppFilePath
+      filePath: currentAppFilePath,
+      exportType: 'package'
     });
     
     if (result.success) {

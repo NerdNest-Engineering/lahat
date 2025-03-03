@@ -31,6 +31,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.38.0",
-    "electron-store": "^8.1.0"
+    "archiver": "^6.0.1",
+    "electron-store": "^8.1.0",
+    "extract-zip": "^2.0.1"
   }
 }

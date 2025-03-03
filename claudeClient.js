@@ -3,6 +3,11 @@ import { app } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
+import { createWriteStream } from 'fs';
+import { createReadStream } from 'fs';
+import { pipeline } from 'stream/promises';
+import archiver from 'archiver';
+import extract from 'extract-zip';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,50 +61,96 @@ EXAMPLE OUTPUT:
 
     this.appStoragePath = path.join(app.getPath('userData'), 'generated-apps');
     this.ensureAppStorageDirectory();
-    this.fixExistingMetadataFiles();
+    this.migrateExistingApps();
   }
 
-  // Fix existing metadata files to use relative paths instead of absolute paths
-  async fixExistingMetadataFiles() {
+  // Migrate existing apps to the new folder structure
+  async migrateExistingApps() {
     try {
-      console.log('Fixing existing metadata files...');
+      console.log('Checking for apps to migrate...');
       const files = await fs.readdir(this.appStoragePath);
       const metaFiles = files.filter(file => file.endsWith('.meta.json'));
       
+      if (metaFiles.length === 0) {
+        console.log('No apps to migrate');
+        return;
+      }
+      
+      console.log(`Found ${metaFiles.length} apps to migrate`);
+      
       for (const metaFile of metaFiles) {
-        const metaPath = path.join(this.appStoragePath, metaFile);
-        const metaContent = await fs.readFile(metaPath, 'utf-8');
-        let metadata;
-        
         try {
-          metadata = JSON.parse(metaContent);
-        } catch (error) {
-          console.error(`Error parsing metadata file ${metaFile}:`, error);
-          continue;
-        }
-        
-        let modified = false;
-        
-        // Fix file paths in versions
-        if (metadata.versions && Array.isArray(metadata.versions)) {
-          for (const version of metadata.versions) {
-            if (version.filePath && version.filePath.includes(this.appStoragePath)) {
-              // Extract just the filename from the full path
-              version.filePath = path.basename(version.filePath);
-              modified = true;
+          const metaPath = path.join(this.appStoragePath, metaFile);
+          const metaContent = await fs.readFile(metaPath, 'utf-8');
+          let metadata;
+          
+          try {
+            metadata = JSON.parse(metaContent);
+          } catch (error) {
+            console.error(`Error parsing metadata file ${metaFile}:`, error);
+            continue;
+          }
+          
+          // Create a folder for this app
+          const baseFilename = metaFile.replace('.meta.json', '');
+          const folderName = baseFilename;
+          const folderPath = path.join(this.appStoragePath, folderName);
+          
+          console.log(`Migrating app to folder: ${folderPath}`);
+          
+          // Create the folder
+          await fs.mkdir(folderPath, { recursive: true });
+          
+          // Create assets folder
+          await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
+          
+          // Move all versions to the new folder
+          if (metadata.versions && Array.isArray(metadata.versions)) {
+            for (let i = 0; i < metadata.versions.length; i++) {
+              const version = metadata.versions[i];
+              const oldPath = path.join(this.appStoragePath, version.filePath);
+              
+              // For the first version, save as index.html
+              // For other versions, save as vX.html
+              const newFilename = i === 0 ? 'index.html' : `v${i + 1}.html`;
+              const newPath = path.join(folderPath, newFilename);
+              
+              try {
+                // Read the file content
+                const content = await fs.readFile(oldPath, 'utf-8');
+                
+                // Write to the new location
+                await fs.writeFile(newPath, content);
+                
+                // Update the file path in metadata
+                version.filePath = newFilename;
+                
+                // Delete the old file
+                await fs.unlink(oldPath).catch(() => {});
+              } catch (error) {
+                console.error(`Error moving file ${oldPath}:`, error);
+              }
             }
           }
-        }
-        
-        if (modified) {
-          console.log(`Fixing metadata file: ${metaFile}`);
-          await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2));
+          
+          // Save the updated metadata to the new location
+          await fs.writeFile(
+            path.join(folderPath, 'metadata.json'),
+            JSON.stringify(metadata, null, 2)
+          );
+          
+          // Delete the old metadata file
+          await fs.unlink(metaPath).catch(() => {});
+          
+          console.log(`Successfully migrated app: ${metadata.name}`);
+        } catch (error) {
+          console.error(`Error migrating app ${metaFile}:`, error);
         }
       }
       
-      console.log('Metadata files fixed');
+      console.log('Migration complete');
     } catch (error) {
-      console.error('Error fixing metadata files:', error);
+      console.error('Error migrating apps:', error);
     }
   }
 
@@ -144,20 +195,26 @@ EXAMPLE OUTPUT:
   }
 
   async saveGeneratedApp(appName, htmlContent, prompt, conversationId = null) {
-    // Create a safe filename from the app name
+    // Create a safe folder name from the app name
     const safeAppName = appName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const timestamp = Date.now();
-    const filename = `${safeAppName}_${timestamp}.html`;
-    const filePath = path.join(this.appStoragePath, filename);
+    const folderName = `${safeAppName}_${timestamp}`;
+    const folderPath = path.join(this.appStoragePath, folderName);
     
-    console.log('Saving generated app to:', filePath);
+    console.log('Saving generated app to folder:', folderPath);
     
-    // Save the HTML content
     try {
-      await fs.writeFile(filePath, htmlContent);
+      // Create the app folder
+      await fs.mkdir(folderPath, { recursive: true });
       
-      // Save metadata
-      const metadataPath = path.join(this.appStoragePath, `${filename}.meta.json`);
+      // Create assets folder
+      await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
+      
+      // Save the HTML content as index.html
+      const htmlFilePath = path.join(folderPath, 'index.html');
+      await fs.writeFile(htmlFilePath, htmlContent);
+      
+      // Create metadata
       const metadata = {
         name: appName,
         created: new Date().toISOString(),
@@ -166,16 +223,19 @@ EXAMPLE OUTPUT:
         versions: [
           {
             timestamp,
-            filePath: filename // Store just the filename, not the full path
+            filePath: 'index.html' // Relative path within the folder
           }
         ]
       };
       
+      // Save metadata
+      const metadataPath = path.join(folderPath, 'metadata.json');
       await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
       
       return {
-        filename,
-        filePath,
+        folderName,
+        filePath: htmlFilePath,
+        folderPath,
         metadata
       };
     } catch (error) {
@@ -185,33 +245,53 @@ EXAMPLE OUTPUT:
 
   async loadConversation(conversationId) {
     try {
-      const files = await fs.readdir(this.appStoragePath);
-      const metaFiles = files.filter(file => file.endsWith('.meta.json'));
+      // Get all folders in the app storage directory
+      const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
+      const folders = items.filter(item => item.isDirectory()).map(item => item.name);
       
-      for (const metaFile of metaFiles) {
-        const metaPath = path.join(this.appStoragePath, metaFile);
-        const metaContent = await fs.readFile(metaPath, 'utf-8');
-        const metadata = JSON.parse(metaContent);
+      for (const folder of folders) {
+        const metadataPath = path.join(this.appStoragePath, folder, 'metadata.json');
         
-        if (metadata.conversationId === conversationId) {
-          // Reconstruct conversation from metadata
-          const messages = [
-            { role: 'user', content: metadata.prompt },
-            { role: 'assistant', content: await fs.readFile(path.join(this.appStoragePath, metadata.versions[0].filePath), 'utf-8') }
-          ];
+        try {
+          // Check if metadata file exists
+          await fs.access(metadataPath);
           
-          // Add any additional messages from iterations
-          for (let i = 1; i < metadata.versions.length; i++) {
-            if (metadata.versions[i].prompt) {
-              messages.push({ role: 'user', content: metadata.versions[i].prompt });
-              messages.push({ 
+          // Read and parse metadata
+          const metaContent = await fs.readFile(metadataPath, 'utf-8');
+          const metadata = JSON.parse(metaContent);
+          
+          if (metadata.conversationId === conversationId) {
+            // Reconstruct conversation from metadata
+            const messages = [
+              { role: 'user', content: metadata.prompt },
+              { 
                 role: 'assistant', 
-                content: await fs.readFile(path.join(this.appStoragePath, metadata.versions[i].filePath), 'utf-8')
-              });
+                content: await fs.readFile(
+                  path.join(this.appStoragePath, folder, metadata.versions[0].filePath), 
+                  'utf-8'
+                ) 
+              }
+            ];
+            
+            // Add any additional messages from iterations
+            for (let i = 1; i < metadata.versions.length; i++) {
+              if (metadata.versions[i].prompt) {
+                messages.push({ role: 'user', content: metadata.versions[i].prompt });
+                messages.push({ 
+                  role: 'assistant', 
+                  content: await fs.readFile(
+                    path.join(this.appStoragePath, folder, metadata.versions[i].filePath), 
+                    'utf-8'
+                  )
+                });
+              }
             }
+            
+            return messages;
           }
-          
-          return messages;
+        } catch (error) {
+          // Skip folders without valid metadata
+          continue;
         }
       }
       
@@ -224,22 +304,38 @@ EXAMPLE OUTPUT:
 
   async listGeneratedApps() {
     try {
-      const files = await fs.readdir(this.appStoragePath);
-      const metaFiles = files.filter(file => file.endsWith('.meta.json'));
+      // Get all folders in the app storage directory
+      const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
+      const folders = items.filter(item => item.isDirectory()).map(item => item.name);
       const apps = [];
       
-      for (const metaFile of metaFiles) {
-        const metaPath = path.join(this.appStoragePath, metaFile);
-        const metaContent = await fs.readFile(metaPath, 'utf-8');
-        const metadata = JSON.parse(metaContent);
+      for (const folder of folders) {
+        const metadataPath = path.join(this.appStoragePath, folder, 'metadata.json');
         
-        apps.push({
-          id: metadata.conversationId,
-          name: metadata.name,
-          created: metadata.created,
-          filePath: path.join(this.appStoragePath, metadata.versions[metadata.versions.length - 1].filePath),
-          versions: metadata.versions.length
-        });
+        try {
+          // Check if metadata file exists
+          await fs.access(metadataPath);
+          
+          // Read and parse metadata
+          const metaContent = await fs.readFile(metadataPath, 'utf-8');
+          const metadata = JSON.parse(metaContent);
+          
+          // Get the latest version file path
+          const latestVersion = metadata.versions[metadata.versions.length - 1];
+          const latestFilePath = path.join(this.appStoragePath, folder, latestVersion.filePath);
+          
+          apps.push({
+            id: metadata.conversationId,
+            name: metadata.name,
+            created: metadata.created,
+            filePath: latestFilePath,
+            folderPath: path.join(this.appStoragePath, folder),
+            versions: metadata.versions.length
+          });
+        } catch (error) {
+          // Skip folders without valid metadata
+          continue;
+        }
       }
       
       // Sort by creation date (newest first)
@@ -252,40 +348,52 @@ EXAMPLE OUTPUT:
 
   async updateGeneratedApp(conversationId, prompt, htmlContent) {
     try {
-      const files = await fs.readdir(this.appStoragePath);
-      const metaFiles = files.filter(file => file.endsWith('.meta.json'));
+      // Get all folders in the app storage directory
+      const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
+      const folders = items.filter(item => item.isDirectory()).map(item => item.name);
       
-      for (const metaFile of metaFiles) {
-        const metaPath = path.join(this.appStoragePath, metaFile);
-        const metaContent = await fs.readFile(metaPath, 'utf-8');
-        const metadata = JSON.parse(metaContent);
+      for (const folder of folders) {
+        const metadataPath = path.join(this.appStoragePath, folder, 'metadata.json');
         
-        if (metadata.conversationId === conversationId) {
-          // Create a new version
-          const timestamp = Date.now();
-          const baseFilename = metaFile.replace('.meta.json', '');
-          const versionFilename = `${baseFilename}_v${metadata.versions.length + 1}.html`;
-          const versionPath = path.join(this.appStoragePath, versionFilename);
+        try {
+          // Check if metadata file exists
+          await fs.access(metadataPath);
           
-          console.log('Updating app, saving to:', versionPath);
+          // Read and parse metadata
+          const metaContent = await fs.readFile(metadataPath, 'utf-8');
+          const metadata = JSON.parse(metaContent);
           
-          // Save the new version
-          await fs.writeFile(versionPath, htmlContent);
-          
-          // Update metadata
-          metadata.versions.push({
-            timestamp,
-            filePath: versionFilename, // Store just the filename, not the full path
-            prompt
-          });
-          
-          await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2));
-          
-          return {
-            conversationId,
-            filePath: versionPath,
-            versionNumber: metadata.versions.length
-          };
+          if (metadata.conversationId === conversationId) {
+            // Create a new version
+            const timestamp = Date.now();
+            const versionNumber = metadata.versions.length + 1;
+            const versionFilename = `v${versionNumber}.html`;
+            const versionPath = path.join(this.appStoragePath, folder, versionFilename);
+            
+            console.log('Updating app, saving to:', versionPath);
+            
+            // Save the new version
+            await fs.writeFile(versionPath, htmlContent);
+            
+            // Update metadata
+            metadata.versions.push({
+              timestamp,
+              filePath: versionFilename,
+              prompt
+            });
+            
+            await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+            
+            return {
+              conversationId,
+              filePath: versionPath,
+              folderPath: path.join(this.appStoragePath, folder),
+              versionNumber
+            };
+          }
+        } catch (error) {
+          // Skip folders without valid metadata
+          continue;
         }
       }
       
@@ -297,25 +405,58 @@ EXAMPLE OUTPUT:
 
   async deleteGeneratedApp(conversationId) {
     try {
-      const files = await fs.readdir(this.appStoragePath);
-      const metaFiles = files.filter(file => file.endsWith('.meta.json'));
+      // Get all folders in the app storage directory
+      const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
+      const folders = items.filter(item => item.isDirectory()).map(item => item.name);
       
-      for (const metaFile of metaFiles) {
-        const metaPath = path.join(this.appStoragePath, metaFile);
-        const metaContent = await fs.readFile(metaPath, 'utf-8');
-        const metadata = JSON.parse(metaContent);
+      for (const folder of folders) {
+        const metadataPath = path.join(this.appStoragePath, folder, 'metadata.json');
         
-        if (metadata.conversationId === conversationId) {
-          // Delete all version files
-          for (const version of metadata.versions) {
-            const versionPath = path.join(this.appStoragePath, version.filePath);
-            await fs.unlink(versionPath).catch(() => {});
+        try {
+          // Check if metadata file exists
+          await fs.access(metadataPath);
+          
+          // Read and parse metadata
+          const metaContent = await fs.readFile(metadataPath, 'utf-8');
+          const metadata = JSON.parse(metaContent);
+          
+          if (metadata.conversationId === conversationId) {
+            // Delete the entire folder
+            const folderPath = path.join(this.appStoragePath, folder);
+            
+            // Get all files in the folder
+            const folderFiles = await fs.readdir(folderPath);
+            
+            // Delete each file
+            for (const file of folderFiles) {
+              await fs.unlink(path.join(folderPath, file)).catch(() => {});
+            }
+            
+            // Delete any subdirectories
+            const subItems = await fs.readdir(folderPath, { withFileTypes: true });
+            const subDirs = subItems.filter(item => item.isDirectory()).map(item => item.name);
+            
+            for (const subDir of subDirs) {
+              const subDirPath = path.join(folderPath, subDir);
+              const subFiles = await fs.readdir(subDirPath);
+              
+              // Delete files in subdirectory
+              for (const file of subFiles) {
+                await fs.unlink(path.join(subDirPath, file)).catch(() => {});
+              }
+              
+              // Remove subdirectory
+              await fs.rmdir(subDirPath).catch(() => {});
+            }
+            
+            // Remove the main folder
+            await fs.rmdir(folderPath).catch(() => {});
+            
+            return true;
           }
-          
-          // Delete metadata file
-          await fs.unlink(metaPath);
-          
-          return true;
+        } catch (error) {
+          // Skip folders without valid metadata
+          continue;
         }
       }
       
@@ -323,6 +464,210 @@ EXAMPLE OUTPUT:
     } catch (error) {
       console.error('Failed to delete generated app:', error);
       return false;
+    }
+  }
+  
+  /**
+   * Export a mini app as a zip package
+   * @param {string} conversationId - ID of the mini app to export
+   * @param {string} outputPath - Path to save the zip file (optional)
+   * @returns {Promise<Object>} - Result object with success flag and file path
+   */
+  async exportMiniAppAsPackage(conversationId, outputPath = null) {
+    try {
+      // Find the app folder
+      const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
+      const folders = items.filter(item => item.isDirectory()).map(item => item.name);
+      let appFolder = null;
+      let metadata = null;
+      
+      for (const folder of folders) {
+        const metadataPath = path.join(this.appStoragePath, folder, 'metadata.json');
+        
+        try {
+          // Check if metadata file exists
+          await fs.access(metadataPath);
+          
+          // Read and parse metadata
+          const metaContent = await fs.readFile(metadataPath, 'utf-8');
+          const parsedMetadata = JSON.parse(metaContent);
+          
+          if (parsedMetadata.conversationId === conversationId) {
+            appFolder = folder;
+            metadata = parsedMetadata;
+            break;
+          }
+        } catch (error) {
+          // Skip folders without valid metadata
+          continue;
+        }
+      }
+      
+      if (!appFolder || !metadata) {
+        throw new Error(`App with conversation ID ${conversationId} not found`);
+      }
+      
+      // Create a safe filename for the zip
+      const safeAppName = metadata.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const zipFilename = outputPath || path.join(app.getPath('downloads'), `${safeAppName}_package.zip`);
+      
+      // Create a zip file
+      const output = createWriteStream(zipFilename);
+      const archive = archiver('zip', {
+        zlib: { level: 9 } // Maximum compression
+      });
+      
+      // Pipe the archive to the output file
+      archive.pipe(output);
+      
+      // Add the entire app folder to the zip
+      const folderPath = path.join(this.appStoragePath, appFolder);
+      archive.directory(folderPath, false);
+      
+      // Finalize the archive
+      await archive.finalize();
+      
+      return {
+        success: true,
+        filePath: zipFilename
+      };
+    } catch (error) {
+      console.error('Failed to export mini app as package:', error);
+      return {
+        success: false,
+        error: `Failed to export mini app: ${error.message}`
+      };
+    }
+  }
+  
+  /**
+   * Import a mini app from a zip package
+   * @param {string} zipFilePath - Path to the zip file
+   * @returns {Promise<Object>} - Result object with success flag and app info
+   */
+  async importMiniAppPackage(zipFilePath) {
+    try {
+      // Create a temporary directory for extraction
+      const tempDir = path.join(app.getPath('temp'), `import_${Date.now()}`);
+      await fs.mkdir(tempDir, { recursive: true });
+      
+      // Extract the zip file
+      await extract(zipFilePath, { dir: tempDir });
+      
+      // Check for metadata.json
+      const metadataPath = path.join(tempDir, 'metadata.json');
+      
+      try {
+        await fs.access(metadataPath);
+      } catch (error) {
+        throw new Error('Invalid mini app package: metadata.json not found');
+      }
+      
+      // Read and validate metadata
+      const metaContent = await fs.readFile(metadataPath, 'utf-8');
+      const metadata = JSON.parse(metaContent);
+      
+      if (!metadata.name || !metadata.conversationId || !metadata.versions || !Array.isArray(metadata.versions)) {
+        throw new Error('Invalid metadata format in package');
+      }
+      
+      // Create a new folder in the app storage directory
+      const safeAppName = metadata.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const timestamp = Date.now();
+      const folderName = `${safeAppName}_${timestamp}`;
+      const folderPath = path.join(this.appStoragePath, folderName);
+      
+      // Create the folder
+      await fs.mkdir(folderPath, { recursive: true });
+      
+      // Create assets folder
+      await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
+      
+      // Copy all files from temp directory to the new folder
+      const files = await fs.readdir(tempDir);
+      
+      for (const file of files) {
+        if (file === 'assets') {
+          // Handle assets directory separately
+          const assetFiles = await fs.readdir(path.join(tempDir, 'assets'));
+          for (const assetFile of assetFiles) {
+            const srcPath = path.join(tempDir, 'assets', assetFile);
+            const destPath = path.join(folderPath, 'assets', assetFile);
+            await fs.copyFile(srcPath, destPath);
+          }
+        } else {
+          const srcPath = path.join(tempDir, file);
+          const destPath = path.join(folderPath, file);
+          
+          // Check if it's a directory
+          const stat = await fs.stat(srcPath);
+          if (stat.isDirectory() && file !== 'assets') {
+            // Create the directory
+            await fs.mkdir(destPath, { recursive: true });
+            
+            // Copy all files in the directory
+            const subFiles = await fs.readdir(srcPath);
+            for (const subFile of subFiles) {
+              const subSrcPath = path.join(srcPath, subFile);
+              const subDestPath = path.join(destPath, subFile);
+              await fs.copyFile(subSrcPath, subDestPath);
+            }
+          } else if (stat.isFile()) {
+            // Copy the file
+            await fs.copyFile(srcPath, destPath);
+          }
+        }
+      }
+      
+      // Update the metadata with a new conversation ID to avoid conflicts
+      metadata.conversationId = `conv_imported_${timestamp}`;
+      
+      // Save the updated metadata
+      await fs.writeFile(
+        path.join(folderPath, 'metadata.json'),
+        JSON.stringify(metadata, null, 2)
+      );
+      
+      // Clean up temp directory
+      await this.deleteDirectory(tempDir);
+      
+      return {
+        success: true,
+        appId: metadata.conversationId,
+        name: metadata.name,
+        filePath: path.join(folderPath, 'index.html'),
+        folderPath
+      };
+    } catch (error) {
+      console.error('Failed to import mini app package:', error);
+      return {
+        success: false,
+        error: `Failed to import mini app: ${error.message}`
+      };
+    }
+  }
+  
+  /**
+   * Helper method to recursively delete a directory
+   * @param {string} dirPath - Path to the directory
+   */
+  async deleteDirectory(dirPath) {
+    try {
+      const items = await fs.readdir(dirPath, { withFileTypes: true });
+      
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item.name);
+        
+        if (item.isDirectory()) {
+          await this.deleteDirectory(itemPath);
+        } else {
+          await fs.unlink(itemPath).catch(() => {});
+        }
+      }
+      
+      await fs.rmdir(dirPath).catch(() => {});
+    } catch (error) {
+      console.error(`Error deleting directory ${dirPath}:`, error);
     }
   }
 }

@@ -122,6 +122,14 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    importMiniApp: async () => {
+      try {
+        return await ipcRenderer.invoke('import-mini-app');
+      } catch (error) {
+        console.error('Error importing mini app:', error);
+        throw error;
+      }
+    },
     openAppDirectory: async () => {
       try {
         return await ipcRenderer.invoke('open-app-directory');

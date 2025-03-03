@@ -35,13 +35,31 @@ export async function createMiniAppWindow(appName, htmlContent, filePath, conver
       }
       tempFilePath = tempResult.filePath;
     } else {
-      // If filePath is provided, ensure the HTML content is written to it
-      const writeResult = await fileOperations.writeFile(tempFilePath, htmlContent);
-      if (!writeResult.success) {
-        return { 
-          success: false, 
-          error: writeResult.error 
-        };
+      // If filePath is provided, we don't need to write the content again
+      // as it should have already been written by the claudeClient.saveGeneratedApp method
+      // Just verify the file exists
+      try {
+        const readResult = await fileOperations.readFile(tempFilePath);
+        if (!readResult.success) {
+          // If reading fails, try writing the content
+          const writeResult = await fileOperations.writeFile(tempFilePath, htmlContent);
+          if (!writeResult.success) {
+            return { 
+              success: false, 
+              error: writeResult.error 
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Error verifying file:', error);
+        // If there's an error, try writing the content
+        const writeResult = await fileOperations.writeFile(tempFilePath, htmlContent);
+        if (!writeResult.success) {
+          return { 
+            success: false, 
+            error: writeResult.error 
+          };
+        }
       }
     }
     

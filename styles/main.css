@@ -80,3 +80,5 @@ button.secondary {
 button.secondary:hover {
   background: var(--medium-gray);
 }
+
+/* No longer needed - export dropdown has been removed */

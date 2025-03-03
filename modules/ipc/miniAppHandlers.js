@@ -5,6 +5,7 @@ import * as apiHandlers from './apiHandlers.js';
 import * as miniAppManager from '../miniAppManager.js';
 import * as titleDescriptionGenerator from '../utils/titleDescriptionGenerator.js';
 import store from '../../store.js';
+import fs from 'fs/promises';
 
 /**
  * Mini App Handlers Module
@@ -270,19 +271,27 @@ async function handleDeleteMiniApp(event, { appId }) {
 }
 
 /**
- * Handle exporting a mini app
+ * Handle exporting a mini app as a package (zip file)
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for exporting the mini app
  * @returns {Promise<Object>} - Result object with success flag
  */
 async function handleExportMiniApp(event, { appId, filePath }) {
   try {
-    // Show save dialog
+    const claudeClient = apiHandlers.getClaudeClient();
+    if (!claudeClient) {
+      return {
+        success: false,
+        error: 'Claude API key not set. Please set your API key in settings.'
+      };
+    }
+    
+    // Show save dialog for zip file
     const { canceled, filePath: savePath } = await dialog.showSaveDialog({
-      title: 'Export Mini App',
-      defaultPath: path.join(app.getPath('documents'), 'mini-app.html'),
+      title: 'Export Mini App Package',
+      defaultPath: path.join(app.getPath('documents'), 'mini-app-package.zip'),
       filters: [
-        { name: 'HTML Files', extensions: ['html'] }
+        { name: 'Zip Files', extensions: ['zip'] }
       ]
     });
     
@@ -290,20 +299,73 @@ async function handleExportMiniApp(event, { appId, filePath }) {
       return { success: false, canceled: true };
     }
     
-    // Read the file content and write to the selected location
-    const readResult = await fileOperations.readFile(filePath);
-    if (!readResult.success) {
-      return readResult;
-    }
-    
-    const writeResult = await fileOperations.writeFile(savePath, readResult.content);
-    if (!writeResult.success) {
-      return writeResult;
-    }
-    
-    return { success: true, filePath: savePath };
+    // Export the app as a package
+    const result = await claudeClient.exportMiniAppAsPackage(appId, savePath);
+    return result;
   } catch (error) {
     console.error('Error exporting mini app:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Handle importing a mini app package
+ * @param {Object} event - IPC event
+ * @returns {Promise<Object>} - Result object with success flag
+ */
+async function handleImportMiniApp(event) {
+  try {
+    const claudeClient = apiHandlers.getClaudeClient();
+    if (!claudeClient) {
+      return {
+        success: false,
+        error: 'Claude API key not set. Please set your API key in settings.'
+      };
+    }
+    
+    // Show open dialog
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Import Mini App Package',
+      properties: ['openFile'],
+      filters: [
+        { name: 'Zip Files', extensions: ['zip'] }
+      ]
+    });
+    
+    if (canceled || filePaths.length === 0) {
+      return { success: false, canceled: true };
+    }
+    
+    // Import the app package
+    const result = await claudeClient.importMiniAppPackage(filePaths[0]);
+    
+    if (result.success) {
+      // Update recent apps list
+      const recentApps = store.get('recentApps') || [];
+      recentApps.unshift({
+        id: result.appId,
+        name: result.name,
+        created: new Date().toISOString(),
+        filePath: result.filePath
+      });
+      
+      // Keep only the 10 most recent apps
+      if (recentApps.length > 10) {
+        recentApps.length = 10;
+      }
+      
+      store.set('recentApps', recentApps);
+      
+      // Open the imported app
+      await miniAppManager.openMiniApp(result.appId, result.filePath, result.name);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error importing mini app:', error);
     return {
       success: false,
       error: error.message
@@ -391,6 +453,9 @@ export function registerHandlers() {
   
   // Export a mini app
   ipcMain.handle('export-mini-app', handleExportMiniApp);
+  
+  // Import a mini app
+  ipcMain.handle('import-mini-app', handleImportMiniApp);
   
   console.log('Mini app handlers registered');
 }
