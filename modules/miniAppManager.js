@@ -88,10 +88,13 @@ export async function createMiniAppWindow(appName, htmlContent, filePath, conver
       console.log('Loading file into window:', tempFilePath);
       win.loadFile(tempFilePath);
       
-      // Open DevTools for debugging
+      // DevTools are disabled for mini apps to prevent Autofill API errors
+      // Uncomment the following code if you need DevTools for debugging mini apps
+      /*
       if (process.env.NODE_ENV === 'development') {
         win.webContents.openDevTools({ mode: 'detach' });
       }
+      */
       
       // Add error event listener
       win.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {

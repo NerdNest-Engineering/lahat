@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/Dorky-Robot/lahat",
   "devDependencies": {
-    "electron": "^34.1.1"
+    "electron": "^34.3.0"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.38.0",

@@ -83,10 +83,13 @@ export function createWindow(type, options = {}) {
     win.loadFile(path.join(__dirname, '../../', WINDOW_HTML[type]));
   }
   
-  // Open DevTools in development mode
+  // DevTools are disabled to prevent Autofill API errors
+  // Uncomment the following code if you need DevTools for debugging
+  /*
   if (process.env.NODE_ENV === 'development') {
     win.webContents.openDevTools({ mode: 'detach' });
   }
+  */
   
   // Save window position and size when closed
   win.on('close', () => {
