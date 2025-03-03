@@ -1,18 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 /**
- * Generate a title and description based on user input
+ * Creates the prompt for title and description generation
  * @param {string} input - User input describing what they want
- * @param {string} apiKey - Claude API key
- * @param {Function} onChunk - Callback for streaming updates
- * @returns {Promise<Object>} - Object containing title and description
+ * @returns {string} - Formatted prompt for Claude
  */
-export async function generateTitleAndDescription(input, apiKey, onChunk) {
-  const anthropic = new Anthropic({
-    apiKey: apiKey
-  });
-  
-  const prompt = `Based on the following user input, provide:
+function createTitleDescriptionPrompt(input) {
+  return `Based on the following user input, provide:
 1. A concise, creative, and descriptive title (2-5 words)
 2. An expanded description paragraph
 
@@ -32,6 +26,36 @@ TITLE: [your title here]
 DESCRIPTION: [your description here]
 
 User input: "${input}"`;
+}
+
+/**
+ * Extracts title and description from Claude's response
+ * @param {string} content - Accumulated content from Claude
+ * @returns {Object} - Object containing title and description
+ */
+function extractTitleAndDescription(content) {
+  const titleMatch = content.match(/TITLE:\s*(.*?)(?:\n|$)/i);
+  const descriptionMatch = content.match(/DESCRIPTION:\s*(.*)/is);
+  
+  return {
+    title: titleMatch ? titleMatch[1].trim() : "Mini App",
+    description: descriptionMatch ? descriptionMatch[1].trim() : content
+  };
+}
+
+/**
+ * Generate a title and description based on user input
+ * @param {string} input - User input describing what they want
+ * @param {string} apiKey - Claude API key
+ * @param {Function} onChunk - Callback for streaming updates
+ * @returns {Promise<Object>} - Object containing title and description
+ */
+export async function generateTitleAndDescription(input, apiKey, onChunk) {
+  const anthropic = new Anthropic({
+    apiKey: apiKey
+  });
+  
+  const prompt = createTitleDescriptionPrompt(input);
 
   // Call Claude API with streaming enabled
   const response = await anthropic.messages.create({
@@ -44,8 +68,6 @@ User input: "${input}"`;
   });
 
   let accumulatedContent = '';
-  let title = '';
-  let description = '';
   
   // Process the stream
   for await (const chunk of response) {
@@ -53,53 +75,34 @@ User input: "${input}"`;
       const text = chunk.delta.text || '';
       accumulatedContent += text;
       
-      console.log('Received chunk:', text);
+      // Extract current title and description
+      const { title, description } = extractTitleAndDescription(accumulatedContent);
       
-      // Try to extract title and description as they come in
-      const titleMatch = accumulatedContent.match(/TITLE:\s*(.*?)(?:\n|$)/i);
-      const descriptionMatch = accumulatedContent.match(/DESCRIPTION:\s*(.*)/is);
-      
-      const currentTitle = titleMatch ? titleMatch[1].trim() : "";
-      const currentDescription = descriptionMatch ? descriptionMatch[1].trim() : "";
-      
-      // Always call onChunk with the current state to ensure UI updates
-      // This ensures we're sending updates even if the title/description hasn't changed
+      // Send update to UI
       if (onChunk) {
         onChunk({
-          title: currentTitle,
-          description: currentDescription,
+          title,
+          description,
           done: false,
           content: text
         });
         
-        // Add a larger delay to ensure the UI has time to update
+        // Small delay to allow UI updates
         await new Promise(resolve => setTimeout(resolve, 50));
       }
-      
-      // Update our local variables
-      title = currentTitle;
-      description = currentDescription;
     }
   }
   
-  // Final parsing to ensure we have the complete title and description
-  const titleMatch = accumulatedContent.match(/TITLE:\s*(.*?)(?:\n|$)/i);
-  const descriptionMatch = accumulatedContent.match(/DESCRIPTION:\s*(.*)/is);
-  
-  title = titleMatch ? titleMatch[1].trim() : "Mini App";
-  description = descriptionMatch ? descriptionMatch[1].trim() : accumulatedContent;
+  // Final extraction
+  const result = extractTitleAndDescription(accumulatedContent);
   
   // Signal completion
   if (onChunk) {
     onChunk({
-      title,
-      description,
+      ...result,
       done: true
     });
   }
   
-  return {
-    title,
-    description
-  };
+  return result;
 }

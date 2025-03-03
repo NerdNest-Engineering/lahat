@@ -1,3 +1,51 @@
+// Helper Functions
+function showError(title, message, level = 'error') {
+  const errorContainer = document.getElementById('error-container') || 
+    createErrorContainer();
+  
+  const errorElement = document.createElement('div');
+  errorElement.className = `error-message ${level}`;
+  
+  const titleElement = document.createElement('div');
+  titleElement.className = 'error-title';
+  titleElement.textContent = title;
+  
+  const messageElement = document.createElement('div');
+  messageElement.className = 'error-content';
+  messageElement.textContent = message;
+  
+  const closeButton = document.createElement('button');
+  closeButton.className = 'error-close';
+  closeButton.innerHTML = '&times;';
+  closeButton.addEventListener('click', () => {
+    errorContainer.removeChild(errorElement);
+  });
+  
+  errorElement.appendChild(titleElement);
+  errorElement.appendChild(messageElement);
+  errorElement.appendChild(closeButton);
+  errorContainer.appendChild(errorElement);
+  
+  // Auto-dismiss non-fatal errors
+  if (level !== 'fatal') {
+    setTimeout(() => {
+      if (errorContainer.contains(errorElement)) {
+        errorContainer.removeChild(errorElement);
+      }
+    }, 5000);
+  }
+  
+  return errorElement;
+}
+
+function createErrorContainer() {
+  const container = document.createElement('div');
+  container.id = 'error-container';
+  container.className = 'error-container';
+  document.body.appendChild(container);
+  return container;
+}
+
 // DOM Elements
 const step1 = document.getElementById('step-1');
 const step2 = document.getElementById('step-2');
@@ -33,18 +81,6 @@ async function initializeApp() {
     window.electronAPI.closeCurrentWindow();
     return;
   }
-  
-  // Add a debug indicator to show when chunks are received
-  const debugIndicator = document.createElement('div');
-  debugIndicator.style.position = 'fixed';
-  debugIndicator.style.top = '10px';
-  debugIndicator.style.right = '10px';
-  debugIndicator.style.width = '10px';
-  debugIndicator.style.height = '10px';
-  debugIndicator.style.borderRadius = '50%';
-  debugIndicator.style.backgroundColor = 'red';
-  debugIndicator.style.zIndex = '9999';
-  document.body.appendChild(debugIndicator);
   
   // Create direct DOM elements for displaying streaming content
   const streamingTitleContainer = document.createElement('div');
@@ -85,63 +121,75 @@ async function initializeApp() {
   // Add the container to the preview section
   titleDescriptionPreview.appendChild(streamingContainer);
   
+  // Helper functions for chunk processing
+  function updateTitleIfPresent(title, container) {
+    if (!title) return;
+    
+    // Update both the input field and streaming container
+    generatedTitle.value = title;
+    currentTitle = title;
+    container.textContent = title;
+    
+    // Make sure the streaming container is visible
+    container.style.display = 'block';
+  }
+  
+  function updateDescriptionIfPresent(description, container) {
+    if (!description) return;
+    
+    // Update both the textarea and streaming container
+    generatedDescription.value = description;
+    currentDescription = description;
+    container.textContent = description;
+    
+    // Make sure the streaming container is visible
+    container.style.display = 'block';
+  }
+  
+  function showPreviewIfHidden() {
+    if (!titleDescriptionPreview.classList.contains('hidden')) return;
+    titleDescriptionPreview.classList.remove('hidden');
+  }
+  
+  function updatePreviewHeaderIfNeeded(title, description) {
+    if (!previewHeader.innerHTML.includes('We are building')) return;
+    if (!(title || description)) return;
+    
+    // Ensure we've received actual content before changing the header
+    previewHeader.textContent = 'We will build...';
+  }
+  
+  function handleCompletedChunk(chunk) {
+    // Store the final values
+    currentTitle = chunk.title || generatedTitle.value;
+    currentDescription = chunk.description || generatedDescription.value;
+    
+    // Hide our streaming containers
+    streamingTitleContainer.style.display = 'none';
+    streamingDescriptionContainer.style.display = 'none';
+  }
+  
+  function handleInProgressChunk(chunk) {
+    // Use setTimeout with zero delay to push DOM updates to the end of the event queue
+    setTimeout(() => {
+      updateTitleIfPresent(chunk.title, streamingTitleContainer);
+      updateDescriptionIfPresent(chunk.description, streamingDescriptionContainer);
+      showPreviewIfHidden();
+      updatePreviewHeaderIfNeeded(chunk.title, chunk.description);
+      
+      // Force a document reflow to ensure updates are visible
+      document.body.offsetHeight;
+    }, 0);
+  }
+  
   // Set up event listener for title/description chunks
   window.electronAPI.onTitleDescriptionChunk((chunk) => {
     console.log('Received title/description chunk:', chunk);
     
-    // Flash the debug indicator when a chunk is received
-    debugIndicator.style.backgroundColor = 'green';
-    setTimeout(() => {
-      debugIndicator.style.backgroundColor = 'red';
-    }, 100);
-    
-    if (!chunk.done) {
-      // Use setTimeout with zero delay to push DOM updates to the end of the event queue
-      setTimeout(() => {
-        // Update the UI with the current state using direct DOM manipulation
-        if (chunk.title) {
-          // Update both the input field and our streaming container
-          generatedTitle.value = chunk.title;
-          currentTitle = chunk.title;
-          streamingTitleContainer.textContent = chunk.title;
-          
-          // Make sure the streaming container is visible
-          streamingTitleContainer.style.display = 'block';
-        }
-        
-        if (chunk.description) {
-          // Update both the textarea and our streaming container
-          generatedDescription.value = chunk.description;
-          currentDescription = chunk.description;
-          streamingDescriptionContainer.textContent = chunk.description;
-          
-          // Make sure the streaming container is visible
-          streamingDescriptionContainer.style.display = 'block';
-        }
-        
-        // Show the preview section if it's hidden
-        if (titleDescriptionPreview.classList.contains('hidden')) {
-          titleDescriptionPreview.classList.remove('hidden');
-        }
-        
-        // Only update the preview header to normal state once we have actual content
-        if (previewHeader.innerHTML.includes('We are building') && 
-            (chunk.title || chunk.description)) {
-          // Ensure we've received actual content before changing the header
-          previewHeader.textContent = 'We will build...';
-        }
-        
-        // Force a document reflow to ensure updates are visible
-        document.body.offsetHeight;
-      }, 0);
+    if (chunk.done) {
+      handleCompletedChunk(chunk);
     } else {
-      // Store the final values
-      currentTitle = chunk.title || generatedTitle.value;
-      currentDescription = chunk.description || generatedDescription.value;
-      
-      // Hide our streaming containers once done
-      streamingTitleContainer.style.display = 'none';
-      streamingDescriptionContainer.style.display = 'none';
+      handleInProgressChunk(chunk);
     }
   });
   
@@ -160,7 +208,7 @@ nextButton.addEventListener('click', async () => {
   currentInput = userInput.value.trim();
   
   if (!currentInput) {
-    alert('Please enter what you would like to create.');
+    showError('Input Required', 'Please enter what you would like to create.');
     return;
   }
   
@@ -205,12 +253,14 @@ nextButton.addEventListener('click', async () => {
       step1.classList.remove('active');
       step2.classList.add('active');
     } else {
-      alert(`Error generating title and description: ${result.error}`);
+      console.error('Title/description generation failed:', result.error);
+      showError('Failed to generate title and description', result.error);
       // Show the button container again if there was an error
       buttonContainer.classList.remove('hidden');
     }
   } catch (error) {
-    alert(`Error: ${error.message}`);
+    console.error('Unexpected error during title/description generation:', error);
+    showError('An unexpected error occurred', error.message);
     // Show the button container again if there was an error
     buttonContainer.classList.remove('hidden');
   } finally {
@@ -261,7 +311,8 @@ generateButton.addEventListener('click', async () => {
         window.electronAPI.closeCurrentWindow();
       }, 2000);
     } else {
-      alert(`Error generating mini app: ${result.error}`);
+      console.error('Mini app generation failed:', result.error);
+      showError('Failed to generate mini app', result.error);
       // Show the button container again if there was an error
       buttonContainer.classList.remove('hidden');
       
@@ -271,7 +322,8 @@ generateButton.addEventListener('click', async () => {
       generatedDescription.readOnly = false;
     }
   } catch (error) {
-    alert(`Error: ${error.message}`);
+    console.error('Unexpected error during mini app generation:', error);
+    showError('An unexpected error occurred', error.message);
     // Show the button container again if there was an error
     buttonContainer.classList.remove('hidden');
     
@@ -285,17 +337,26 @@ generateButton.addEventListener('click', async () => {
   }
 });
 
+// Helper functions for generation chunks
+function handleGenerationProgress(content) {
+  generationChunks += content;
+  generationOutput.textContent = generationChunks;
+  
+  // Auto-scroll to bottom
+  generationOutput.scrollTop = generationOutput.scrollHeight;
+}
+
+function handleGenerationComplete() {
+  // Reset chunks when generation is complete
+  generationChunks = '';
+}
+
 // Handle generation chunks
 window.electronAPI.onGenerationChunk((chunk) => {
-  if (!chunk.done) {
-    generationChunks += chunk.content;
-    generationOutput.textContent = generationChunks;
-    
-    // Auto-scroll to bottom
-    generationOutput.scrollTop = generationOutput.scrollHeight;
+  if (chunk.done) {
+    handleGenerationComplete();
   } else {
-    // Generation complete
-    generationChunks = '';
+    handleGenerationProgress(chunk.content);
   }
 });
 
