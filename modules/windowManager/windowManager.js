@@ -5,6 +5,7 @@ import store from '../../store.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const rootDir = path.join(__dirname, '../../');
 
 // Window types
 export const WindowType = {
@@ -62,6 +63,7 @@ export function createWindow(type, options = {}) {
     y: windowConfig.y,
     titleBarStyle: 'hidden', // Changed from 'hiddenInset' to allow content to extend to edges
     backgroundColor: '#ffffff',
+    icon: path.join(rootDir, 'assets/icons/lahat.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

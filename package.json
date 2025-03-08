@@ -6,7 +6,13 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "NODE_ENV=development electron ."
+    "dev": "NODE_ENV=development electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist-mac": "electron-builder --mac",
+    "dist-win": "electron-builder --win",
+    "dist-linux": "electron-builder --linux",
+    "dist-all": "electron-builder -mwl"
   },
   "repository": {
     "type": "git",
@@ -27,12 +33,70 @@
   },
   "homepage": "https://github.com/Dorky-Robot/lahat",
   "devDependencies": {
-    "electron": "^34.3.0"
+    "electron": "^34.3.0",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.38.0",
     "archiver": "^6.0.1",
+    "archiver-utils": "^4.0.1",
     "electron-store": "^8.1.0",
-    "extract-zip": "^2.0.1"
+    "electron-updater": "^6.3.9",
+    "extract-zip": "^2.0.1",
+    "zip-stream": "^5.0.2"
+  },
+  "build": {
+    "appId": "com.dorkyrobot.lahat",
+    "productName": "Lahat",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "assets/icons/lahat.png",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "darkModeSupport": true
+    },
+    "win": {
+      "icon": "assets/icons/lahat.png",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "icon": "assets/icons/lahat.png",
+      "category": "Development",
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Dorky-Robot",
+      "repo": "lahat"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/archiver/**/*",
+      "node_modules/archiver-utils/**/*",
+      "node_modules/zip-stream/**/*"
+    ],
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ]
   }
 }
