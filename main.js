@@ -75,6 +75,14 @@ function initializeApp() {
  * Setup auto-update functionality
  */
 function setupAutoUpdater() {
+  // Configure auto-updater
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  
+  // Add more detailed logging for debugging
+  autoUpdater.logger = console;
+  autoUpdater.logger.transports.file.level = 'debug';
+  
   // Handle update events
   autoUpdater.on('update-downloaded', (info) => {
     const mainWindow = windowManager.getWindow(windowManager.WindowType.MAIN);
@@ -88,7 +96,8 @@ function setupAutoUpdater() {
         detail: 'The application will restart to install the update.'
       }).then(result => {
         if (result.response === 0) {
-          autoUpdater.quitAndInstall();
+          // Force application to quit and install by setting specific options
+          autoUpdater.quitAndInstall(true, true);
         }
       });
     }
@@ -99,11 +108,31 @@ function setupAutoUpdater() {
     console.error('Auto-updater error:', err);
   });
   
-  // Check for updates
-  autoUpdater.checkForUpdatesAndNotify().catch(err => {
-    ErrorHandler.logError('checkForUpdatesAndNotify', err, ErrorHandler.ERROR_LEVELS.ERROR);
-    console.error('Failed to check for updates:', err);
+  // Add event listeners for debugging
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for update...');
   });
+  
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version);
+  });
+  
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('Update not available. Current version:', info.version);
+  });
+  
+  autoUpdater.on('download-progress', (progressObj) => {
+    console.log(`Download progress: ${progressObj.percent.toFixed(2)}%`);
+  });
+  
+  // Check for updates with a slight delay to ensure app is fully initialized
+  setTimeout(() => {
+    console.log('Checking for updates...');
+    autoUpdater.checkForUpdatesAndNotify().catch(err => {
+      ErrorHandler.logError('checkForUpdatesAndNotify', err, ErrorHandler.ERROR_LEVELS.ERROR);
+      console.error('Failed to check for updates:', err);
+    });
+  }, 3000);
 }
 
 // Application lifecycle events
