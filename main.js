@@ -75,13 +75,23 @@ function initializeApp() {
  * Setup auto-update functionality
  */
 function setupAutoUpdater() {
-  // Configure auto-updater
+  // Configure auto-updater with all possible options
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.allowPrerelease = false;
+  autoUpdater.allowDowngrade = true;
+  
+  // Ensure updates aren't blocked by development mode
+  if (process.env.NODE_ENV === 'development') {
+    autoUpdater.forceDevUpdateConfig = true;
+  }
   
   // Add more detailed logging for debugging
   autoUpdater.logger = console;
   autoUpdater.logger.transports.file.level = 'debug';
+  
+  // Track if an update is available
+  autoUpdater.isUpdateAvailable = false;
   
   // Handle update events
   autoUpdater.on('update-downloaded', (info) => {
@@ -96,19 +106,36 @@ function setupAutoUpdater() {
         detail: 'The application will restart to install the update.'
       }).then(result => {
         if (result.response === 0) {
-          // Close all windows first to ensure clean shutdown
+          console.log('User chose to install the update now');
+          
+          // Set force quit flag so we know we're handling updates
+          forceQuit = true;
+          
+          // Unregister all window close events to prevent hanging
           BrowserWindow.getAllWindows().forEach(window => {
             if (!window.isDestroyed()) {
-              window.close();
+              window.removeAllListeners('close');
+              window.destroy(); // Force destroy windows
             }
           });
           
-          // Set a very short timeout to allow windows to close first
+          // Use longer timeout to ensure everything is cleaned up
           setTimeout(() => {
-            console.log('Applying update and restarting...');
-            // Force true for isSilent and isForceRunAfter
-            autoUpdater.quitAndInstall(false, true);
-          }, 200);
+            console.log('All windows destroyed, installing update...');
+            try {
+              // Try the standard approach first
+              autoUpdater.quitAndInstall(false, true);
+              
+              // Set a backup forced exit
+              setTimeout(() => {
+                console.log('Forcing app exit as backup...');
+                app.exit(0);
+              }, 3000);
+            } catch (err) {
+              console.error('Error during update installation:', err);
+              app.exit(0); // Force exit if update installation fails
+            }
+          }, 1000);
         }
       });
     }
@@ -132,6 +159,10 @@ function setupAutoUpdater() {
   
   autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
+    
+    // Mark that an update is available
+    autoUpdater.isUpdateAvailable = true;
+    
     // Explicitly request download when update is detected
     autoUpdater.downloadUpdate().catch(err => {
       console.error('Error downloading update:', err);
@@ -161,7 +192,46 @@ function setupAutoUpdater() {
   }, 3000);
 }
 
+// Force clean exit when update is ready
+let forceQuit = false;
+
 // Application lifecycle events
+app.on('before-quit', (event) => {
+  console.log('Application before-quit event');
+  
+  // If we're forcing quit for updates, don't prevent it
+  if (forceQuit) {
+    console.log('Force quit is enabled - allowing quit');
+    return;
+  }
+  
+  // Only handle update installation in before-quit if we're not already handling it
+  if (autoUpdater.isUpdateAvailable && !forceQuit) {
+    console.log('Update is available during quit - handling update installation');
+    event.preventDefault();
+    forceQuit = true;
+    
+    // Use more radical shutdown approach
+    BrowserWindow.getAllWindows().forEach(window => {
+      if (!window.isDestroyed()) {
+        window.removeAllListeners('close');
+        window.destroy(); // Force destroy instead of just close
+      }
+    });
+    
+    // Use longer timeout to ensure everything is properly cleaned up
+    setTimeout(() => {
+      console.log('Forcefully installing update...');
+      try {
+        autoUpdater.quitAndInstall(false, true);
+      } catch (err) {
+        console.error('Error during quitAndInstall:', err);
+        app.exit(0); // Force exit if quitAndInstall fails
+      }
+    }, 1000);
+  }
+});
+
 app.whenReady().then(() => {
   initializeApp();
 
