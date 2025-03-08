@@ -1,4 +1,4 @@
-# Lahat v1.0.9 Release Notes
+# Lahat v1.0.10 Release Notes
 
 ## New Features and Improvements
 
