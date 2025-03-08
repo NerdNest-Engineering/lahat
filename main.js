@@ -96,8 +96,19 @@ function setupAutoUpdater() {
         detail: 'The application will restart to install the update.'
       }).then(result => {
         if (result.response === 0) {
-          // Force application to quit and install by setting specific options
-          autoUpdater.quitAndInstall(true, true);
+          // Close all windows first to ensure clean shutdown
+          BrowserWindow.getAllWindows().forEach(window => {
+            if (!window.isDestroyed()) {
+              window.close();
+            }
+          });
+          
+          // Set a very short timeout to allow windows to close first
+          setTimeout(() => {
+            console.log('Applying update and restarting...');
+            // Force true for isSilent and isForceRunAfter
+            autoUpdater.quitAndInstall(false, true);
+          }, 200);
         }
       });
     }
@@ -108,6 +119,12 @@ function setupAutoUpdater() {
     console.error('Auto-updater error:', err);
   });
   
+  // Explicitly set allowDowngrade as a workaround
+  autoUpdater.allowDowngrade = true;
+  
+  // Tell app to quit for updates
+  autoUpdater.forceDevUpdateConfig = true;
+  
   // Add event listeners for debugging
   autoUpdater.on('checking-for-update', () => {
     console.log('Checking for update...');
@@ -115,6 +132,10 @@ function setupAutoUpdater() {
   
   autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
+    // Explicitly request download when update is detected
+    autoUpdater.downloadUpdate().catch(err => {
+      console.error('Error downloading update:', err);
+    });
   });
   
   autoUpdater.on('update-not-available', (info) => {
@@ -123,6 +144,11 @@ function setupAutoUpdater() {
   
   autoUpdater.on('download-progress', (progressObj) => {
     console.log(`Download progress: ${progressObj.percent.toFixed(2)}%`);
+  });
+  
+  // Register the before-quit event to properly handle application quit
+  app.on('before-quit', () => {
+    console.log('Application quitting - ensuring updates are applied');
   });
   
   // Check for updates with a slight delay to ensure app is fully initialized
