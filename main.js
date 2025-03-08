@@ -286,11 +286,16 @@ sleep 2
   
   // Check for updates with a slight delay to ensure app is fully initialized
   setTimeout(() => {
-    console.log('Checking for updates...');
-    autoUpdater.checkForUpdatesAndNotify().catch(err => {
-      ErrorHandler.logError('checkForUpdatesAndNotify', err, ErrorHandler.ERROR_LEVELS.ERROR);
-      console.error('Failed to check for updates:', err);
-    });
+    // Only check for updates in production mode or if dev-app-update.yml exists
+    if (process.env.NODE_ENV !== 'development' || fs.existsSync(path.join(__dirname, 'dev-app-update.yml'))) {
+      console.log('Checking for updates...');
+      autoUpdater.checkForUpdatesAndNotify().catch(err => {
+        ErrorHandler.logError('checkForUpdatesAndNotify', err, ErrorHandler.ERROR_LEVELS.ERROR);
+        console.error('Failed to check for updates:', err);
+      });
+    } else {
+      console.log('Skipping update check in development mode');
+    }
   }, 3000);
 }
 

@@ -1,0 +1,4 @@
+provider: github
+owner: Dorky-Robot
+repo: lahat
+updaterCacheDirName: lahat-updater
