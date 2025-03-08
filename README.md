@@ -1,117 +1,126 @@
 # Lahat
 
+<div align="center">
+  <img src="assets/icons/lahat.png" alt="Lahat Logo" width="150"/>
+  <h3>Build desktop apps with natural language</h3>
+</div>
+
 *Lahat* (Tagalog for "all" or "everything") is an Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts.
 
-## Features
+## 📥 Installation
+
+### Easy Install (Recommended)
+
+1. **Download the latest release**:
+   - Go to the [Releases page](https://github.com/Dorky-Robot/lahat/releases/latest)
+   - Download the appropriate file for your platform:
+     - **macOS**: `Lahat-x.x.x-arm64.dmg` or `Lahat-x.x.x-mac.zip`
+     - **Windows**: `Lahat-Setup-x.x.x.exe` or `Lahat-x.x.x-win.zip`
+     - **Linux**: `Lahat-x.x.x.AppImage`, `Lahat-x.x.x.deb`, or `Lahat-x.x.x.rpm`
+
+2. **Install**:
+   - **macOS**: Open the `.dmg` file and drag Lahat to your Applications folder
+   - **Windows**: Run the `.exe` installer and follow the prompts
+   - **Linux**: Run the AppImage or install the .deb/.rpm package
+
+### Development Setup
+
+If you're a developer and want to run from source:
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the application: `npm start`
+
+## ✨ Features
 
 - **Natural Language App Generation**: Describe the app you want, and Claude will generate a self-contained HTML/CSS/JS implementation
 - **App Management**: Save, open, update, and delete your generated mini apps
 - **Iterative Refinement**: Continue the conversation with Claude to refine and improve your apps
 - **Export Functionality**: Export your mini apps as standalone HTML files
 
-## Getting Started
+## 🚀 Getting Started
 
-### Prerequisites
+### First-time Setup
 
-- Node.js and npm
-- An Anthropic API key for Claude
+1. Launch Lahat - you'll be prompted to enter your Claude API key
+2. Get your API key from [Anthropic's website](https://console.anthropic.com/)
+3. Enter your key and click "Save API Key" to store it securely
+4. You're ready to create apps!
 
-### Installation
+### Creating Your First App
 
-1. Clone the repository
-2. Install dependencies:
+<img src="https://github.com/Dorky-Robot/lahat/assets/screenshots/app-creation.png" alt="App Creation Screenshot" width="600"/>
+
+1. Enter a name for your app
+2. Describe what you want it to do, for example:
    ```
-   npm install
+   Create a pomodoro timer with a clean design that has:
+   - 25/5 minute work/break intervals
+   - Start, pause, and reset buttons
+   - Sound notification when timer completes
+   - A circular progress indicator
    ```
-3. Start the application:
-   ```
-   npm start
-   ```
-   
-   For development mode with DevTools:
-   ```
-   npm run dev
-   ```
-
-### Setup
-
-1. When you first launch the application, you'll need to enter your Claude API key
-2. Click "Save API Key" to store your key securely
-3. Once your API key is set, you can start generating mini apps
-
-## Usage
-
-### Generating a Mini App
-
-1. Enter a name for your app in the "App Name" field
-2. Describe the app you want in the "Describe Your App" textarea
-   - Be as specific as possible about functionality, design, and behavior
-   - Example: "Create a pomodoro timer app with start, pause, and reset buttons. It should have a clean, modern design with a circular progress indicator."
-3. Click "Generate Mini App"
-4. Wait for Claude to generate your app (this may take a few moments)
-5. The app will automatically open in a new window when generation is complete
+3. Click "Generate Mini App" and wait for Claude to work its magic
+4. Your app will open automatically when ready!
 
 ### Managing Your Apps
 
-- View all your generated apps in the "Your Mini Apps" section
-- Click on an app card to view details and options:
-  - **Open App**: Launch the app in a new window
-  - **Update App**: Provide additional instructions to refine the app
-  - **Export App**: Save the app as a standalone HTML file
-  - **Delete App**: Remove the app from your collection
+- All your apps appear in the main dashboard
+- Click on any app to:
+  - **Open**: Launch the app in a new window
+  - **Update**: Add new features or fix issues
+  - **Export**: Save as a standalone HTML file
+  - **Delete**: Remove the app
 
-### Updating an App
+### Updating Apps
 
-1. Click on an app in your list
-2. Click "Update App"
-3. Describe the changes you want to make
-   - Example: "Add a settings button that allows changing the timer duration"
-4. Click "Submit Update"
-5. The updated app will automatically open when generation is complete
+Simply describe what changes you want, and Claude will update your app while preserving your data and preferences.
 
-## Security Notes
+## 🔒 Security & Privacy
 
-- All generated apps run in sandboxed browser windows for security
-- No external dependencies or network requests are allowed in generated apps
-- Content Security Policy (CSP) is applied to all generated apps
+- Your API key is stored securely on your device
+- All apps run in sandboxed windows for security
+- No network requests are allowed in generated apps
+- Strong Content Security Policy (CSP) enforced
 
-## Troubleshooting
+## 🛠 Troubleshooting
 
-- If app generation fails, check your API key and internet connection
-- If a generated app doesn't work as expected, try updating it with more specific instructions
-- For any issues, check the console logs in development mode (npm run dev)
+- **App won't generate?** Check your API key and internet connection
+- **App doesn't work as expected?** Try updating with more specific instructions
+- **Other issues?** Check our [GitHub Issues](https://github.com/Dorky-Robot/lahat/issues)
 
-## Roadmap
+## 🔄 Automatic Updates
 
-Future development plans for Lahat include:
+Lahat will automatically check for updates when you start the app. When a new version is available:
 
-- **Local LLM Support**: Integration with local LLM solutions (e.g., Ollama, llama.cpp) as alternatives to Claude
-- **Enhanced Customization**: More options for customizing the appearance and behavior of generated apps
-- **Templates & Examples**: Library of template prompts and example apps to help users get started
-- **Collaborative Features**: Sharing and collaborative development of mini apps
-- **MCP Integration**: Support for the Model Context Protocol to connect mini apps with external tools and services
+1. You'll see a notification
+2. Click "Install and Restart" to update immediately
+3. The app will restart with the latest version
 
-## Contributing
+## 🗺 Roadmap
 
-Contributions to Lahat are welcome! Here's how you can contribute:
+- **Local LLM Support**: Integration with Ollama and other local models
+- **Enhanced Customization**: More appearance and behavior options
+- **Templates Library**: Pre-made templates for common app types
+- **Collaborative Features**: Share and collaborate on mini apps
+- **AI Improvements**: Smarter app generation with better tools
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature/my-new-feature`
-5. Submit a pull request
+## 🤝 Contributing
 
-Please make sure your code follows the existing style and includes appropriate tests.
+We welcome contributions! See our [Contributing Guide](https://github.com/Dorky-Robot/lahat/blob/main/CONTRIBUTING.md) to get started.
 
-## License
+## 📝 License
 
-Apache License 2.0
+Apache License 2.0 - See [LICENSE](https://github.com/Dorky-Robot/lahat/blob/main/LICENSE.md) for details.
 
-Lahat is licensed under the Apache License 2.0, which allows you to:
-- Use the software for any purpose
-- Distribute and modify the software
-- Distribute modified versions
-- Patent rights are explicitly granted
-     
-This license is ideal for Lahat's dual goals of allowing free usage while 
-supporting potential commercial applications.
+---
+
+<div align="center">
+  <img src="assets/icons/lahat.png" alt="Lahat Logo" width="100"/>
+  <p>Made with ❤️ by Dorky Robot</p>
+  <p>
+    <a href="https://github.com/Dorky-Robot/lahat/releases/latest">Download Latest Release</a> •
+    <a href="https://github.com/Dorky-Robot/lahat/issues">Report Bug</a> •
+    <a href="https://github.com/Dorky-Robot/lahat/issues">Request Feature</a>
+  </p>
+</div>
