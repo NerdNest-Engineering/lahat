@@ -26,7 +26,10 @@
     "app-generator",
     "lahat"
   ],
-  "author": "Dorky Robot",
+  "author": {
+    "name": "Dorky Robot",
+    "email": "contact@dorkyrobot.com"
+  },
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/Dorky-Robot/lahat/issues"
