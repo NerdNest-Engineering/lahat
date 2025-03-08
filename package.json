@@ -1,12 +1,13 @@
 {
   "type": "module",
   "name": "lahat",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "NODE_ENV=development electron .",
     "dev": "NODE_ENV=development electron .",
+    "start-prod": "NODE_ENV=production electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist-mac": "electron-builder --mac",

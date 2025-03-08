@@ -1,4 +1,4 @@
-# Lahat v1.0.10 Release Notes
+# Lahat v1.0.11 Release Notes
 
 ## New Features and Improvements
 
@@ -14,6 +14,7 @@
 - Memory leaks in component lifecycle management
 - IPC handlers lacking proper validation and error handling
 - Auto-updater issues in development mode
+- Fixed bug in main.js affecting window management
 
 ## Installation Notes
 
