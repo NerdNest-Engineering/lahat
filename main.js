@@ -329,14 +329,31 @@ app.on('before-quit', (event) => {
 app.whenReady().then(() => {
   initializeApp();
 
+  // Handle macOS dock click or Windows taskbar click
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    // Get the main window if it exists
+    const mainWindow = windowManager.getWindow(windowManager.WindowType.MAIN);
+    
+    if (mainWindow) {
+      // If the window exists but is hidden or minimized, show and focus it
+      if (!mainWindow.isVisible()) {
+        mainWindow.show();
+      }
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.focus();
+    } else {
+      // If no window exists, create a new one
       windowManager.showWindow(windowManager.WindowType.MAIN);
     }
   });
 });
 
+// Handle window-all-closed event
 app.on('window-all-closed', () => {
+  // On macOS, applications typically stay active until the user quits explicitly
+  // This allows the app to be reopened by clicking the dock icon
   if (process.platform !== 'darwin') {
     app.quit();
   }

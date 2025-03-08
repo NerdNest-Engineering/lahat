@@ -3,6 +3,10 @@
  * Exports all window manager modules from a single entry point
  */
 
+// Import electron modules
+import { screen, app, BrowserWindow } from 'electron';
+import store from '../../store.js';
+
 // Import from windowManager.js
 import { 
   WindowType,
@@ -47,6 +51,18 @@ import { windowPool } from './windowPool.js';
 export function initializeWindowManager() {
   // Initialize window pool
   console.log('Window pool initialized with max size:', windowPool.maxPoolSize);
+  
+  // Initialize main screen dimensions for better window placement
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+  
+  // Store primary screen dimensions for use in window positioning
+  store.set('primaryScreenDimensions', { width, height });
+  
+  // Configure dock/taskbar click behavior for macOS
+  if (process.platform === 'darwin') {
+    app.setActivationPolicy('regular'); // Ensure dock icon is visible
+  }
   
   return {
     windowPool
