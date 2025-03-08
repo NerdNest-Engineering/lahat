@@ -1,9 +1,9 @@
-Lahat
+Lahat ᜎᜑᜆ᜔
 Copyright (c) 2025 Dorky Robot
 
 This product includes software developed by Dorky Robot (https://github.com/Dorky-Robot/lahat).
 
-Lahat is an Electron application that integrates with Claude to generate mini desktop applications 
+Lahat (ᜎᜑᜆ᜔) is an Electron application that integrates with Claude to generate mini desktop applications 
 based on natural language prompts. It allows users to describe the app they want, and Claude will 
 generate a self-contained HTML/CSS/JS implementation.
 
