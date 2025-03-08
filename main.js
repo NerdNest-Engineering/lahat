@@ -1,6 +1,8 @@
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, BrowserWindow, dialog, shell } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execFile } from 'child_process';
+import fs from 'fs';
 import store from './store.js';
 import * as windowManager from './modules/windowManager/index.js';
 import * as apiHandlers from './modules/ipc/apiHandlers.js';
@@ -42,6 +44,26 @@ function initializeApp() {
         theme: 'light',
         autoUpdate: true
       });
+    }
+    
+    // Check for pending updates from previous run
+    const updateReadyFile = path.join(app.getPath('userData'), 'update-ready');
+    if (fs.existsSync(updateReadyFile)) {
+      try {
+        console.log('Detected pending update, applying changes...');
+        // Apply the update that was downloaded in a previous session
+        autoUpdater.checkForUpdatesAndNotify().catch(err => {
+          console.error('Error applying pending update:', err);
+        });
+        // Delete the marker file
+        fs.unlinkSync(updateReadyFile);
+      } catch (err) {
+        console.error('Error handling pending update:', err);
+        // Delete the marker file to prevent infinite loop
+        if (fs.existsSync(updateReadyFile)) {
+          fs.unlinkSync(updateReadyFile);
+        }
+      }
     }
     
     // Initialize window manager
@@ -108,34 +130,106 @@ function setupAutoUpdater() {
         if (result.response === 0) {
           console.log('User chose to install the update now');
           
-          // Set force quit flag so we know we're handling updates
-          forceQuit = true;
+          // Create a marker file to indicate an update is ready
+          const updateReadyFile = path.join(app.getPath('userData'), 'update-ready');
+          fs.writeFileSync(updateReadyFile, info.version, 'utf8');
           
-          // Unregister all window close events to prevent hanging
-          BrowserWindow.getAllWindows().forEach(window => {
-            if (!window.isDestroyed()) {
-              window.removeAllListeners('close');
-              window.destroy(); // Force destroy windows
-            }
-          });
+          // Get the path to the current application
+          let appPath = '';
           
-          // Use longer timeout to ensure everything is cleaned up
-          setTimeout(() => {
-            console.log('All windows destroyed, installing update...');
-            try {
-              // Try the standard approach first
-              autoUpdater.quitAndInstall(false, true);
-              
-              // Set a backup forced exit
-              setTimeout(() => {
-                console.log('Forcing app exit as backup...');
-                app.exit(0);
-              }, 3000);
-            } catch (err) {
-              console.error('Error during update installation:', err);
-              app.exit(0); // Force exit if update installation fails
+          // Platform-specific app path detection
+          if (process.platform === 'darwin') {
+            // On macOS, determine the .app bundle path
+            appPath = path.dirname(path.dirname(path.dirname(path.dirname(process.execPath))));
+            if (!appPath.endsWith('.app')) {
+              appPath = path.dirname(process.execPath);
             }
-          }, 1000);
+          } else if (process.platform === 'win32') {
+            // On Windows, use the executable path
+            appPath = process.execPath;
+          } else {
+            // On Linux, use the executable path
+            appPath = process.execPath;
+          }
+          
+          console.log('Application path for restart:', appPath);
+          
+          // Create a restart script based on platform
+          let restartScript = '';
+          let scriptPath = '';
+          
+          if (process.platform === 'darwin') {
+            // macOS restart script (shell script)
+            scriptPath = path.join(app.getPath('temp'), 'restart-lahat.sh');
+            restartScript = `#!/bin/bash
+# Wait for the app to quit
+sleep 2
+
+# Apply the update
+"${app.getPath('exe')}" --install-update
+
+# Wait for the update to be applied
+sleep 2
+
+# Relaunch the app
+open "${appPath}"
+`;
+          } else if (process.platform === 'win32') {
+            // Windows restart script (batch file)
+            scriptPath = path.join(app.getPath('temp'), 'restart-lahat.bat');
+            restartScript = `@echo off
+:: Wait for the app to quit
+timeout /t 2 /nobreak
+
+:: Apply the update
+"${app.getPath('exe')}" --install-update
+
+:: Wait for the update to be applied
+timeout /t 2 /nobreak
+
+:: Relaunch the app
+start "" "${appPath}"
+`;
+          } else {
+            // Linux restart script (shell script)
+            scriptPath = path.join(app.getPath('temp'), 'restart-lahat.sh');
+            restartScript = `#!/bin/bash
+# Wait for the app to quit
+sleep 2
+
+# Apply the update
+"${app.getPath('exe')}" --install-update
+
+# Wait for the update to be applied
+sleep 2
+
+# Relaunch the app
+"${appPath}"
+`;
+          }
+          
+          // Write the restart script to disk
+          fs.writeFileSync(scriptPath, restartScript, { mode: 0o755 });
+          console.log('Created restart script at:', scriptPath);
+          
+          // Execute the restart script
+          try {
+            if (process.platform === 'darwin' || process.platform === 'linux') {
+              execFile('/bin/bash', [scriptPath], { detached: true, stdio: 'ignore' });
+            } else if (process.platform === 'win32') {
+              execFile('cmd.exe', ['/c', scriptPath], { detached: true, stdio: 'ignore' });
+            }
+            console.log('Launched restart script, now quitting app...');
+            
+            // Exit the app after a short delay to allow the restart script to detach
+            setTimeout(() => {
+              app.exit(0);
+            }, 500);
+          } catch (err) {
+            console.error('Failed to execute restart script:', err);
+            // If restart script fails, try the standard approach
+            autoUpdater.quitAndInstall(false, true);
+          }
         }
       });
     }
