@@ -80,9 +80,13 @@ function initializeApp() {
     // Create main window
     windowManager.showWindow(windowManager.WindowType.MAIN);
     
-    // Setup auto-updater if enabled
+    // Setup auto-updater if enabled and not in development mode
     if (store.get('settings.autoUpdate') !== false) {
-      setupAutoUpdater();
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Auto-updater disabled in development mode');
+      } else {
+        setupAutoUpdater();
+      }
     }
     
     console.log('Application initialized');
@@ -110,7 +114,11 @@ function setupAutoUpdater() {
   
   // Add more detailed logging for debugging
   autoUpdater.logger = console;
-  autoUpdater.logger.transports.file.level = 'debug';
+  
+  // Only set file transport level if it exists (will be undefined in dev mode)
+  if (autoUpdater.logger.transports && autoUpdater.logger.transports.file) {
+    autoUpdater.logger.transports.file.level = 'debug';
+  }
   
   // Track if an update is available
   autoUpdater.isUpdateAvailable = false;
