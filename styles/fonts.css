@@ -1,0 +1,14 @@
+/* Font Declarations */
+
+@font-face {
+  font-family: 'Noto Sans Tagalog';
+  src: url('../fonts/NotoSansTagalog-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Utility class for Tagalog text */
+.tagalog-text {
+  font-family: 'Noto Sans Tagalog', sans-serif;
+}
