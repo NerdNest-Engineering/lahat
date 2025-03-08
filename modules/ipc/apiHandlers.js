@@ -3,6 +3,8 @@ import ClaudeClient from '../../claudeClient.js';
 import store from '../../store.js';
 import { IpcChannels, createSuccessResponse, createErrorResponse } from './ipcTypes.js';
 import { ErrorHandler } from '../utils/errorHandler.js';
+import keyManager from '../security/keyManager.js';
+import logger from '../utils/logger.js';
 
 /**
  * API Handlers Module
@@ -17,14 +19,15 @@ let claudeClient = null;
  * @returns {boolean} - True if initialized successfully
  */
 export function initializeClaudeClient() {
-  const apiKey = store.get('apiKey');
+  const apiKey = keyManager.getApiKey();
   if (apiKey) {
     try {
       claudeClient = new ClaudeClient(apiKey);
       // Log the app storage path for troubleshooting
-      console.log('App storage directory:', claudeClient.appStoragePath);
+      logger.info('App storage directory initialized', { path: claudeClient.appStoragePath }, 'ClaudeClient');
       return true;
     } catch (error) {
+      logger.error('Failed to initialize Claude client', error, 'initializeClaudeClient');
       ErrorHandler.logError('initializeClaudeClient', error);
       return false;
     }
@@ -54,10 +57,15 @@ export function getClaudeClient() {
  */
 async function handleSetApiKey(event, apiKey) {
   try {
-    store.set('apiKey', apiKey);
+    // Store the API key securely
+    const securelyStored = await keyManager.securelyStoreApiKey(apiKey);
+    
+    // Initialize Claude client with the new API key
     claudeClient = new ClaudeClient(apiKey);
-    return createSuccessResponse();
+    
+    return createSuccessResponse({ securelyStored });
   } catch (error) {
+    logger.error('Failed to set API key', error, 'handleSetApiKey');
     ErrorHandler.logError('handleSetApiKey', error);
     return createErrorResponse(error, 'set-api-key');
   }
@@ -69,12 +77,14 @@ async function handleSetApiKey(event, apiKey) {
  */
 async function handleCheckApiKey() {
   try {
-    const apiKey = store.get('apiKey');
+    const hasApiKey = keyManager.hasApiKey();
+    // We don't send the actual API key back for security reasons
     return createSuccessResponse({ 
-      hasApiKey: !!apiKey,
-      apiKey: apiKey || ''
+      hasApiKey,
+      isSecurelyStored: store.has('encryptedApiKey')
     });
   } catch (error) {
+    logger.error('Failed to check API key', error, 'handleCheckApiKey');
     ErrorHandler.logError('handleCheckApiKey', error);
     return createErrorResponse(error, 'check-api-key');
   }
