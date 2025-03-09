@@ -2,6 +2,7 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import * as windowManager from './windowManager/windowManager.js';
 import * as fileOperations from './utils/fileOperations.js';
+import { setActiveMiniApp, clearActiveMiniApp } from './utils/activeAppState.js';
 
 /**
  * Mini App Manager Module
@@ -74,6 +75,9 @@ export async function createMiniAppWindow(appName, htmlContent, filePath, conver
       console.log('Window closed event triggered for:', appName);
       if (conversationId) {
         miniAppWindows.delete(conversationId);
+        
+        // Clear active mini app
+        clearActiveMiniApp();
       }
       
       // Delete the temp file if it's not a saved app
@@ -118,10 +122,19 @@ export async function createMiniAppWindow(appName, htmlContent, filePath, conver
     // Store the window reference
     if (conversationId) {
       console.log('Storing window reference for conversation:', conversationId);
-      miniAppWindows.set(conversationId, {
+      const appInfo = {
         window: win,
         filePath: tempFilePath,
         name: appName
+      };
+      
+      miniAppWindows.set(conversationId, appInfo);
+      
+      // Set as active mini app
+      setActiveMiniApp({
+        id: conversationId,
+        name: appName,
+        filePath: tempFilePath
       });
     }
     
@@ -230,6 +243,10 @@ export function closeMiniApp(appId) {
       appWindow.window.close();
     }
     miniAppWindows.delete(appId);
+    
+    // Clear active mini app
+    clearActiveMiniApp();
+    
     return true;
   }
   

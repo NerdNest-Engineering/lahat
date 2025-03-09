@@ -1,3 +1,7 @@
+// Import command palette
+import commandPalette from '../components/ui/modals/command-palette.js';
+import { hasActiveMiniApp, getActiveMiniApp } from '../modules/utils/activeAppState.js';
+
 // DOM Elements
 // App Management Section
 const appManagementSection = document.getElementById('app-management-section');
@@ -255,5 +259,57 @@ window.electronAPI.onAppUpdated(() => {
   loadMiniApps();
 });
 
+// Command Palette Setup
+function setupCommandPalette() {
+  // Register commands
+  commandPalette.addCommand('create-app', 'Create New App', () => {
+    window.electronAPI.openWindow('app-creation');
+  });
+
+  commandPalette.addCommand('import-app', 'Import App', async () => {
+    try {
+      const result = await window.electronAPI.importMiniApp();
+      
+      if (result.success) {
+        alert(`Mini app "${result.name}" imported successfully!`);
+        await loadMiniApps();
+      }
+    } catch (error) {
+      console.error('Error importing app:', error);
+    }
+  });
+
+  commandPalette.addCommand('open-app-directory', 'Open App Directory', async () => {
+    try {
+      await window.electronAPI.openAppDirectory();
+    } catch (error) {
+      console.error('Error opening app directory:', error);
+    }
+  });
+
+  // Conditionally show Edit App command when there's an active mini app
+  commandPalette.addCommand('edit-app', 'Edit App', () => {
+    const activeApp = getActiveMiniApp();
+    window.electronAPI.openWindow('app-creation', {
+      updateMode: true,
+      appId: activeApp.id,
+      appName: activeApp.name
+    });
+  }, () => {
+    // Only show this command when there's an active mini app
+    return hasActiveMiniApp();
+  });
+
+  // Add keyboard shortcut listener
+  window.addEventListener('keydown', (event) => {
+    // Check for cmd+p or ctrl+p
+    if ((event.metaKey || event.ctrlKey) && event.key === 'p') {
+      event.preventDefault();
+      commandPalette.show();
+    }
+  });
+}
+
 // Initialize the app
 initializeApp();
+setupCommandPalette();
