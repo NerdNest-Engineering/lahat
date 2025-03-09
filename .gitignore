@@ -28,6 +28,10 @@ release/
 .env.test.local
 .env.production.local
 
+# Debug logs
+logs/
+*.log
+
 # User-specific files
 .idea/
 .vscode/

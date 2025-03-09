@@ -80,13 +80,9 @@ function initializeApp() {
     // Create main window
     windowManager.showWindow(windowManager.WindowType.MAIN);
     
-    // Setup auto-updater if enabled and not in development mode
+    // Setup auto-updater if enabled
     if (store.get('settings.autoUpdate') !== false) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Auto-updater disabled in development mode');
-      } else {
-        setupAutoUpdater();
-      }
+      setupAutoUpdater();
     }
     
     console.log('Application initialized');
@@ -107,9 +103,11 @@ function setupAutoUpdater() {
   autoUpdater.allowPrerelease = false;
   autoUpdater.allowDowngrade = true;
   
-  // Ensure updates aren't blocked by development mode
-  if (process.env.NODE_ENV === 'development') {
-    autoUpdater.forceDevUpdateConfig = true;
+  // Disable update checks in development mode (use both checks for robustness)
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+    console.log('Auto-updater disabled in development mode');
+    // Return early - don't set up update functionality in dev mode
+    return;
   }
   
   // Add more detailed logging for debugging
@@ -285,17 +283,13 @@ sleep 2
   });
   
   // Check for updates with a slight delay to ensure app is fully initialized
+  // Only proceed with this part if we're not in development mode (early return above)
   setTimeout(() => {
-    // Only check for updates in production mode or if dev-app-update.yml exists
-    if (process.env.NODE_ENV !== 'development' || fs.existsSync(path.join(__dirname, 'dev-app-update.yml'))) {
-      console.log('Checking for updates...');
-      autoUpdater.checkForUpdatesAndNotify().catch(err => {
-        ErrorHandler.logError('checkForUpdatesAndNotify', err, ErrorHandler.ERROR_LEVELS.ERROR);
-        console.error('Failed to check for updates:', err);
-      });
-    } else {
-      console.log('Skipping update check in development mode');
-    }
+    console.log('Checking for updates...');
+    autoUpdater.checkForUpdatesAndNotify().catch(err => {
+      ErrorHandler.logError('checkForUpdatesAndNotify', err, ErrorHandler.ERROR_LEVELS.ERROR);
+      console.error('Failed to check for updates:', err);
+    });
   }, 3000);
 }
 
@@ -376,10 +370,35 @@ app.on('window-all-closed', () => {
 process.on('uncaughtException', (error) => {
   ErrorHandler.logError('uncaughtException', error, ErrorHandler.ERROR_LEVELS.FATAL);
   console.error('Uncaught exception:', error);
+  
+  // Only in production and when the app is ready, offer error reporting
+  if (process.env.NODE_ENV !== 'development' && app.isReady()) {
+    import('./modules/utils/logger.js').then(logger => {
+      logger.showErrorReportDialog(error).catch(err => {
+        console.error('Failed to show error report dialog:', err);
+      });
+    }).catch(err => {
+      console.error('Failed to import logger module:', err);
+    });
+  }
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  ErrorHandler.logError('unhandledRejection', reason, ErrorHandler.ERROR_LEVELS.ERROR);
-  console.error('Unhandled promise rejection:', reason);
+  // Convert the reason to an Error object if it isn't already
+  const error = reason instanceof Error ? reason : new Error(String(reason));
+  ErrorHandler.logError('unhandledRejection', error, ErrorHandler.ERROR_LEVELS.ERROR);
+  console.error('Unhandled promise rejection:', error);
+  
+  // Only show error reporting for fatal promise rejections in production
+  if (process.env.NODE_ENV !== 'development' && app.isReady() && 
+      error.message && error.message.toLowerCase().includes('fatal')) {
+    import('./modules/utils/logger.js').then(logger => {
+      logger.showErrorReportDialog(error).catch(err => {
+        console.error('Failed to show error report dialog:', err);
+      });
+    }).catch(err => {
+      console.error('Failed to import logger module:', err);
+    });
+  }
 });

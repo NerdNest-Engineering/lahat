@@ -1,11 +1,13 @@
 /**
  * Logger Module
  * Provides structured logging with different log levels
+ * Enhanced with error reporting capabilities for production
  */
 
 import { app } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
+import { dialog } from 'electron';
 
 /**
  * Log levels with numeric values for comparison
@@ -96,6 +98,115 @@ export const warn = (message, data, context) => log('WARN', message, data, conte
 export const error = (message, data, context) => log('ERROR', message, data, context);
 export const fatal = (message, data, context) => log('FATAL', message, data, context);
 
+/**
+ * Get the path to the logs directory
+ * @returns {string|null} The path to the logs directory or null if not available
+ */
+export function getLogsPath() {
+  return logFilePath;
+}
+
+/**
+ * Get recent log files
+ * @param {number} days - Number of days of logs to retrieve
+ * @returns {Promise<string[]>} Array of log file paths
+ */
+export async function getRecentLogFiles(days = 7) {
+  if (!logFilePath) return [];
+  
+  try {
+    await ensureLogDirectory();
+    const files = await fs.readdir(logFilePath);
+    const logFiles = files.filter(file => file.startsWith('lahat-') && file.endsWith('.log'));
+    
+    // Sort by date (most recent first)
+    return logFiles
+      .map(file => ({
+        path: path.join(logFilePath, file),
+        date: new Date(file.split('lahat-')[1].split('.log')[0])
+      }))
+      .filter(item => {
+        // Filter logs within the specified number of days
+        const now = new Date();
+        const diffTime = Math.abs(now - item.date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= days;
+      })
+      .sort((a, b) => b.date - a.date)
+      .map(item => item.path);
+  } catch (error) {
+    console.error('Failed to get log files:', error);
+    return [];
+  }
+}
+
+/**
+ * Show dialog to send error reports
+ * Allows users to send logs to developers
+ * @param {Error} error - The error that triggered this
+ * @returns {Promise<boolean>} True if user chose to send reports
+ */
+export async function showErrorReportDialog(error) {
+  try {
+    // Only show in production and main process
+    if (process.env.NODE_ENV === 'development' || !app) {
+      return false;
+    }
+    
+    const { response } = await dialog.showMessageBox({
+      type: 'error',
+      title: 'Application Error',
+      message: 'Lahat encountered an error',
+      detail: `Would you like to send an error report to help us improve?\n\nError: ${error.message}`,
+      buttons: ['Send Error Report', 'Don\'t Send'],
+      defaultId: 0,
+      cancelId: 1
+    });
+    
+    if (response === 0) {
+      // User wants to send report
+      const logFiles = await getRecentLogFiles(2); // Last 2 days of logs
+      
+      if (logFiles.length === 0) {
+        dialog.showMessageBox({
+          type: 'info',
+          message: 'No log files available',
+          detail: 'No recent log files were found to include in the report.'
+        });
+        return false;
+      }
+      
+      const { filePath } = await dialog.showSaveDialog({
+        title: 'Save Error Report',
+        defaultPath: path.join(app.getPath('desktop'), `lahat-error-report-${new Date().toISOString().split('T')[0]}.zip`),
+        filters: [{ name: 'ZIP Archive', extensions: ['zip'] }]
+      });
+      
+      if (!filePath) return false;
+      
+      // Create a ZIP file with logs
+      const { createZipArchive } = await import('../utils/fileOperations.js');
+      await createZipArchive(filePath, logFiles.map(file => ({
+        source: file,
+        destination: path.basename(file)
+      })));
+      
+      dialog.showMessageBox({
+        type: 'info',
+        message: 'Error Report Created',
+        detail: `The error report has been saved to:\n${filePath}\n\nPlease attach this file when reporting the issue on GitHub.`
+      });
+      
+      return true;
+    }
+    
+    return false;
+  } catch (err) {
+    console.error('Failed to show error report dialog:', err);
+    return false;
+  }
+}
+
 // Default export as an object with all methods
 export default {
   LOG_LEVELS,
@@ -105,5 +216,8 @@ export default {
   info,
   warn,
   error,
-  fatal
+  fatal,
+  getLogsPath,
+  getRecentLogFiles,
+  showErrorReportDialog
 };

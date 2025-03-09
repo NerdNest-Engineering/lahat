@@ -87,7 +87,48 @@ Simply describe what changes you want, and Claude will update your app while pre
 
 - **App won't generate?** Check your API key and internet connection
 - **App doesn't work as expected?** Try updating with more specific instructions
-- **Other issues?** Check our [GitHub Issues](https://github.com/Dorky-Robot/lahat/issues)
+- **"Lahat is damaged and can't be opened" on macOS?** This is due to code signing issues. Use the signed releases, see the "macOS Code Signing" section below, or try the "Alpha Builds" approach for testing.
+- **Other issues?** The app will offer to create error reports when crashes occur. You can submit these reports with your GitHub issues or email them to felix@dorkyrobot.com to help us debug.
+
+## 🔐 macOS Code Signing and Notarization
+
+For developers distributing macOS applications:
+
+1. Create a `.env` file in the project root with your Apple Developer credentials:
+   ```
+   APPLE_ID=your.apple.id@example.com
+   APPLE_ID_PASSWORD=app-specific-password-from-apple-account
+   APPLE_TEAM_ID=your-team-id-if-you-have-multiple-teams
+   ```
+
+2. For the `APPLE_ID_PASSWORD`, create an app-specific password at https://appleid.apple.com/account/manage
+
+3. Build the application:
+   ```
+   npm run dist-mac
+   ```
+
+The application will be automatically signed and notarized during the build process, preventing the "damaged and can't be opened" error.
+
+## 🧪 Alpha Builds
+
+For testing purposes, you can create unnotarized alpha builds that don't require Apple Developer credentials:
+
+1. Use the provided build script:
+   ```
+   ./build-alpha.sh
+   ```
+   
+   Or run the command manually:
+   ```
+   npm run dist-mac-alpha
+   ```
+
+2. This will create an unnotarized build that will show security warnings on macOS.
+
+3. See [ALPHA_TESTERS.md](ALPHA_TESTERS.md) for instructions on how to bypass these security warnings.
+
+Note: Alpha builds are intended for testing only and should not be distributed to end users.
 
 ## 🔄 Automatic Updates
 
