@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "lahat",
-  "version": "1.0.11-alpha",
+  "version": "1.0.11",
   "description": "An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts",
   "main": "main.js",
   "scripts": {
