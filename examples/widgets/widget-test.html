@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self';
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Widget Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      background-color: #4285f4;
+      color: white;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    .grid-container {
+      width: 100%;
+      height: 800px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background-color: white;
+      margin-bottom: 20px;
+    }
+    
+    .controls {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4285f4;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .event-log {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: white;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    
+    .event-log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .event-log-entry.widget-event {
+      background-color: #e8f5e9;
+    }
+    
+    .event-log-entry.cell-event {
+      background-color: #e3f2fd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Lahat Composable Widgets Test</h1>
+    </div>
+    
+    <div class="controls">
+      <button id="add-widget">Add Counter Widget</button>
+      <button id="add-cell">Add Empty Cell</button>
+      <button id="add-nested-cells">Add Nested Cells</button>
+      <button id="clear-grid">Clear Grid</button>
+      <button id="clear-log">Clear Event Log</button>
+    </div>
+    
+    <div class="grid-container" id="grid-container"></div>
+    
+    <h2>Event Log</h2>
+    <div class="event-log" id="event-log"></div>
+  </div>
+  
+  <script type="module">
+    // Import components
+    import { 
+      LahatGrid, 
+      LahatCell, 
+      globalEventBus,
+      createWidgetInCell,
+      createCellInGrid,
+      createWidgetInGrid,
+      createNestedCells
+    } from '../../components/core/index.js';
+    import { CounterWidget } from './counter-widget.js';
+    
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Create grid
+      const gridContainer = document.getElementById('grid-container');
+      const grid = document.createElement('lahat-grid');
+      gridContainer.appendChild(grid);
+      
+      // Set up event listeners
+      document.getElementById('add-widget').addEventListener('click', addCounterWidget);
+      document.getElementById('add-cell').addEventListener('click', addEmptyCell);
+      document.getElementById('add-nested-cells').addEventListener('click', addNestedCells);
+      document.getElementById('clear-grid').addEventListener('click', clearGrid);
+      document.getElementById('clear-log').addEventListener('click', clearEventLog);
+      
+      // Set up event logging
+      setupEventLogging();
+      
+      // Add initial widget
+      addCounterWidget();
+      
+      /**
+       * Add a counter widget to the grid
+       */
+      function addCounterWidget() {
+        // Find free position
+        const position = grid.findFreePosition(3, 3) || { x: 0, y: 0 };
+        
+        // Create widget in grid
+        const { cell, widget } = createWidgetInGrid('counter-widget', grid, position.x, position.y, 3, 3);
+        
+        // Log event
+        logEvent('Added counter widget', 'system');
+      }
+      
+      /**
+       * Add an empty cell to the grid
+       */
+      function addEmptyCell() {
+        // Find free position
+        const position = grid.findFreePosition(2, 2) || { x: 0, y: 0 };
+        
+        // Create cell in grid
+        createCellInGrid(grid, position.x, position.y, 2, 2);
+        
+        // Log event
+        logEvent('Added empty cell', 'system');
+      }
+      
+      /**
+       * Add nested cells to the grid
+       */
+      function addNestedCells() {
+        // Find free position
+        const position = grid.findFreePosition(4, 4) || { x: 0, y: 0 };
+        
+        // Create parent cell
+        const parentCell = createCellInGrid(grid, position.x, position.y, 4, 4);
+        
+        // Create child cells
+        const [childCell1, childCell2] = createNestedCells(parentCell, 2);
+        
+        // Create widget for child cell 1
+        createWidgetInCell('counter-widget', childCell1);
+        
+        // Log event
+        logEvent('Added nested cells', 'system');
+      }
+      
+      /**
+       * Clear the grid
+       */
+      function clearGrid() {
+        grid.clear();
+        
+        // Log event
+        logEvent('Cleared grid', 'system');
+      }
+      
+      /**
+       * Set up event logging
+       */
+      function setupEventLogging() {
+        // Listen for widget events
+        globalEventBus.subscribe('widget:', (data) => {
+          const eventName = data.eventName;
+          const widgetId = data.sourceWidget?.id || 'unknown';
+          
+          logEvent(`Widget ${widgetId}: ${eventName}`, 'widget-event', data);
+        });
+        
+        // Listen for cell events
+        globalEventBus.subscribe('cell:', (data) => {
+          const eventName = data.eventName;
+          const cellId = data.sourceCell?.id || 'unknown';
+          
+          logEvent(`Cell ${cellId}: ${eventName}`, 'cell-event', data);
+        });
+      }
+      
+      /**
+       * Log an event to the event log
+       * @param {string} message - Event message
+       * @param {string} type - Event type
+       * @param {Object} data - Event data
+       */
+      function logEvent(message, type = 'system', data = null) {
+        const eventLog = document.getElementById('event-log');
+        
+        // Create log entry
+        const entry = document.createElement('div');
+        entry.classList.add('event-log-entry');
+        
+        if (type) {
+          entry.classList.add(type);
+        }
+        
+        // Add timestamp
+        const timestamp = new Date().toLocaleTimeString();
+        
+        // Set entry content
+        entry.innerHTML = `<strong>${timestamp}</strong>: ${message}`;
+        
+        // Add data if available
+        if (data && type !== 'system') {
+          const dataStr = JSON.stringify(data, null, 2);
+          entry.title = dataStr;
+          
+          // Add click handler to toggle data display
+          entry.addEventListener('click', () => {
+            const dataElement = entry.querySelector('.event-data');
+            
+            if (dataElement) {
+              dataElement.remove();
+            } else {
+              const dataDiv = document.createElement('div');
+              dataDiv.classList.add('event-data');
+              dataDiv.style.fontSize = '12px';
+              dataDiv.style.marginTop = '5px';
+              dataDiv.style.padding = '5px';
+              dataDiv.style.backgroundColor = '#f5f5f5';
+              dataDiv.style.borderRadius = '4px';
+              dataDiv.style.whiteSpace = 'pre-wrap';
+              dataDiv.textContent = dataStr;
+              
+              entry.appendChild(dataDiv);
+            }
+          });
+        }
+        
+        // Add entry to log
+        eventLog.prepend(entry);
+        
+        // Limit log size
+        while (eventLog.children.length > 100) {
+          eventLog.removeChild(eventLog.lastChild);
+        }
+      }
+      
+      /**
+       * Clear the event log
+       */
+      function clearEventLog() {
+        const eventLog = document.getElementById('event-log');
+        eventLog.innerHTML = '';
+        
+        // Log event
+        logEvent('Cleared event log', 'system');
+      }
+    });
+  </script>
+</body>
+</html>
