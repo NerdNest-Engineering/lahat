@@ -7,7 +7,7 @@
 export * from './renderer/index.js';
 
 // Export system prompts
-export * from './system-prompts.js';
+export * from './widget-system-prompts.js';
 
 // Note: Main process and preload components are not exported here
 // as they are used directly by the main process and preload script
