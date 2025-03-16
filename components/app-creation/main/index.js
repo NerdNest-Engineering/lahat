@@ -38,39 +38,16 @@ async function handleUpdateMiniApp(event, params) {
   
   // If no system prompt is provided, determine one based on the description
   if (!params.systemPrompt && params.prompt) {
-    const { 
-      DEFAULT_SYSTEM_PROMPT, 
-      GAME_SYSTEM_PROMPT, 
-      UTILITY_SYSTEM_PROMPT, 
-      DATA_VIZ_SYSTEM_PROMPT 
-    } = await import('../system-prompts.js');
-    
-    // Simple keyword-based determination of system prompt
-    const lowerDesc = params.prompt.toLowerCase();
-    
-    if (
-      lowerDesc.includes('game') || 
-      lowerDesc.includes('play') || 
-      lowerDesc.includes('score') || 
-      lowerDesc.includes('player')
-    ) {
-      params.systemPrompt = GAME_SYSTEM_PROMPT;
-    } else if (
-      lowerDesc.includes('calculator') || 
-      lowerDesc.includes('convert') || 
-      lowerDesc.includes('utility') || 
-      lowerDesc.includes('tool')
-    ) {
-      params.systemPrompt = UTILITY_SYSTEM_PROMPT;
-    } else if (
-      lowerDesc.includes('chart') || 
-      lowerDesc.includes('graph') || 
-      lowerDesc.includes('plot') || 
-      lowerDesc.includes('visualization')
-    ) {
-      params.systemPrompt = DATA_VIZ_SYSTEM_PROMPT;
-    } else {
-      params.systemPrompt = DEFAULT_SYSTEM_PROMPT;
+    try {
+      const { determineWidgetSystemPrompt, DEFAULT_WIDGET_PROMPT } = await import('../widget-system-prompts.js');
+      
+      // Use Claude to determine the appropriate widget type
+      params.systemPrompt = await determineWidgetSystemPrompt(params.prompt);
+    } catch (error) {
+      console.error('Error determining widget type:', error);
+      // Fall back to default widget prompt
+      const { DEFAULT_WIDGET_PROMPT } = await import('../widget-system-prompts.js');
+      params.systemPrompt = DEFAULT_WIDGET_PROMPT;
     }
   }
   

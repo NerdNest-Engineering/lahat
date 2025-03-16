@@ -6,7 +6,7 @@ import * as fileOperations from '../../../../modules/utils/fileOperations.js';
 import * as miniAppManager from '../../../../modules/miniAppManager.js';
 import * as titleDescriptionGenerator from '../../../../modules/utils/titleDescriptionGenerator.js';
 import store from '../../../../store.js';
-import { DEFAULT_SYSTEM_PROMPT } from '../../system-prompts.js';
+import { DEFAULT_WIDGET_PROMPT } from '../../widget-system-prompts.js';
 
 /**
  * Generate a mini app
@@ -18,7 +18,7 @@ import { DEFAULT_SYSTEM_PROMPT } from '../../system-prompts.js';
  * @param {string} [params.systemPrompt] - Optional custom system prompt
  * @returns {Promise<Object>} - Result object with success flag
  */
-export async function generateMiniApp(claudeClient, event, { prompt, appName, systemPrompt = DEFAULT_SYSTEM_PROMPT }) {
+export async function generateMiniApp(claudeClient, event, { prompt, appName, systemPrompt = DEFAULT_WIDGET_PROMPT }) {
   try {
     if (!claudeClient) {
       return {
@@ -161,7 +161,7 @@ export async function openMiniApp(appId, filePath, name) {
  * @param {string} [params.systemPrompt] - Optional custom system prompt
  * @returns {Promise<Object>} - Result object with success flag
  */
-export async function updateMiniApp(claudeClient, event, { appId, prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT }) {
+export async function updateMiniApp(claudeClient, event, { appId, prompt, systemPrompt = DEFAULT_WIDGET_PROMPT }) {
   try {
     if (!claudeClient) {
       return {
