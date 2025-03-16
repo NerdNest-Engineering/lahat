@@ -1,4 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const { setupAppCreationAPI } = require('./components/app-creation/preload/index.cjs');
+
+// Set up the app creation API
+setupAppCreationAPI();
 
 // Expose protected methods that allow the renderer process to use
 // IPC communication with the main process
@@ -74,6 +78,8 @@ contextBridge.exposeInMainWorld(
     },
     
     // Mini app generation and management
+    // Note: These are kept for backward compatibility
+    // New code should use the appCreationService API
     generateMiniApp: async (params) => {
       try {
         return await ipcRenderer.invoke('generate-mini-app', params);
@@ -140,6 +146,8 @@ contextBridge.exposeInMainWorld(
     },
     
     // Event listeners for generation progress
+    // Note: These are kept for backward compatibility
+    // New code should use the appCreationService API
     onGenerationStatus: (callback) => {
       ipcRenderer.on('generation-status', (_event, status) => callback(status));
     },
@@ -148,6 +156,8 @@ contextBridge.exposeInMainWorld(
     },
     
     // Title and description generation
+    // Note: These are kept for backward compatibility
+    // New code should use the appCreationService API
     generateTitleAndDescription: async (params) => {
       try {
         return await ipcRenderer.invoke('generate-title-and-description', params);
