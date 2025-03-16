@@ -35,6 +35,45 @@ async function handleOpenMiniApp(event, { appId, filePath, name }) {
  */
 async function handleUpdateMiniApp(event, params) {
   const claudeClient = apiHandlers.getClaudeClient();
+  
+  // If no system prompt is provided, determine one based on the description
+  if (!params.systemPrompt && params.prompt) {
+    const { 
+      DEFAULT_SYSTEM_PROMPT, 
+      GAME_SYSTEM_PROMPT, 
+      UTILITY_SYSTEM_PROMPT, 
+      DATA_VIZ_SYSTEM_PROMPT 
+    } = await import('../system-prompts.js');
+    
+    // Simple keyword-based determination of system prompt
+    const lowerDesc = params.prompt.toLowerCase();
+    
+    if (
+      lowerDesc.includes('game') || 
+      lowerDesc.includes('play') || 
+      lowerDesc.includes('score') || 
+      lowerDesc.includes('player')
+    ) {
+      params.systemPrompt = GAME_SYSTEM_PROMPT;
+    } else if (
+      lowerDesc.includes('calculator') || 
+      lowerDesc.includes('convert') || 
+      lowerDesc.includes('utility') || 
+      lowerDesc.includes('tool')
+    ) {
+      params.systemPrompt = UTILITY_SYSTEM_PROMPT;
+    } else if (
+      lowerDesc.includes('chart') || 
+      lowerDesc.includes('graph') || 
+      lowerDesc.includes('plot') || 
+      lowerDesc.includes('visualization')
+    ) {
+      params.systemPrompt = DATA_VIZ_SYSTEM_PROMPT;
+    } else {
+      params.systemPrompt = DEFAULT_SYSTEM_PROMPT;
+    }
+  }
+  
   return await miniAppService.updateMiniApp(claudeClient, event, params);
 }
 

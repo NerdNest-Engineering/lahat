@@ -201,7 +201,7 @@ customElements.define('mini-app-component', MiniAppComponent);`;
     }
   }
 
-  async generateApp(prompt, conversationId = null) {
+  async generateApp(prompt, conversationId = null, customSystemPrompt = null) {
     try {
       // Initialize messages with just the user prompt
       const messages = [
@@ -221,7 +221,7 @@ customElements.define('mini-app-component', MiniAppComponent);`;
       const response = await this.anthropic.messages.create({
         model: 'claude-3-7-sonnet-20250219', // Updated to latest model
         max_tokens: 64000, // Reduced to maximum allowed for this model
-        system: this.systemPrompt, // System prompt as top-level parameter
+        system: customSystemPrompt || this.systemPrompt, // Use custom prompt if provided
         messages,
         stream: true
       });

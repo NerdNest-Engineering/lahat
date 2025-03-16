@@ -6,15 +6,19 @@ import * as fileOperations from '../../../../modules/utils/fileOperations.js';
 import * as miniAppManager from '../../../../modules/miniAppManager.js';
 import * as titleDescriptionGenerator from '../../../../modules/utils/titleDescriptionGenerator.js';
 import store from '../../../../store.js';
+import { DEFAULT_SYSTEM_PROMPT } from '../../system-prompts.js';
 
 /**
  * Generate a mini app
  * @param {Object} claudeClient - Claude API client
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for generating the mini app
+ * @param {string} params.prompt - The prompt for generating the mini app
+ * @param {string} params.appName - The name of the app
+ * @param {string} [params.systemPrompt] - Optional custom system prompt
  * @returns {Promise<Object>} - Result object with success flag
  */
-export async function generateMiniApp(claudeClient, event, { prompt, appName }) {
+export async function generateMiniApp(claudeClient, event, { prompt, appName, systemPrompt = DEFAULT_SYSTEM_PROMPT }) {
   try {
     if (!claudeClient) {
       return {
@@ -29,7 +33,7 @@ export async function generateMiniApp(claudeClient, event, { prompt, appName }) 
       message: 'Generating your mini app...'
     });
     
-    const response = await claudeClient.generateApp(prompt);
+    const response = await claudeClient.generateApp(prompt, null, systemPrompt);
     let htmlContent = '';
     
     // Stream the response
@@ -152,9 +156,12 @@ export async function openMiniApp(appId, filePath, name) {
  * @param {Object} claudeClient - Claude API client
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for updating the mini app
+ * @param {string} params.appId - The ID of the app to update
+ * @param {string} params.prompt - The prompt for updating the mini app
+ * @param {string} [params.systemPrompt] - Optional custom system prompt
  * @returns {Promise<Object>} - Result object with success flag
  */
-export async function updateMiniApp(claudeClient, event, { appId, prompt }) {
+export async function updateMiniApp(claudeClient, event, { appId, prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT }) {
   try {
     if (!claudeClient) {
       return {
@@ -169,7 +176,7 @@ export async function updateMiniApp(claudeClient, event, { appId, prompt }) {
       message: 'Updating your mini app...'
     });
     
-    const response = await claudeClient.generateApp(prompt, appId);
+    const response = await claudeClient.generateApp(prompt, appId, systemPrompt);
     let htmlContent = '';
     
     // Stream the response
