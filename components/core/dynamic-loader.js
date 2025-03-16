@@ -90,7 +90,10 @@ export const ComponentPaths = {
   APP_CARD: 'ui/cards/app-card.js',
   APP_LIST: 'ui/containers/app-list.js',
   APP_MANAGEMENT_SECTION: 'ui/containers/app-management-section.js',
-  APP_DETAILS_MODAL: 'ui/modals/app-details-modal.js'
+  APP_DETAILS_MODAL: 'ui/modals/app-details-modal.js',
+  
+  // Mini App components
+  MINI_APP_CONTAINER: 'mini-app/mini-app-container.js'
 };
 
 /**
@@ -100,6 +103,7 @@ export const ComponentPaths = {
 export async function loadEssentialComponents() {
   await componentLoader.loadMultiple([
     ComponentPaths.ERROR_CONTAINER,
-    ComponentPaths.ERROR_MESSAGE
+    ComponentPaths.ERROR_MESSAGE,
+    ComponentPaths.MINI_APP_CONTAINER
   ]);
 }

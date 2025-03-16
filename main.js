@@ -6,8 +6,8 @@ import fs from 'fs';
 import store from './store.js';
 import * as windowManager from './modules/windowManager/index.js';
 import * as apiHandlers from './modules/ipc/apiHandlers.js';
-import * as miniAppHandlers from './modules/ipc/miniAppHandlers.js';
 import * as windowHandlers from './modules/ipc/windowHandlers.js';
+import { registerAppCreationHandlers } from './components/app-creation/main/index.js';
 import { ErrorHandler } from './modules/utils/errorHandler.js';
 // Import CommonJS module correctly
 import electronUpdater from 'electron-updater';
@@ -71,7 +71,7 @@ function initializeApp() {
     
     // Register IPC handlers
     apiHandlers.registerHandlers();
-    miniAppHandlers.registerHandlers();
+    registerAppCreationHandlers(); // Use the new app creation handlers
     windowHandlers.registerHandlers();
     
     // Initialize Claude client

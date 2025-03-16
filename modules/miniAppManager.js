@@ -15,59 +15,43 @@ const miniAppWindows = new Map();
 /**
  * Create a mini app window
  * @param {string} appName - Name of the mini app
- * @param {string} htmlContent - HTML content of the mini app
- * @param {string} filePath - Path to the HTML file (optional)
+ * @param {string} componentContent - Component content of the mini app (optional)
+ * @param {string} filePath - Path to the HTML file
  * @param {string} conversationId - Conversation ID for the mini app
  * @returns {Promise<Object>} - Result object with success flag, filePath, and windowId
  */
-export async function createMiniAppWindow(appName, htmlContent, filePath, conversationId) {
+export async function createMiniAppWindow(appName, componentContent, filePath, conversationId) {
   console.log('Creating mini app window:', { appName, filePath, conversationId });
   
   try {
-    // Create a temporary file for the HTML content if no filePath is provided
-    let tempFilePath = filePath;
-    if (!tempFilePath) {
-      const tempResult = await fileOperations.createTempFile(htmlContent);
-      if (!tempResult.success) {
-        return { 
-          success: false, 
-          error: tempResult.error 
-        };
-      }
-      tempFilePath = tempResult.filePath;
-    } else {
-      // If filePath is provided, we don't need to write the content again
-      // as it should have already been written by the claudeClient.saveGeneratedApp method
-      // Just verify the file exists
-      try {
-        const readResult = await fileOperations.readFile(tempFilePath);
-        if (!readResult.success) {
-          // If reading fails, try writing the content
-          const writeResult = await fileOperations.writeFile(tempFilePath, htmlContent);
-          if (!writeResult.success) {
-            return { 
-              success: false, 
-              error: writeResult.error 
-            };
-          }
-        }
-      } catch (error) {
-        console.error('Error verifying file:', error);
-        // If there's an error, try writing the content
-        const writeResult = await fileOperations.writeFile(tempFilePath, htmlContent);
-        if (!writeResult.success) {
-          return { 
-            success: false, 
-            error: writeResult.error 
-          };
-        }
-      }
+    // Verify the HTML file exists
+    if (!filePath) {
+      return {
+        success: false,
+        error: 'No file path provided for mini app'
+      };
     }
     
-    console.log('HTML content written to file:', tempFilePath);
+    try {
+      const readResult = await fileOperations.readFile(filePath);
+      if (!readResult.success) {
+        return { 
+          success: false, 
+          error: `Failed to read mini app file: ${readResult.error}` 
+        };
+      }
+    } catch (error) {
+      console.error('Error verifying file:', error);
+      return { 
+        success: false, 
+        error: `Error verifying mini app file: ${error.message}` 
+      };
+    }
+    
+    console.log('Mini app file verified:', filePath);
     
     // Create the window using the window manager
-    const win = windowManager.createMiniAppWindow(appName, htmlContent, filePath, conversationId);
+    const win = windowManager.createMiniAppWindow(appName, componentContent, filePath, conversationId);
     
     // Add event listeners for window events
     win.on('close', () => console.log('Window close event triggered for:', appName));
@@ -79,18 +63,11 @@ export async function createMiniAppWindow(appName, htmlContent, filePath, conver
         // Clear active mini app
         clearActiveMiniApp();
       }
-      
-      // Delete the temp file if it's not a saved app
-      if (!filePath) {
-        fileOperations.deleteFile(tempFilePath).catch((err) => {
-          console.error('Error deleting temp file:', err);
-        });
-      }
     });
     
     try {
-      console.log('Loading file into window:', tempFilePath);
-      win.loadFile(tempFilePath);
+      console.log('Loading file into window:', filePath);
+      win.loadFile(filePath);
       
       // DevTools are disabled for mini apps to prevent Autofill API errors
       // Uncomment the following code if you need DevTools for debugging mini apps
@@ -124,7 +101,7 @@ export async function createMiniAppWindow(appName, htmlContent, filePath, conver
       console.log('Storing window reference for conversation:', conversationId);
       const appInfo = {
         window: win,
-        filePath: tempFilePath,
+        filePath: filePath,
         name: appName
       };
       
@@ -134,13 +111,13 @@ export async function createMiniAppWindow(appName, htmlContent, filePath, conver
       setActiveMiniApp({
         id: conversationId,
         name: appName,
-        filePath: tempFilePath
+        filePath: filePath
       });
     }
     
     return { 
       success: true, 
-      filePath: tempFilePath,
+      filePath: filePath,
       windowId: win.id
     };
   } catch (error) {
@@ -196,21 +173,25 @@ export async function openMiniApp(appId, filePath, name) {
 /**
  * Update an existing mini app
  * @param {string} appId - ID of the mini app
- * @param {string} htmlContent - New HTML content
+ * @param {string} componentContent - New component content
  * @param {string} filePath - Path to the HTML file
+ * @param {string} componentFilePath - Path to the component file (optional)
  * @returns {Promise<Object>} - Result object with success flag and filePath
  */
-export async function updateMiniApp(appId, htmlContent, filePath) {
-  console.log('Updating mini app:', { appId, filePath });
+export async function updateMiniApp(appId, componentContent, filePath, componentFilePath) {
+  console.log('Updating mini app:', { appId, filePath, componentFilePath });
   
   try {
-    // Write the updated content to the file
-    const writeResult = await fileOperations.writeFile(filePath, htmlContent);
-    if (!writeResult.success) {
-      return writeResult;
+    // If componentFilePath is provided, write the component content to it
+    if (componentContent && componentFilePath) {
+      console.log('Writing component content to:', componentFilePath);
+      const writeComponentResult = await fileOperations.writeFile(componentFilePath, componentContent);
+      if (!writeComponentResult.success) {
+        return writeComponentResult;
+      }
     }
     
-    // If the window is open, update it
+    // If the window is open, update it by reloading the HTML file
     if (miniAppWindows.has(appId)) {
       const appWindow = miniAppWindows.get(appId);
       if (!appWindow.window.isDestroyed()) {
@@ -219,7 +200,11 @@ export async function updateMiniApp(appId, htmlContent, filePath) {
       }
     }
     
-    return { success: true, filePath };
+    return { 
+      success: true, 
+      filePath,
+      componentFilePath
+    };
   } catch (error) {
     console.error('Error updating mini app:', error);
     return {

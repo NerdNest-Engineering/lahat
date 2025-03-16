@@ -32,7 +32,7 @@ const WINDOW_HTML = {
   [WindowType.MAIN]: 'main.html',
   [WindowType.MAIN_WEB_COMPONENTS]: 'main-web-components.html', // New HTML file
   [WindowType.API_SETUP]: 'api-setup.html',
-  [WindowType.APP_CREATION]: 'app-creation.html',
+  [WindowType.APP_CREATION]: 'components/app-creation/app-creation.html',
   [WindowType.MINI_APP]: null // Mini apps use dynamic content
 };
 
