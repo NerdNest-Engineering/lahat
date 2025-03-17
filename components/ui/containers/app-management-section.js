@@ -87,10 +87,10 @@ export class AppManagementSection extends BaseComponent {
       <div class="section-header">
         <h2 class="section-title">My Mini Apps</h2>
         <div class="controls">
-          <button id="create-app-button" class="primary-button">Create App</button>
+          <button id="create-widget-button" class="primary-button">Create App</button>
           <button id="api-settings-button" class="secondary-button">API Settings</button>
           <button id="refresh-apps-button" class="secondary-button">Refresh</button>
-          <button id="open-app-directory-button" class="secondary-button">Open Directory</button>
+          <button id="open-widget-directory-button" class="secondary-button">Open Directory</button>
         </div>
       </div>
       
@@ -109,12 +109,12 @@ export class AppManagementSection extends BaseComponent {
     this._appList = this.shadowRoot.querySelector('app-list');
     
     // Set up event listeners
-    this.shadowRoot.getElementById('create-app-button').addEventListener('click', () => {
-      this.emit('create-app');
+    this.shadowRoot.getElementById('create-widget-button').addEventListener('click', () => {
+      this.emit('create-widget');
     });
     
     this.shadowRoot.getElementById('create-first-app-button').addEventListener('click', () => {
-      this.emit('create-app');
+      this.emit('create-widget');
     });
     
     this.shadowRoot.getElementById('api-settings-button').addEventListener('click', () => {
@@ -125,8 +125,8 @@ export class AppManagementSection extends BaseComponent {
       this.emit('refresh-apps');
     });
     
-    this.shadowRoot.getElementById('open-app-directory-button').addEventListener('click', () => {
-      this.emit('open-app-directory');
+    this.shadowRoot.getElementById('open-widget-directory-button').addEventListener('click', () => {
+      this.emit('open-widget-directory');
     });
   }
   

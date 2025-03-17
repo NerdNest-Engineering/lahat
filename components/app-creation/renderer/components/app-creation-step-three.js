@@ -8,7 +8,7 @@ import { AppCreationStep } from './app-creation-step.js';
 
 /**
  * AppCreationStepThree component
- * Handles the third step of the app creation process - generating the mini app
+ * Handles the third step of the app creation process - generating the widget
  */
 export class AppCreationStepThree extends AppCreationStep {
   constructor() {
@@ -93,7 +93,7 @@ export class AppCreationStepThree extends AppCreationStep {
         }
       </style>
       <div>
-        <h2>Generating Your Mini App</h2>
+        <h2>Generating Your Widget</h2>
         
         <div class="summary-section">
           <div class="summary-item">
@@ -108,7 +108,7 @@ export class AppCreationStepThree extends AppCreationStep {
         
         <div class="generation-status">
           <div class="spinner"></div>
-          <div>Generating mini app...</div>
+          <div>Generating widget...</div>
         </div>
         
         <div class="preview-container">
@@ -161,16 +161,16 @@ export class AppCreationStepThree extends AppCreationStep {
     this.previewOutput.textContent = '';
     
     try {
-      // Generate mini app using the domain API
-      console.log('Starting mini app generation...');
-      const result = await window.appCreationService.generateMiniApp({
+      // Generate widget using the domain API
+      console.log('Starting widget generation...');
+      const result = await window.appCreationService.generateWidget({
         appName: this._title,
         prompt: this._description
       });
-      console.log('Mini app generation completed:', result);
+      console.log('Widget generation completed:', result);
       
       if (!result.success) {
-        throw new Error(result.error || 'Failed to generate mini app');
+        throw new Error(result.error || 'Failed to generate widget');
       }
       
       // Success handling is done via the streaming chunks
@@ -180,7 +180,7 @@ export class AppCreationStepThree extends AppCreationStep {
       this.completeStep({ success: true });
       
     } catch (error) {
-      console.error('Mini app generation failed:', error);
+      console.error('Widget generation failed:', error);
       this.handleGenerationError(error);
     }
   }
@@ -198,7 +198,7 @@ export class AppCreationStepThree extends AppCreationStep {
    */
   handleGenerationError(error) {
     // Show error
-    showError('Failed to generate mini app', error.message);
+    showError('Failed to generate widget', error.message);
     
     // Report the error
     this.reportError(error);
@@ -222,6 +222,9 @@ export class AppCreationStepThree extends AppCreationStep {
   handleGenerationComplete() {
     // Reset chunks when generation is complete
     this._generationChunks = '';
+    
+    // Close the window after generation is complete
+    window.close();
   }
   
   // Public methods
