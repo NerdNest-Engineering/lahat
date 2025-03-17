@@ -102,14 +102,14 @@ export class AppCreationController {
   
   async handleGenerateApp(event) {
     // Show loading indicator
-    this.generationStatus.show('Generating mini app...');
+    this.generationStatus.show('Generating widget...');
     
     // Reset and show generation preview
     this.generationPreview.reset();
     this.generationPreview.show();
     
     try {
-      const result = await window.electronAPI.generateMiniApp({
+      const result = await window.electronAPI.generateWidget({
         appName: event.detail.title,
         prompt: event.detail.description
       });
@@ -123,13 +123,13 @@ export class AppCreationController {
           window.electronAPI.closeCurrentWindow();
         }, 2000);
       } else {
-        console.error('Mini app generation failed:', result.error);
-        showError('Failed to generate mini app', result.error);
+        console.error('Widget generation failed:', result.error);
+        showError('Failed to generate widget', result.error);
         // Show the button container again if there was an error
         this.stepTwo.resetButtonContainer();
       }
     } catch (error) {
-      console.error('Unexpected error during mini app generation:', error);
+      console.error('Unexpected error during widget generation:', error);
       showError('An unexpected error occurred', error.message);
       // Show the button container again if there was an error
       this.stepTwo.resetButtonContainer();

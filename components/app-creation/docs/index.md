@@ -10,8 +10,48 @@ The app creation process consists of multiple steps that guide the user through 
 2. Implements event-based communication between steps
 3. Simplifies the controller to act as a dumb event relay
 4. Makes steps truly self-contained "black boxes"
+5. Integrates widgets directly into Lahat cells for enhanced capabilities and security
 
 **Note: The current implementation is simpler and represents a transition state towards this target architecture. See [Current Implementation](./current-implementation.md) for detailed documentation of the current code implementation.**
+
+## Widget Integration
+
+The app creation module now generates standalone widget components that are directly integrated into Lahat cells, rather than creating separate HTML files with their own execution context. This approach provides several benefits:
+
+1. **Enhanced Capabilities**: Widgets have access to more Lahat capabilities
+2. **Better Integration**: Widgets are more tightly integrated with the Lahat UI
+3. **Improved Security**: Widget code is verified using CSP hashes before loading
+4. **Simplified Architecture**: Cleaner separation of concerns
+
+### Widget Generation Process
+
+The widget generation process works as follows:
+
+1. Claude generates a JavaScript file containing a widget component class that extends `WidgetComponent`
+2. The widget code is saved to a JS file in the app's directory
+3. A CSP hash is generated for the widget code and stored in a security manifest
+4. When the widget is loaded, its hash is verified to ensure it hasn't been tampered with
+5. The widget is dynamically imported and instantiated within a Lahat cell
+
+### Security Manifest
+
+A security manifest system ensures the integrity of widget code:
+
+- Stores hashes of widget JS files
+- Verifies widget integrity before loading
+- Prevents loading of widgets with invalid hashes
+
+### Secure Widget Loading
+
+Widgets are loaded securely using a dedicated loader that:
+
+1. Retrieves widget information from the security manifest
+2. Fetches the widget code
+3. Verifies the hash against the stored hash
+4. Creates a blob URL for the verified code
+5. Dynamically imports the widget module
+6. Registers the custom element if needed
+7. Creates and returns an instance of the widget
 
 ## Documentation Sections
 
@@ -76,6 +116,8 @@ Implementing this architecture provides several benefits:
 4. **Better Encapsulation**: Steps are truly black boxes that communicate only via events
 5. **Addressable Steps**: Steps can be targeted by handle for specific actions
 6. **Enhanced Maintainability**: Changes to one step don't affect other steps
+7. **Integrated Widgets**: Widgets are directly integrated into Lahat cells for enhanced capabilities
+8. **Improved Security**: Widget code is verified using CSP hashes before loading
 
 ## Example Use Case
 
@@ -97,6 +139,7 @@ The implementation can be done incrementally:
 1. Create the base step component and lifecycle interface
 2. Update the controller to handle events
 3. Update each step component one by one
-4. Remove legacy code and finalize the migration
+4. Implement the widget integration and security features
+5. Remove legacy code and finalize the migration
 
 This incremental approach minimizes disruption and allows for testing at each stage.

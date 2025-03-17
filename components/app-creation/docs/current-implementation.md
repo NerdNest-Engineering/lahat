@@ -34,7 +34,108 @@ components/app-creation/
 ├── app-creation.html      # HTML template
 ├── app-creation-controller.js # Legacy controller (to be removed)
 ├── utils.js               # Utility functions (to be moved to renderer/utils)
+├── widget-system-prompts.js # System prompts for widget generation
 └── index.js               # Main module entry point
+```
+
+## Widget Integration
+
+The app creation module now generates standalone widget components that are directly integrated into Lahat cells, rather than creating separate HTML files with their own execution context. This approach provides several benefits:
+
+1. **Enhanced Capabilities**: Widgets have access to more Lahat capabilities
+2. **Better Integration**: Widgets are more tightly integrated with the Lahat UI
+3. **Improved Security**: Widget code is verified using CSP hashes before loading
+4. **Simplified Architecture**: Cleaner separation of concerns
+
+### Widget Generation Process
+
+The widget generation process now works as follows:
+
+1. Claude generates a JavaScript file containing a widget component class that extends `WidgetComponent`
+2. The widget code is saved to a JS file in the app's directory
+3. A CSP hash is generated for the widget code and stored in a security manifest
+4. When the widget is loaded, its hash is verified to ensure it hasn't been tampered with
+5. The widget is dynamically imported and instantiated within a Lahat cell
+
+### Security Manifest
+
+A new security manifest system has been implemented to ensure the integrity of widget code:
+
+```javascript
+// modules/utils/widgetSecurityManifest.js
+export class WidgetSecurityManifest {
+  // Initialize the manifest
+  async initialize() { /* ... */ }
+  
+  // Add or update a widget hash
+  async addOrUpdateWidget(widgetId, filePath) { /* ... */ }
+  
+  // Verify a widget's integrity
+  verifyWidget(widgetId, content) { /* ... */ }
+  
+  // Get widget info
+  getWidgetInfo(widgetId) { /* ... */ }
+}
+```
+
+### Secure Widget Loading
+
+Widgets are loaded securely using the new secure widget loader:
+
+```javascript
+// components/core/secure-widget-loader.js
+export async function loadWidgetSecurely(widgetId) {
+  // Get widget info from manifest
+  const widgetInfo = securityManifest.getWidgetInfo(widgetId);
+  
+  // Fetch the widget code
+  const code = await fetch(widgetInfo.filePath).then(res => res.text());
+  
+  // Verify the hash
+  const hash = generateScriptHash(code);
+  if (hash !== widgetInfo.hash) {
+    throw new Error('Widget integrity check failed');
+  }
+  
+  // Create a blob URL for the verified code
+  const blob = new Blob([code], { type: 'application/javascript' });
+  const blobUrl = URL.createObjectURL(blob);
+  
+  // Dynamically import the widget module
+  const module = await import(blobUrl);
+  
+  // Find the widget class and create an instance
+  const WidgetClass = module.default || /* ... */;
+  const tagName = getTagNameFromCode(code);
+  
+  // Register the custom element if needed
+  if (!customElements.get(tagName)) {
+    customElements.define(tagName, WidgetClass);
+  }
+  
+  // Create an instance of the widget
+  return document.createElement(tagName);
+}
+```
+
+### Widget System Prompts
+
+The widget system prompts have been updated to focus on generating standalone widget components:
+
+```javascript
+// components/app-creation/widget-system-prompts.js
+const BASE_PROMPT_TEMPLATE = `
+IMPORTANT GUIDELINES:
+1. Your response must be a SINGLE JavaScript file that defines a widget component class extending WidgetComponent.
+2. The widget must use Shadow DOM for encapsulation.
+3. All CSS must be included within the component using a <style> tag in the shadow DOM.
+4. All functionality must be self-contained within the component class.
+5. The component must be fully functional without any external dependencies or network requests.
+...
+13. DO NOT include any HTML boilerplate or script tags - ONLY the widget component class and its registration.
+14. Your code will be directly imported into Lahat, so ensure it's compatible with ES modules.
+15. Make sure to register your component with customElements.define() at the end of the file.
+`;
 ```
 
 ## Component Registration and Usage
@@ -202,6 +303,8 @@ The current implementation is being gradually migrated toward the target archite
 1. Step components have been moved to the renderer/components directory
 2. A new controller implementation exists in renderer/controller
 3. Basic event communication has been implemented
+4. Widget integration has been updated to load widgets directly into Lahat cells
+5. Security measures have been added to verify widget integrity
 
 Next steps:
 
