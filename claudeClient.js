@@ -19,85 +19,6 @@ class ClaudeClient {
       apiKey: this.apiKey || process.env.ANTHROPIC_API_KEY
     });
     
-    this.systemPrompt = `You are an expert web developer specializing in creating self-contained web components using JavaScript. When given a description of an application, you will generate a complete, functional web component implementation.
-
-IMPORTANT GUIDELINES:
-1. Your response must be a SINGLE JavaScript file that defines a web component class extending HTMLElement.
-2. The web component must use Shadow DOM for encapsulation.
-3. All CSS must be included within the component using a <style> tag in the shadow DOM.
-4. All functionality must be self-contained within the component class.
-5. The component must be fully functional without any external dependencies or network requests.
-6. Use modern JavaScript (ES6+) and CSS features.
-7. Ensure the UI is clean, intuitive, and responsive.
-8. Include appropriate error handling and user feedback.
-9. Add comments to explain complex logic or functionality.
-10. The component will be loaded in a container that already has a draggable region at the top, so you don't need to add one.
-
-RESPONSE FORMAT:
-Your response must be a valid JavaScript file defining a web component class and registering it with customElements.define().
-
-EXAMPLE OUTPUT:
-/**
- * Mini App Component
- * Description of what this component does
- */
-export class MiniAppComponent extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    
-    // Initialize state
-    this.state = {
-      // Component state here
-    };
-    
-    // Render initial UI
-    this.render();
-  }
-  
-  // Lifecycle methods
-  connectedCallback() {
-    // Component connected to DOM
-    this.setupEventListeners();
-  }
-  
-  disconnectedCallback() {
-    // Component removed from DOM
-    this.removeEventListeners();
-  }
-  
-  // Render method
-  render() {
-    this.shadowRoot.innerHTML = \`
-      <style>
-        /* Component styles */
-        :host {
-          display: block;
-          font-family: system-ui, sans-serif;
-        }
-        .container {
-          padding: 20px;
-        }
-      </style>
-      <div class="container">
-        <!-- Component HTML -->
-      </div>
-    \`;
-  }
-  
-  // Event handling
-  setupEventListeners() {
-    // Set up event listeners
-  }
-  
-  removeEventListeners() {
-    // Clean up event listeners
-  }
-}
-
-// Register the component
-customElements.define('mini-app-component', MiniAppComponent);`;
-
     this.appStoragePath = path.join(app.getPath('userData'), 'generated-apps');
     this.ensureAppStorageDirectory();
     this.migrateExistingApps();
@@ -201,7 +122,7 @@ customElements.define('mini-app-component', MiniAppComponent);`;
     }
   }
 
-  async generateApp(prompt, conversationId = null, customSystemPrompt = null) {
+  async generateApp(prompt, conversationId = null, systemPrompt) {
     try {
       // Initialize messages with just the user prompt
       const messages = [
@@ -221,9 +142,10 @@ customElements.define('mini-app-component', MiniAppComponent);`;
       const response = await this.anthropic.messages.create({
         model: 'claude-3-7-sonnet-20250219', // Updated to latest model
         max_tokens: 64000, // Reduced to maximum allowed for this model
-        system: customSystemPrompt || this.systemPrompt, // Use custom prompt if provided
+        system: systemPrompt, // System prompt is now a required parameter
         messages,
-        stream: true
+        stream: true,
+        temperature: 0.4
       });
 
       return response;
@@ -233,7 +155,7 @@ customElements.define('mini-app-component', MiniAppComponent);`;
     }
   }
 
-  async saveGeneratedApp(appName, componentContent, prompt, conversationId = null) {
+  async saveGeneratedApp(appName, componentContent, prompt, conversationId = null, minimal = false) {
     // Create a safe folder name from the app name
     const safeAppName = appName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const timestamp = Date.now();
@@ -246,15 +168,56 @@ customElements.define('mini-app-component', MiniAppComponent);`;
       // Create the app folder
       await fs.mkdir(folderPath, { recursive: true });
       
+      // In minimal mode, we only create the essential directories and files
+      let componentFilePath;
+      let componentName = `${safeAppName}-component.js`;
+      
+      if (minimal) {
+        // Save the component content directly in the app folder
+        componentFilePath = path.join(folderPath, componentName);
+        await fs.writeFile(componentFilePath, componentContent);
+        
+        // Create minimal metadata
+        const metadata = {
+          name: appName,
+          created: new Date().toISOString(),
+          prompt,
+          conversationId: conversationId || `conv_${timestamp}`,
+          versions: [
+            {
+              timestamp,
+              filePath: componentName,
+              isMinimal: true
+            }
+          ],
+          isWebComponent: true,
+          isMinimal: true
+        };
+        
+        // Save metadata
+        const metadataPath = path.join(folderPath, 'metadata.json');
+        await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+        
+        return {
+          folderName,
+          filePath: componentFilePath,
+          componentFilePath,
+          folderPath,
+          metadata,
+          isMinimal: true
+        };
+      }
+      
+      // If not in minimal mode, continue with the full app generation
+      
       // Create assets folder
       await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
       
       // Create components folder
       await fs.mkdir(path.join(folderPath, 'components'), { recursive: true });
       
-      // Save the component content as a JS file
-      const componentName = `${safeAppName}-component.js`;
-      const componentFilePath = path.join(folderPath, 'components', componentName);
+      // Save the component content as a JS file in the components folder
+      componentFilePath = path.join(folderPath, 'components', componentName);
       await fs.writeFile(componentFilePath, componentContent);
       
       // Copy the base-component.js file
@@ -989,7 +952,7 @@ textarea {
     }
   }
 
-  async updateGeneratedApp(conversationId, prompt, componentContent) {
+  async updateGeneratedApp(conversationId, prompt, componentContent, minimal = false) {
     try {
       // Get all folders in the app storage directory
       const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
@@ -1010,6 +973,45 @@ textarea {
             // Create a new version
             const timestamp = Date.now();
             const versionNumber = metadata.versions.length + 1;
+            
+            // Check if we should use minimal mode
+            if (minimal || metadata.isMinimal) {
+              // In minimal mode, we only update the component file
+              const safeAppName = metadata.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+              const componentFilename = `${safeAppName}-component-v${versionNumber}.js`;
+              const componentFilePath = path.join(this.appStoragePath, folder, componentFilename);
+              
+              console.log('Updating app in minimal mode, saving component to:', componentFilePath);
+              
+              // Save the new component version
+              await fs.writeFile(componentFilePath, componentContent);
+              
+              // Update metadata
+              metadata.versions.push({
+                timestamp,
+                filePath: componentFilename,
+                prompt,
+                isMinimal: true
+              });
+              
+              // Set isMinimal flag if not already set
+              if (!metadata.isMinimal) {
+                metadata.isMinimal = true;
+              }
+              
+              await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+              
+              return {
+                conversationId,
+                filePath: componentFilePath,
+                componentFilePath,
+                folderPath: path.join(this.appStoragePath, folder),
+                versionNumber,
+                isMinimal: true
+              };
+            }
+            
+            // For non-minimal mode, continue with the full app update
             
             // Create version-specific filenames
             const versionHtmlFilename = `v${versionNumber}.html`;

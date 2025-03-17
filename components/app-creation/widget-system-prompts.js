@@ -21,6 +21,9 @@ IMPORTANT GUIDELINES:
 10. The widget will be placed in a Lahat cell and should support resizing.
 11. Use the provided data persistence methods (this.saveData and this.loadData) for storing widget state.
 12. Implement event communication using this.publishEvent to communicate with the parent cell.
+13. DO NOT include any HTML boilerplate or script tags - ONLY the widget component class and its registration.
+14. Your code will be directly imported into Lahat, so ensure it's compatible with ES modules.
+15. Make sure to register your component with customElements.define() at the end of the file.
 {{SPECIFIC_GUIDELINES}}
 
 WIDGET COMPONENT INTERFACE:
@@ -48,7 +51,75 @@ The WidgetComponent base class provides the following methods and properties:
   - render(html, styles): Render HTML and CSS in the shadow DOM
 
 RESPONSE FORMAT:
-Your response must be a valid JavaScript file defining a widget component class extending WidgetComponent and registering it with customElements.define().`;
+Your response must be a valid JavaScript file defining a widget component class extending WidgetComponent and registering it with customElements.define().
+
+EXAMPLE RESPONSE FORMAT:
+// The following is an example of what your response should look like
+// This is just a template - your actual implementation will be different
+
+/*
+import { WidgetComponent } from '../../components/core/widget-component.js';
+
+export class ExampleWidget extends WidgetComponent {
+  constructor() {
+    super();
+    this._count = 0;
+    this.render();
+  }
+  
+  async onDataStoreReady() {
+    const savedCount = await this.loadData('count');
+    if (savedCount !== null) {
+      this._count = savedCount;
+      this.updateUI();
+    }
+  }
+  
+  render() {
+    const html = \`
+      <div class="example-widget">
+        <h2>Example Widget</h2>
+        <div class="count">\${this._count}</div>
+        <button class="increment">Increment</button>
+      </div>
+    \`;
+    
+    const styles = \`
+      :host {
+        display: block;
+      }
+      
+      .example-widget {
+        padding: 16px;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+      }
+    \`;
+    
+    this.shadowRoot.innerHTML = \`
+      <style>\${styles}</style>
+      \${html}
+    \`;
+    
+    this.shadowRoot.querySelector('.increment').addEventListener('click', () => {
+      this._count++;
+      this.updateUI();
+      this.saveData('count', this._count);
+      this.publishEvent('count-changed', { count: this._count });
+    });
+  }
+  
+  updateUI() {
+    const countElement = this.shadowRoot.querySelector('.count');
+    if (countElement) {
+      countElement.textContent = this._count;
+    }
+  }
+}
+
+// Register the component
+customElements.define('example-widget', ExampleWidget);
+*/`;
 
 /**
  * Widget type-specific content
