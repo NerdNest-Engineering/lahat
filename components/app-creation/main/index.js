@@ -3,37 +3,37 @@
  * Registers IPC handlers for app creation functionality
  */
 import { ipcMain } from 'electron';
-import { handleGenerateMiniApp } from './handlers/generate-mini-app.js';
+import { handleGenerateWidget } from './handlers/generate-mini-app.js';
 import { handleGenerateTitleAndDescription } from './handlers/generate-title-description.js';
-import * as miniAppService from './services/mini-app-service.js';
+import * as widgetService from './services/mini-app-service.js';
 import * as apiHandlers from '../../../modules/ipc/apiHandlers.js';
 
 /**
- * Handle listing mini apps
+ * Handle listing widgets
  * @returns {Promise<Object>} - Result object with apps list
  */
-async function handleListMiniApps() {
+async function handleListWidgets() {
   const claudeClient = apiHandlers.getClaudeClient();
-  return await miniAppService.listMiniApps(claudeClient);
+  return await widgetService.listWidgets(claudeClient);
 }
 
 /**
- * Handle opening a mini app
+ * Handle opening a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for opening the mini app
+ * @param {Object} params - Parameters for opening the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleOpenMiniApp(event, { appId, filePath, name }) {
-  return await miniAppService.openMiniApp(appId, filePath, name);
+async function handleOpenWidget(event, { appId, filePath, name }) {
+  return await widgetService.openWidget(appId, filePath, name);
 }
 
 /**
- * Handle updating a mini app
+ * Handle updating a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for updating the mini app
+ * @param {Object} params - Parameters for updating the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleUpdateMiniApp(event, params) {
+async function handleUpdateWidget(event, params) {
   const claudeClient = apiHandlers.getClaudeClient();
   
   // If no system prompt is provided, determine one based on the description
@@ -51,41 +51,41 @@ async function handleUpdateMiniApp(event, params) {
     }
   }
   
-  return await miniAppService.updateMiniApp(claudeClient, event, params);
+  return await widgetService.updateWidget(claudeClient, event, params);
 }
 
 /**
- * Handle deleting a mini app
+ * Handle deleting a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for deleting the mini app
+ * @param {Object} params - Parameters for deleting the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleDeleteMiniApp(event, { appId }) {
+async function handleDeleteWidget(event, { appId }) {
   const claudeClient = apiHandlers.getClaudeClient();
-  return await miniAppService.deleteMiniApp(claudeClient, appId);
+  return await widgetService.deleteWidget(claudeClient, appId);
 }
 
 /**
  * Register all app creation IPC handlers
  */
 export function registerAppCreationHandlers() {
-  // Generate mini app
-  ipcMain.handle('generate-mini-app', handleGenerateMiniApp);
+  // Generate widget
+  ipcMain.handle('generate-widget', handleGenerateWidget);
   
   // Generate title and description
   ipcMain.handle('generate-title-and-description', handleGenerateTitleAndDescription);
   
-  // List mini apps
-  ipcMain.handle('list-mini-apps', handleListMiniApps);
+  // List widgets
+  ipcMain.handle('list-widgets', handleListWidgets);
   
-  // Open a mini app
-  ipcMain.handle('open-mini-app', handleOpenMiniApp);
+  // Open a widget
+  ipcMain.handle('open-widget', handleOpenWidget);
   
-  // Update a mini app
-  ipcMain.handle('update-mini-app', handleUpdateMiniApp);
+  // Update a widget
+  ipcMain.handle('update-widget', handleUpdateWidget);
   
-  // Delete a mini app
-  ipcMain.handle('delete-mini-app', handleDeleteMiniApp);
+  // Delete a widget
+  ipcMain.handle('delete-widget', handleDeleteWidget);
   
   console.log('App creation handlers registered');
 }

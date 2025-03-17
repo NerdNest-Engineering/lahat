@@ -1,8 +1,8 @@
 /**
- * Generate Mini App Handler
- * IPC handler for mini app generation
+ * Generate Widget Handler
+ * IPC handler for widget generation
  */
-import * as miniAppService from '../services/mini-app-service.js';
+import * as widgetService from '../services/mini-app-service.js';
 import * as apiHandlers from '../../../../modules/ipc/apiHandlers.js';
 import { 
   DEFAULT_WIDGET_PROMPT, 
@@ -13,12 +13,16 @@ import {
 } from '../../widget-system-prompts.js';
 
 /**
- * Handle generating a mini app
+ * Handle generating a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for generating the mini app
+ * @param {Object} params - Parameters for generating the widget
+ * @param {string} params.prompt - The prompt for generating the widget
+ * @param {string} params.appName - The name of the app
+ * @param {string} [params.systemPrompt] - Optional custom system prompt
+ * @param {boolean} [params.minimal=false] - Whether to generate a minimal app without dependencies
  * @returns {Promise<Object>} - Result object with success flag
  */
-export async function handleGenerateMiniApp(event, params) {
+export async function handleGenerateWidget(event, params) {
   const claudeClient = apiHandlers.getClaudeClient();
   
   // If no system prompt is provided, determine one based on the description
@@ -33,5 +37,5 @@ export async function handleGenerateMiniApp(event, params) {
     }
   }
   
-  return await miniAppService.generateMiniApp(claudeClient, event, params);
+  return await widgetService.generateWidget(claudeClient, event, params);
 }
