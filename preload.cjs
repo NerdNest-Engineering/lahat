@@ -88,11 +88,28 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    generateWidget: async (params) => {
+      try {
+        return await ipcRenderer.invoke('generate-widget', params);
+      } catch (error) {
+        console.error('Error generating widget:', error);
+        throw error;
+      }
+    },
     listMiniApps: async () => {
       try {
         return await ipcRenderer.invoke('list-mini-apps');
       } catch (error) {
         console.error('Error listing mini apps:', error);
+        throw error;
+      }
+    },
+    // Widget management
+    listWidgets: async () => {
+      try {
+        return await ipcRenderer.invoke('list-widgets');
+      } catch (error) {
+        console.error('Error listing widgets:', error);
         throw error;
       }
     },
@@ -104,11 +121,27 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    openWidget: async (params) => {
+      try {
+        return await ipcRenderer.invoke('open-widget', params);
+      } catch (error) {
+        console.error('Error opening widget:', error);
+        throw error;
+      }
+    },
     updateMiniApp: async (params) => {
       try {
         return await ipcRenderer.invoke('update-mini-app', params);
       } catch (error) {
         console.error('Error updating mini app:', error);
+        throw error;
+      }
+    },
+    updateWidget: async (params) => {
+      try {
+        return await ipcRenderer.invoke('update-widget', params);
+      } catch (error) {
+        console.error('Error updating widget:', error);
         throw error;
       }
     },
@@ -120,11 +153,27 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    deleteWidget: async (params) => {
+      try {
+        return await ipcRenderer.invoke('delete-widget', params);
+      } catch (error) {
+        console.error('Error deleting widget:', error);
+        throw error;
+      }
+    },
     exportMiniApp: async (params) => {
       try {
         return await ipcRenderer.invoke('export-mini-app', params);
       } catch (error) {
         console.error('Error exporting mini app:', error);
+        throw error;
+      }
+    },
+    exportWidget: async (params) => {
+      try {
+        return await ipcRenderer.invoke('export-widget', params);
+      } catch (error) {
+        console.error('Error exporting widget:', error);
         throw error;
       }
     },
@@ -136,9 +185,17 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    importWidget: async () => {
+      try {
+        return await ipcRenderer.invoke('import-widget');
+      } catch (error) {
+        console.error('Error importing widget:', error);
+        throw error;
+      }
+    },
     openAppDirectory: async () => {
       try {
-        return await ipcRenderer.invoke('open-app-directory');
+        return await ipcRenderer.invoke('open-widget-directory');
       } catch (error) {
         console.error('Error opening app directory:', error);
         throw error;

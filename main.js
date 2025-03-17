@@ -7,6 +7,7 @@ import store from './store.js';
 import * as windowManager from './modules/windowManager/index.js';
 import * as apiHandlers from './modules/ipc/apiHandlers.js';
 import * as windowHandlers from './modules/ipc/windowHandlers.js';
+import * as miniAppHandlers from './modules/ipc/miniAppHandlers.js';
 import { registerAppCreationHandlers } from './components/app-creation/main/index.js';
 import { ErrorHandler } from './modules/utils/errorHandler.js';
 // Import CommonJS module correctly
@@ -73,6 +74,7 @@ function initializeApp() {
     apiHandlers.registerHandlers();
     registerAppCreationHandlers(); // Use the new app creation handlers
     windowHandlers.registerHandlers();
+    // Note: miniAppHandlers.registerHandlers() is not needed as these handlers are now registered by registerAppCreationHandlers()
     
     // Initialize Claude client
     apiHandlers.initializeClaudeClient();

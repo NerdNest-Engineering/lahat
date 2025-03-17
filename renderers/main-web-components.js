@@ -24,7 +24,7 @@ class AppController {
     }
     
     // Set up event listeners
-    this.appManagementSection.addEventListener('create-app', () => {
+    this.appManagementSection.addEventListener('create-widget', () => {
       window.electronAPI.openWindow('app-creation');
     });
     
@@ -36,7 +36,7 @@ class AppController {
       this.loadMiniApps();
     });
     
-    this.appManagementSection.addEventListener('open-app-directory', async () => {
+    this.appManagementSection.addEventListener('open-widget-directory', async () => {
       try {
         await window.electronAPI.openAppDirectory();
       } catch (error) {

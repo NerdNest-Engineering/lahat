@@ -18,7 +18,7 @@ const generationOutput = document.getElementById('generation-output');
 // App Management Section
 const appManagementSection = document.getElementById('app-management-section');
 const refreshAppsButton = document.getElementById('refresh-apps-button');
-const openAppDirectoryButton = document.getElementById('open-app-directory-button');
+const openAppDirectoryButton = document.getElementById('open-widget-directory-button');
 const appList = document.getElementById('app-list');
 const noAppsMessage = document.getElementById('no-apps-message');
 
