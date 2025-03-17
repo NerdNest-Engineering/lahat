@@ -2,23 +2,23 @@ import { ipcMain, dialog, app } from 'electron';
 import path from 'path';
 import * as fileOperations from '../utils/fileOperations.js';
 import * as apiHandlers from './apiHandlers.js';
-import * as miniAppManager from '../miniAppManager.js';
+import * as widgetManager from '../miniAppManager.js';
 import * as titleDescriptionGenerator from '../utils/titleDescriptionGenerator.js';
 import store from '../../store.js';
 import fs from 'fs/promises';
 
 /**
- * Mini App Handlers Module
- * Responsible for mini app generation and management IPC handlers
+ * Widget Handlers Module
+ * Responsible for widget generation and management IPC handlers
  */
 
 /**
- * Handle generating a mini app
+ * Handle generating a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for generating the mini app
+ * @param {Object} params - Parameters for generating the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleGenerateMiniApp(event, { prompt, appName }) {
+async function handleGenerateWidget(event, { prompt, appName }) {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -31,7 +31,7 @@ async function handleGenerateMiniApp(event, { prompt, appName }) {
     // Start streaming response
     event.sender.send('generation-status', {
       status: 'generating',
-      message: 'Generating your mini app...'
+      message: 'Generating your widget...'
     });
     
     const response = await claudeClient.generateApp(prompt);
@@ -55,13 +55,13 @@ async function handleGenerateMiniApp(event, { prompt, appName }) {
     
     // Save the generated app
     const savedApp = await claudeClient.saveGeneratedApp(
-      appName || 'Mini App',
+      appName || 'Widget',
       htmlContent,
       prompt
     );
     
     // Create a window for the app
-    const windowResult = await miniAppManager.createMiniAppWindow(
+    const windowResult = await widgetManager.createWidgetWindow(
       savedApp.metadata.name,
       htmlContent,
       savedApp.filePath,
@@ -110,10 +110,10 @@ async function handleGenerateMiniApp(event, { prompt, appName }) {
 }
 
 /**
- * Handle listing mini apps
+ * Handle listing widgets
  * @returns {Promise<Object>} - Result object with apps list
  */
-async function handleListMiniApps() {
+async function handleListWidgets() {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -123,7 +123,7 @@ async function handleListMiniApps() {
     const apps = await claudeClient.listGeneratedApps();
     return { apps };
   } catch (error) {
-    console.error('Error listing mini apps:', error);
+    console.error('Error listing widgets:', error);
     return {
       success: false,
       error: error.message,
@@ -133,19 +133,19 @@ async function handleListMiniApps() {
 }
 
 /**
- * Handle opening a mini app
+ * Handle opening a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for opening the mini app
+ * @param {Object} params - Parameters for opening the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleOpenMiniApp(event, { appId, filePath, name }) {
-  console.log('handleOpenMiniApp called with:', { appId, filePath, name });
+async function handleOpenWidget(event, { appId, filePath, name }) {
+  console.log('handleOpenWidget called with:', { appId, filePath, name });
   
   try {
-    const result = await miniAppManager.openMiniApp(appId, filePath, name);
+    const result = await widgetManager.openWidget(appId, filePath, name);
     return result;
   } catch (error) {
-    console.error('Error in handleOpenMiniApp:', error);
+    console.error('Error in handleOpenWidget:', error);
     return {
       success: false,
       error: error.message
@@ -154,12 +154,12 @@ async function handleOpenMiniApp(event, { appId, filePath, name }) {
 }
 
 /**
- * Handle updating a mini app
+ * Handle updating a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for updating the mini app
+ * @param {Object} params - Parameters for updating the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleUpdateMiniApp(event, { appId, prompt }) {
+async function handleUpdateWidget(event, { appId, prompt }) {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -172,7 +172,7 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
     // Start streaming response
     event.sender.send('generation-status', {
       status: 'updating',
-      message: 'Updating your mini app...'
+      message: 'Updating your widget...'
     });
     
     const response = await claudeClient.generateApp(prompt, appId);
@@ -202,7 +202,7 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
     );
     
     // Update the window if it's open
-    const updateResult = await miniAppManager.updateMiniApp(
+    const updateResult = await widgetManager.updateWidget(
       appId,
       htmlContent,
       updatedApp.filePath
@@ -234,12 +234,12 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
 }
 
 /**
- * Handle deleting a mini app
+ * Handle deleting a widget
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for deleting the mini app
+ * @param {Object} params - Parameters for deleting the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleDeleteMiniApp(event, { appId }) {
+async function handleDeleteWidget(event, { appId }) {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -250,7 +250,7 @@ async function handleDeleteMiniApp(event, { appId }) {
     }
     
     // Close the window if it's open
-    miniAppManager.closeMiniApp(appId);
+    widgetManager.closeWidget(appId);
     
     // Delete the app
     await claudeClient.deleteGeneratedApp(appId);
@@ -262,7 +262,7 @@ async function handleDeleteMiniApp(event, { appId }) {
     
     return { success: true };
   } catch (error) {
-    console.error('Error deleting mini app:', error);
+    console.error('Error deleting widget:', error);
     return {
       success: false,
       error: error.message
@@ -271,12 +271,12 @@ async function handleDeleteMiniApp(event, { appId }) {
 }
 
 /**
- * Handle exporting a mini app as a package (zip file)
+ * Handle exporting a widget as a package (zip file)
  * @param {Object} event - IPC event
- * @param {Object} params - Parameters for exporting the mini app
+ * @param {Object} params - Parameters for exporting the widget
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleExportMiniApp(event, { appId, filePath }) {
+async function handleExportWidget(event, { appId, filePath }) {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -288,8 +288,8 @@ async function handleExportMiniApp(event, { appId, filePath }) {
     
     // Show save dialog for zip file
     const { canceled, filePath: savePath } = await dialog.showSaveDialog({
-      title: 'Export Mini App Package',
-      defaultPath: path.join(app.getPath('documents'), 'mini-app-package.zip'),
+      title: 'Export Widget Package',
+      defaultPath: path.join(app.getPath('documents'), 'widget-package.zip'),
       filters: [
         { name: 'Zip Files', extensions: ['zip'] }
       ]
@@ -303,7 +303,7 @@ async function handleExportMiniApp(event, { appId, filePath }) {
     const result = await claudeClient.exportMiniAppAsPackage(appId, savePath);
     return result;
   } catch (error) {
-    console.error('Error exporting mini app:', error);
+    console.error('Error exporting widget:', error);
     return {
       success: false,
       error: error.message
@@ -312,11 +312,11 @@ async function handleExportMiniApp(event, { appId, filePath }) {
 }
 
 /**
- * Handle importing a mini app package
+ * Handle importing a widget package
  * @param {Object} event - IPC event
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleImportMiniApp(event) {
+async function handleImportWidget(event) {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -328,7 +328,7 @@ async function handleImportMiniApp(event) {
     
     // Show open dialog
     const { canceled, filePaths } = await dialog.showOpenDialog({
-      title: 'Import Mini App Package',
+      title: 'Import Widget Package',
       properties: ['openFile'],
       filters: [
         { name: 'Zip Files', extensions: ['zip'] }
@@ -359,13 +359,13 @@ async function handleImportMiniApp(event) {
       
       store.set('recentApps', recentApps);
       
-      // Open the imported app
-      await miniAppManager.openMiniApp(result.appId, result.filePath, result.name);
+    // Open the imported app
+    await widgetManager.openWidget(result.appId, result.filePath, result.name);
     }
     
     return result;
   } catch (error) {
-    console.error('Error importing mini app:', error);
+    console.error('Error importing widget:', error);
     return {
       success: false,
       error: error.message
@@ -374,7 +374,7 @@ async function handleImportMiniApp(event) {
 }
 
 /**
- * Handle generating title and description for a mini app
+ * Handle generating title and description for a widget
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for generating title and description
  * @returns {Promise<Object>} - Result object with title and description
@@ -430,32 +430,32 @@ async function handleGenerateTitleAndDescription(event, { input }) {
 }
 
 /**
- * Register mini app-related IPC handlers
+ * Register widget-related IPC handlers
  */
 export function registerHandlers() {
-  // Generate mini app
-  ipcMain.handle('generate-mini-app', handleGenerateMiniApp);
+  // Generate widget
+  ipcMain.handle('generate-widget', handleGenerateWidget);
   
   // Generate title and description
   ipcMain.handle('generate-title-and-description', handleGenerateTitleAndDescription);
   
-  // List mini apps
-  ipcMain.handle('list-mini-apps', handleListMiniApps);
+  // List widgets
+  ipcMain.handle('list-widgets', handleListWidgets);
   
-  // Open a mini app
-  ipcMain.handle('open-mini-app', handleOpenMiniApp);
+  // Open a widget
+  ipcMain.handle('open-widget', handleOpenWidget);
   
-  // Update a mini app
-  ipcMain.handle('update-mini-app', handleUpdateMiniApp);
+  // Update a widget
+  ipcMain.handle('update-widget', handleUpdateWidget);
   
-  // Delete a mini app
-  ipcMain.handle('delete-mini-app', handleDeleteMiniApp);
+  // Delete a widget
+  ipcMain.handle('delete-widget', handleDeleteWidget);
   
-  // Export a mini app
-  ipcMain.handle('export-mini-app', handleExportMiniApp);
+  // Export a widget
+  ipcMain.handle('export-widget', handleExportWidget);
   
-  // Import a mini app
-  ipcMain.handle('import-mini-app', handleImportMiniApp);
+  // Import a widget
+  ipcMain.handle('import-widget', handleImportWidget);
   
-  console.log('Mini app handlers registered');
+  console.log('Widget handlers registered');
 }

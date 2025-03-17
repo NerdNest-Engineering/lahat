@@ -101,7 +101,7 @@ async function handleOpenAppDirectory() {
       if (!initialized) {
         return createErrorResponse(
           'Claude API key not set. Please set your API key in settings.',
-          'open-app-directory'
+          'open-widget-directory'
         );
       }
     }
@@ -110,7 +110,7 @@ async function handleOpenAppDirectory() {
     return createSuccessResponse();
   } catch (error) {
     ErrorHandler.logError('handleOpenAppDirectory', error);
-    return createErrorResponse(error, 'open-app-directory');
+    return createErrorResponse(error, 'open-widget-directory');
   }
 }
 

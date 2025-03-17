@@ -2,33 +2,33 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import * as windowManager from './windowManager/windowManager.js';
 import * as fileOperations from './utils/fileOperations.js';
-import { setActiveMiniApp, clearActiveMiniApp } from './utils/activeAppState.js';
+import { setActiveWidget, clearActiveWidget } from './utils/activeAppState.js';
 
 /**
- * Mini App Manager Module
- * Responsible for creating and managing mini app windows
+ * Widget Manager Module
+ * Responsible for creating and managing widget windows
  */
 
-// Track all mini app windows
-const miniAppWindows = new Map();
+// Track all widget windows
+const widgetWindows = new Map();
 
 /**
- * Create a mini app window
- * @param {string} appName - Name of the mini app
- * @param {string} componentContent - Component content of the mini app (optional)
+ * Create a widget window
+ * @param {string} appName - Name of the widget
+ * @param {string} componentContent - Component content of the widget (optional)
  * @param {string} filePath - Path to the HTML file
- * @param {string} conversationId - Conversation ID for the mini app
+ * @param {string} conversationId - Conversation ID for the widget
  * @returns {Promise<Object>} - Result object with success flag, filePath, and windowId
  */
-export async function createMiniAppWindow(appName, componentContent, filePath, conversationId) {
-  console.log('Creating mini app window:', { appName, filePath, conversationId });
+export async function createWidgetWindow(appName, componentContent, filePath, conversationId) {
+  console.log('Creating widget window:', { appName, filePath, conversationId });
   
   try {
     // Verify the HTML file exists
     if (!filePath) {
-      return {
-        success: false,
-        error: 'No file path provided for mini app'
+      return { 
+        success: false, 
+        error: 'No file path provided for widget'
       };
     }
     
@@ -37,31 +37,31 @@ export async function createMiniAppWindow(appName, componentContent, filePath, c
       if (!readResult.success) {
         return { 
           success: false, 
-          error: `Failed to read mini app file: ${readResult.error}` 
+          error: `Failed to read widget file: ${readResult.error}` 
         };
       }
     } catch (error) {
       console.error('Error verifying file:', error);
       return { 
         success: false, 
-        error: `Error verifying mini app file: ${error.message}` 
+        error: `Error verifying widget file: ${error.message}` 
       };
     }
     
-    console.log('Mini app file verified:', filePath);
+    console.log('Widget file verified:', filePath);
     
     // Create the window using the window manager
-    const win = windowManager.createMiniAppWindow(appName, componentContent, filePath, conversationId);
+    const win = windowManager.createWidgetWindow(appName, componentContent, filePath, conversationId);
     
     // Add event listeners for window events
     win.on('close', () => console.log('Window close event triggered for:', appName));
     win.on('closed', () => {
       console.log('Window closed event triggered for:', appName);
       if (conversationId) {
-        miniAppWindows.delete(conversationId);
+        widgetWindows.delete(conversationId);
         
-        // Clear active mini app
-        clearActiveMiniApp();
+        // Clear active widget
+        clearActiveWidget();
       }
     });
     
@@ -69,8 +69,8 @@ export async function createMiniAppWindow(appName, componentContent, filePath, c
       console.log('Loading file into window:', filePath);
       win.loadFile(filePath);
       
-      // DevTools are disabled for mini apps to prevent Autofill API errors
-      // Uncomment the following code if you need DevTools for debugging mini apps
+      // DevTools are disabled for widgets to prevent Autofill API errors
+      // Uncomment the following code if you need DevTools for debugging widgets
       /*
       if (process.env.NODE_ENV === 'development') {
         win.webContents.openDevTools({ mode: 'detach' });
@@ -105,10 +105,10 @@ export async function createMiniAppWindow(appName, componentContent, filePath, c
         name: appName
       };
       
-      miniAppWindows.set(conversationId, appInfo);
+      widgetWindows.set(conversationId, appInfo);
       
-      // Set as active mini app
-      setActiveMiniApp({
+      // Set as active widget
+      setActiveWidget({
         id: conversationId,
         name: appName,
         filePath: filePath
@@ -121,28 +121,28 @@ export async function createMiniAppWindow(appName, componentContent, filePath, c
       windowId: win.id
     };
   } catch (error) {
-    console.error('Failed to create mini app window:', error);
+    console.error('Failed to create widget window:', error);
     return { 
       success: false, 
-      error: `Failed to create mini app window: ${error.message}` 
+      error: `Failed to create widget window: ${error.message}` 
     };
   }
 }
 
 /**
- * Open an existing mini app
- * @param {string} appId - ID of the mini app
+ * Open an existing widget
+ * @param {string} appId - ID of the widget
  * @param {string} filePath - Path to the HTML file
- * @param {string} name - Name of the mini app
+ * @param {string} name - Name of the widget
  * @returns {Promise<Object>} - Result object with success flag, filePath, and windowId
  */
-export async function openMiniApp(appId, filePath, name) {
-  console.log('Opening mini app:', { appId, filePath, name });
+export async function openWidget(appId, filePath, name) {
+  console.log('Opening widget:', { appId, filePath, name });
   
   try {
     // Check if the window is already open
-    if (miniAppWindows.has(appId)) {
-      const existingWindow = miniAppWindows.get(appId).window;
+    if (widgetWindows.has(appId)) {
+      const existingWindow = widgetWindows.get(appId).window;
       if (!existingWindow.isDestroyed()) {
         console.log('Window already exists, focusing it');
         existingWindow.focus();
@@ -157,29 +157,29 @@ export async function openMiniApp(appId, filePath, name) {
     }
     
     // Create a new window
-    console.log('Creating mini app window for:', name);
-    const result = await createMiniAppWindow(name, readResult.content, filePath, appId);
+    console.log('Creating widget window for:', name);
+    const result = await createWidgetWindow(name, readResult.content, filePath, appId);
     
     return result;
   } catch (error) {
-    console.error('Error opening mini app:', error);
+    console.error('Error opening widget:', error);
     return {
       success: false,
-      error: `Error opening mini app: ${error.message}`
+      error: `Error opening widget: ${error.message}`
     };
   }
 }
 
 /**
- * Update an existing mini app
- * @param {string} appId - ID of the mini app
+ * Update an existing widget
+ * @param {string} appId - ID of the widget
  * @param {string} componentContent - New component content
  * @param {string} filePath - Path to the HTML file
  * @param {string} componentFilePath - Path to the component file (optional)
  * @returns {Promise<Object>} - Result object with success flag and filePath
  */
-export async function updateMiniApp(appId, componentContent, filePath, componentFilePath) {
-  console.log('Updating mini app:', { appId, filePath, componentFilePath });
+export async function updateWidget(appId, componentContent, filePath, componentFilePath) {
+  console.log('Updating widget:', { appId, filePath, componentFilePath });
   
   try {
     // If componentFilePath is provided, write the component content to it
@@ -192,8 +192,8 @@ export async function updateMiniApp(appId, componentContent, filePath, component
     }
     
     // If the window is open, update it by reloading the HTML file
-    if (miniAppWindows.has(appId)) {
-      const appWindow = miniAppWindows.get(appId);
+    if (widgetWindows.has(appId)) {
+      const appWindow = widgetWindows.get(appId);
       if (!appWindow.window.isDestroyed()) {
         // Update the window content
         appWindow.window.loadFile(filePath);
@@ -206,31 +206,31 @@ export async function updateMiniApp(appId, componentContent, filePath, component
       componentFilePath
     };
   } catch (error) {
-    console.error('Error updating mini app:', error);
+    console.error('Error updating widget:', error);
     return {
       success: false,
-      error: `Error updating mini app: ${error.message}`
+      error: `Error updating widget: ${error.message}`
     };
   }
 }
 
 /**
- * Close a mini app window
- * @param {string} appId - ID of the mini app
+ * Close a widget window
+ * @param {string} appId - ID of the widget
  * @returns {boolean} - True if window was closed
  */
-export function closeMiniApp(appId) {
-  console.log('Closing mini app:', appId);
+export function closeWidget(appId) {
+  console.log('Closing widget:', appId);
   
-  if (miniAppWindows.has(appId)) {
-    const appWindow = miniAppWindows.get(appId);
+  if (widgetWindows.has(appId)) {
+    const appWindow = widgetWindows.get(appId);
     if (!appWindow.window.isDestroyed()) {
       appWindow.window.close();
     }
-    miniAppWindows.delete(appId);
+    widgetWindows.delete(appId);
     
-    // Clear active mini app
-    clearActiveMiniApp();
+    // Clear active widget
+    clearActiveWidget();
     
     return true;
   }
@@ -239,18 +239,18 @@ export function closeMiniApp(appId) {
 }
 
 /**
- * Get a mini app window
- * @param {string} appId - ID of the mini app
- * @returns {Object|null} - Mini app window object or null if not found
+ * Get a widget window
+ * @param {string} appId - ID of the widget
+ * @returns {Object|null} - Widget window object or null if not found
  */
-export function getMiniApp(appId) {
-  return miniAppWindows.get(appId) || null;
+export function getWidget(appId) {
+  return widgetWindows.get(appId) || null;
 }
 
 /**
- * Get all mini app windows
- * @returns {Map<string, Object>} - Map of mini app windows
+ * Get all widget windows
+ * @returns {Map<string, Object>} - Map of widget windows
  */
-export function getAllMiniApps() {
-  return miniAppWindows;
+export function getAllWidgets() {
+  return widgetWindows;
 }

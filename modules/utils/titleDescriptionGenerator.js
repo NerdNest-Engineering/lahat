@@ -6,11 +6,12 @@ import Anthropic from '@anthropic-ai/sdk';
  * @returns {string} - Formatted prompt for Claude
  */
 function createTitleDescriptionPrompt(input) {
-  return `Based on the following user input, provide:
-1. A concise, creative, and descriptive title (2-5 words)
-2. An expanded description paragraph
+  return `Based on the following user input, first take a moment to analyze the request and consider possible variations or enhancements that could make the resulting web component more useful and appealing. Then, generate:
 
-For the description paragraph: Rephrase and expand the input into a single, self-contained paragraph that clearly defines the purpose and functionality of the mini-application. The response should be declarative, avoiding direct reference to the user and eliminating any additional explanations or commentary.
+1. A concise, creative, and descriptive title (2-5 words) that captures the essence of the component.
+2. An expanded description paragraph that rephrases and expands the input into a single, self-contained paragraph, clearly defining the purpose and functionality of the web component.
+
+For the description paragraph: Ensure the response is engaging, thoughtful, and intuitive, making it feel like the perfect fit for the user's intent. Avoid directly referencing the user and refrain from unnecessary explanations or commentary.
 
 For example:
 • Input: "I want Tetris."
@@ -38,7 +39,7 @@ function extractTitleAndDescription(content) {
   const descriptionMatch = content.match(/DESCRIPTION:\s*(.*)/is);
   
   return {
-    title: titleMatch ? titleMatch[1].trim() : "Mini App",
+    title: titleMatch ? titleMatch[1].trim() : "Widget",
     description: descriptionMatch ? descriptionMatch[1].trim() : content
   };
 }
@@ -64,7 +65,8 @@ export async function generateTitleAndDescription(input, apiKey, onChunk) {
     messages: [
       { role: 'user', content: prompt }
     ],
-    stream: true
+    stream: true,
+    temperature: 0.9
   });
 
   let accumulatedContent = '';

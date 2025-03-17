@@ -11,7 +11,7 @@ export const IpcChannels = {
   // API related
   SET_API_KEY: 'set-api-key',
   CHECK_API_KEY: 'check-api-key',
-  OPEN_APP_DIRECTORY: 'open-app-directory',
+  OPEN_APP_DIRECTORY: 'open-widget-directory',
   
   // Mini app related
   GENERATE_MINI_APP: 'generate-mini-app',
