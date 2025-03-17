@@ -1,4 +1,4 @@
-# Lahat
+t# Lahat
 
 <div align="center">
   <img src="assets/icons/lahat.png" alt="Lahat Logo" width="150"/>
@@ -37,6 +37,7 @@ If you're a developer and want to run from source:
 - **App Management**: Save, open, update, and delete your generated mini apps
 - **Iterative Refinement**: Continue the conversation with Claude to refine and improve your apps
 - **Export Functionality**: Export your mini apps as standalone HTML files
+- **Self-Contained Widgets**: Generate simplified widgets with only essential files for better clarity and performance
 
 ## 🚀 Getting Started
 
@@ -75,6 +76,22 @@ If you're a developer and want to run from source:
 ### Updating Apps
 
 Simply describe what changes you want, and Claude will update your app while preserving your data and preferences.
+
+### Using Self-Contained Widgets
+
+Self-contained widgets are generated with a simplified file structure, creating only the essential files needed:
+
+1. When creating a widget, enable the self-contained option (coming soon to the UI)
+2. The widget will be generated with just the component file and metadata
+3. No additional dependencies or files will be created
+
+Benefits of self-contained widgets:
+- **Cleaner Structure**: Easier to understand and modify
+- **Better Performance**: Reduced overhead from unnecessary files
+- **Faster Generation**: Creates fewer files, so generation is quicker
+- **Simplified Updates**: Easier to maintain and update
+
+For more details, see the [Self-Contained Widgets Documentation](docs/self-contained-widgets.md).
 
 ## 🔒 Security & Privacy
 
