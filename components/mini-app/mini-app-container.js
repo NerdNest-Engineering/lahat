@@ -1,18 +1,18 @@
 /**
- * Mini App Container Component
- * A standard container for hosting generated mini app web components
+ * Widget Container Component
+ * A standard container for hosting generated widget web components
  */
 
 import { BaseComponent } from '../core/base-component.js';
 
 /**
- * Mini App Container
- * Provides a standardized environment for loading and running mini app components
+ * Widget Container
+ * Provides a standardized environment for loading and running widget components
  * @extends BaseComponent
  */
-export class MiniAppContainer extends BaseComponent {
+export class WidgetContainer extends BaseComponent {
   /**
-   * Create a new MiniAppContainer
+   * Create a new WidgetContainer
    */
   constructor() {
     super();
@@ -23,9 +23,9 @@ export class MiniAppContainer extends BaseComponent {
     
     // Create base HTML structure
     this.render(`
-      <div class="mini-app-container">
-        <div class="mini-app-content">
-          <!-- Mini app component will be loaded here -->
+      <div class="widget-container">
+        <div class="widget-content">
+          <!-- Widget component will be loaded here -->
         </div>
       </div>
     `, `
@@ -36,7 +36,7 @@ export class MiniAppContainer extends BaseComponent {
         overflow: hidden;
       }
       
-      .mini-app-container {
+      .widget-container {
         width: 100%;
         height: 100%;
         display: flex;
@@ -45,7 +45,7 @@ export class MiniAppContainer extends BaseComponent {
         box-sizing: border-box;
       }
       
-      .mini-app-content {
+      .widget-content {
         flex: 1;
         overflow: auto;
         position: relative;
@@ -64,7 +64,7 @@ export class MiniAppContainer extends BaseComponent {
     this._loadedComponent = ComponentClass;
     
     // Get the content container
-    const contentContainer = this.$('.mini-app-content');
+    const contentContainer = this.$('.widget-content');
     
     // Clear any existing content
     contentContainer.innerHTML = '';
@@ -130,7 +130,7 @@ export class MiniAppContainer extends BaseComponent {
     
     // Ensure the tag name contains a hyphen (required for custom elements)
     if (!tagName.includes('-')) {
-      tagName = `mini-app-${tagName}`;
+      tagName = `widget-${tagName}`;
     }
     
     return tagName;
@@ -138,4 +138,4 @@ export class MiniAppContainer extends BaseComponent {
 }
 
 // Register the component
-customElements.define('mini-app-container', MiniAppContainer);
+customElements.define('widget-container', WidgetContainer);

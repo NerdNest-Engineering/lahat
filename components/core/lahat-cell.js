@@ -234,11 +234,18 @@ export class LahatCell extends BaseComponent {
       widget.setParentCell(this);
     }
     
+    // Apply CSP hash if available
+    const cspHash = widget.getAttribute('data-csp-hash');
+    if (cspHash) {
+      this.setAttribute('data-csp-hash', cspHash);
+    }
+    
     // Emit content change event
     this.emit('cell-content-changed', {
       cell: this,
       contentType: 'widget',
-      content: widget
+      content: widget,
+      cspHash
     });
   }
   

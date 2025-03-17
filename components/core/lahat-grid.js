@@ -6,6 +6,7 @@
 
 import { BaseComponent } from './base-component.js';
 import { LahatCell } from './lahat-cell.js';
+import { loadMiniAppComponent } from './secure-widget-loader.js';
 
 /**
  * Lahat Grid component for organizing cells in a grid layout
@@ -487,33 +488,62 @@ export class LahatGrid extends BaseComponent {
     return { ...this._gridSize };
   }
   
+  
   /**
-   * Check if a grid position is occupied
+   * Load a mini app into the grid
+   * @param {string} appId - App ID
+   * @param {string} componentPath - Path to the component file
    * @param {number} x - X position in grid
    * @param {number} y - Y position in grid
    * @param {number} width - Width in grid cells
    * @param {number} height - Height in grid cells
-   * @param {string} [excludeCellId] - Cell ID to exclude from check
-   * @returns {boolean} - True if position is occupied
+   * @returns {Promise<{cell: LahatCell, component: HTMLElement}|null>} - Cell and component or null if loading failed
    */
-  isPositionOccupied(x, y, width, height, excludeCellId = null) {
-    // Check each cell in the grid
-    for (const [cellId, cell] of this._cells.entries()) {
-      // Skip excluded cell
-      if (excludeCellId && cellId === excludeCellId) {
-        continue;
+  async loadMiniApp(appId, componentPath, x = 0, y = 0, width = 3, height = 3) {
+    try {
+      // Load the component
+      const component = await loadMiniAppComponent(componentPath, appId);
+      if (!component) {
+        console.error(`Failed to load mini app component: ${componentPath}`);
+        return null;
       }
       
-      // Get cell position and size
-      const position = cell.getGridPosition();
-      const size = cell.getGridSize();
+      // Create a cell for the component
+      const cell = document.createElement('lahat-cell');
       
-      // Check for overlap
+      // Add the component to the cell
+      cell.setWidget(component);
+      
+      // Add the cell to the grid
+      this.addCell(cell, x, y, width, height);
+      
+      return { cell, component };
+    } catch (error) {
+      console.error(`Error loading mini app: ${error.message}`);
+      return null;
+    }
+  }
+  
+  /**
+   * Check if a position is occupied by any cell
+   * @param {number} x - X position in grid
+   * @param {number} y - Y position in grid
+   * @param {number} width - Width in grid cells
+   * @param {number} height - Height in grid cells
+   * @returns {boolean} - True if position is occupied
+   */
+  isPositionOccupied(x, y, width, height) {
+    // Check each cell
+    for (const cell of this._cells.values()) {
+      const cellPos = cell.getGridPosition();
+      const cellSize = cell.getGridSize();
+      
+      // Check if cells overlap
       if (
-        x < position.x + size.width &&
-        x + width > position.x &&
-        y < position.y + size.height &&
-        y + height > position.y
+        x < cellPos.x + cellSize.width &&
+        x + width > cellPos.x &&
+        y < cellPos.y + cellSize.height &&
+        y + height > cellPos.y
       ) {
         return true;
       }

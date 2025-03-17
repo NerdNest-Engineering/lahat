@@ -3,6 +3,13 @@
  * Exports all core components for easier importing
  */
 
+// Import secure widget loader
+import { 
+  loadWidgetSecurely, 
+  loadWidgetIntoGrid, 
+  loadWidgetIntoCell 
+} from './secure-widget-loader.js';
+
 // Base components
 export { BaseComponent } from './base-component.js';
 export { WidgetComponent } from './widget-component.js';
@@ -92,6 +99,13 @@ export function createNestedCells(parentCell, count = 2) {
   return childCells;
 }
 
+// Secure widget loader
+export {
+  loadWidgetSecurely,
+  loadWidgetIntoGrid,
+  loadWidgetIntoCell
+};
+
 export default {
   BaseComponent,
   WidgetComponent,
@@ -106,5 +120,8 @@ export default {
   createWidgetInCell,
   createCellInGrid,
   createWidgetInGrid,
-  createNestedCells
+  createNestedCells,
+  loadWidgetSecurely,
+  loadWidgetIntoGrid,
+  loadWidgetIntoCell
 };
