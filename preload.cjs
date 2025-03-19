@@ -77,17 +77,7 @@ contextBridge.exposeInMainWorld(
       }
     },
     
-    // Mini app generation and management
-    // Note: These are kept for backward compatibility
-    // New code should use the appCreationService API
-    generateMiniApp: async (params) => {
-      try {
-        return await ipcRenderer.invoke('generate-mini-app', params);
-      } catch (error) {
-        console.error('Error generating mini app:', error);
-        throw error;
-      }
-    },
+    // Widget generation and management
     generateWidget: async (params) => {
       try {
         return await ipcRenderer.invoke('generate-widget', params);
@@ -96,28 +86,11 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
-    listMiniApps: async () => {
-      try {
-        return await ipcRenderer.invoke('list-mini-apps');
-      } catch (error) {
-        console.error('Error listing mini apps:', error);
-        throw error;
-      }
-    },
-    // Widget management
     listWidgets: async () => {
       try {
         return await ipcRenderer.invoke('list-widgets');
       } catch (error) {
         console.error('Error listing widgets:', error);
-        throw error;
-      }
-    },
-    openMiniApp: async (params) => {
-      try {
-        return await ipcRenderer.invoke('open-mini-app', params);
-      } catch (error) {
-        console.error('Error opening mini app:', error);
         throw error;
       }
     },
@@ -129,27 +102,11 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
-    updateMiniApp: async (params) => {
-      try {
-        return await ipcRenderer.invoke('update-mini-app', params);
-      } catch (error) {
-        console.error('Error updating mini app:', error);
-        throw error;
-      }
-    },
     updateWidget: async (params) => {
       try {
         return await ipcRenderer.invoke('update-widget', params);
       } catch (error) {
         console.error('Error updating widget:', error);
-        throw error;
-      }
-    },
-    deleteMiniApp: async (params) => {
-      try {
-        return await ipcRenderer.invoke('delete-mini-app', params);
-      } catch (error) {
-        console.error('Error deleting mini app:', error);
         throw error;
       }
     },
@@ -161,27 +118,11 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
-    exportMiniApp: async (params) => {
-      try {
-        return await ipcRenderer.invoke('export-mini-app', params);
-      } catch (error) {
-        console.error('Error exporting mini app:', error);
-        throw error;
-      }
-    },
     exportWidget: async (params) => {
       try {
         return await ipcRenderer.invoke('export-widget', params);
       } catch (error) {
         console.error('Error exporting widget:', error);
-        throw error;
-      }
-    },
-    importMiniApp: async () => {
-      try {
-        return await ipcRenderer.invoke('import-mini-app');
-      } catch (error) {
-        console.error('Error importing mini app:', error);
         throw error;
       }
     },

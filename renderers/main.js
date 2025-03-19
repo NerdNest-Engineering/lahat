@@ -47,7 +47,7 @@ async function initializeApp() {
 // App Management
 async function loadWidgets() {
   try {
-    console.log('Loading mini apps...');
+    console.log('Loading widgets...');
     const { apps } = await window.electronAPI.listWidgets();
     console.log('Loaded apps:', apps);
     
@@ -94,7 +94,7 @@ async function loadWidgets() {
       noAppsMessage.classList.remove('hidden');
     }
   } catch (error) {
-    console.error('Error loading mini apps:', error);
+    console.error('Error loading widgets:', error);
   }
 }
 
@@ -112,10 +112,10 @@ importAppButton.addEventListener('click', async () => {
     const result = await window.electronAPI.importWidget();
     
     if (result.success) {
-      alert(`Mini app "${result.name}" imported successfully!`);
+      alert(`Widget "${result.name}" imported successfully!`);
       loadWidgets();
     } else if (!result.canceled) {
-      alert(`Error importing mini app: ${result.error}`);
+      alert(`Error importing widget: ${result.error}`);
     }
   } catch (error) {
     alert(`Error: ${error.message}`);
@@ -191,8 +191,8 @@ openAppButton.addEventListener('click', async () => {
     // Close modal
     appDetailsModal.classList.add('hidden');
   } catch (error) {
-    console.error('Error opening mini app:', error);
-    alert(`Error opening mini app: ${error.message}`);
+    console.error('Error opening widget:', error);
+    alert(`Error opening widget: ${error.message}`);
   }
 });
 
@@ -219,12 +219,12 @@ exportAppButton.addEventListener('click', async () => {
     });
     
     if (result.success) {
-      alert(`Mini app exported successfully to ${result.filePath}`);
+      alert(`Widget exported successfully to ${result.filePath}`);
       
       // Close modal
       appDetailsModal.classList.add('hidden');
     } else if (!result.canceled) {
-      alert(`Error exporting mini app: ${result.error}`);
+      alert(`Error exporting widget: ${result.error}`);
     }
   } catch (error) {
     alert(`Error: ${error.message}`);
@@ -246,7 +246,7 @@ deleteAppButton.addEventListener('click', async () => {
         // Refresh app list
         loadWidgets();
       } else {
-        alert(`Error deleting mini app: ${result.error}`);
+        alert(`Error deleting widget: ${result.error}`);
       }
     } catch (error) {
       alert(`Error: ${error.message}`);
@@ -271,7 +271,7 @@ function setupCommandPalette() {
       const result = await window.electronAPI.importWidget();
       
       if (result.success) {
-        alert(`Mini app "${result.name}" imported successfully!`);
+        alert(`Widget "${result.name}" imported successfully!`);
         loadWidgets();
       }
     } catch (error) {
@@ -287,7 +287,7 @@ function setupCommandPalette() {
     }
   });
 
-  // Conditionally show Edit App command when there's an active mini app
+  // Conditionally show Edit App command when there's an active widget
   commandPalette.addCommand('edit-app', 'Edit App', () => {
     const activeApp = getActiveWidget();
     window.electronAPI.openWindow('app-creation', {
@@ -296,7 +296,7 @@ function setupCommandPalette() {
       appName: activeApp.name
     });
   }, () => {
-    // Only show this command when there's an active mini app
+    // Only show this command when there's an active widget
     return hasActiveWidget();
   });
 

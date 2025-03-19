@@ -14,26 +14,26 @@ function setupAppCreationAPI() {
       return await ipcRenderer.invoke('generate-title-and-description', { input });
     },
     
-    // Mini app generation
-    generateMiniApp: async (params) => {
-      return await ipcRenderer.invoke('generate-mini-app', params);
+    // Widget generation
+    generateWidget: async (params) => {
+      return await ipcRenderer.invoke('generate-widget', params);
     },
     
-    // Mini app management
-    listMiniApps: async () => {
-      return await ipcRenderer.invoke('list-mini-apps');
+    // Widget management
+    listWidgets: async () => {
+      return await ipcRenderer.invoke('list-widgets');
     },
     
-    openMiniApp: async (appId, filePath, name) => {
-      return await ipcRenderer.invoke('open-mini-app', { appId, filePath, name });
+    openWidget: async (appId, filePath, name) => {
+      return await ipcRenderer.invoke('open-widget', { appId, filePath, name });
     },
     
-    updateMiniApp: async (appId, prompt) => {
-      return await ipcRenderer.invoke('update-mini-app', { appId, prompt });
+    updateWidget: async (appId, prompt) => {
+      return await ipcRenderer.invoke('update-widget', { appId, prompt });
     },
     
-    deleteMiniApp: async (appId) => {
-      return await ipcRenderer.invoke('delete-mini-app', { appId });
+    deleteWidget: async (appId) => {
+      return await ipcRenderer.invoke('delete-widget', { appId });
     },
     
     // Events
