@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self';
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Does Nothing Widget Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      background-color: #4285f4;
+      color: white;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    .grid-container {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background-color: white;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .controls {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4285f4;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .description {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Does Nothing Widget Test</h1>
+    </div>
+    
+    <div class="description">
+      <p>This page demonstrates a widget that intentionally does nothing when interacted with.</p>
+      <p>Try clicking the buttons or typing in the input field - nothing will happen!</p>
+    </div>
+    
+    <div class="controls">
+      <button id="add-widget">Add Does Nothing Widget</button>
+      <button id="clear-grid">Clear Grid</button>
+    </div>
+    
+    <div class="grid-container" id="grid-container"></div>
+  </div>
+  
+  <script type="module" src="./does-nothing-widget-test.js"></script>
+</body>
+</html>

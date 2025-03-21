@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self' 'sha256-hPPsdAZF3UZJeMnYzdh7FkbYhux6NBVafRWhTp9LED0=';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self';
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Lahat - Widget Gallery</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles/fonts.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/command-palette.css">
+</head>
+<body>
+  <div class="drag-region"></div>
+  <div class="window">
+    <div class="titlebar">Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span> - Widget Gallery</div>
+    <div class="content">
+      <!-- Widget Management Section -->
+      <div id="widget-management-section" class="section">
+        <div class="widget-controls-header">
+          <h2>Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span></h2>
+          <div class="widget-controls">
+            <button id="api-settings-button" class="secondary">API Settings</button>
+            <button id="dashboards-button" class="primary">Dashboards</button>
+            <button id="create-widget-button" class="primary">Create New Widget</button>
+            <button id="import-widget-button">Import Widget</button>
+            <button id="refresh-widgets-button">Refresh</button>
+            <button id="open-widget-directory-button">Open Widget Directory</button>
+          </div>
+        </div>
+        <div id="widget-list-container">
+          <widget-list></widget-list>
+          <div id="no-widgets-message" class="hidden">
+            <p>You haven't created any widgets yet.</p>
+            <button id="create-first-widget-button" class="primary">Create Your First Widget</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget Details Modal -->
+      <div id="widget-details-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-widget-name">Widget Name</h2>
+            <button id="close-modal-button">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="widget-details">
+              <p><strong>Created:</strong> <span id="modal-widget-created"></span></p>
+              <p><strong>Versions:</strong> <span id="modal-widget-versions"></span></p>
+            </div>
+            <div class="widget-actions">
+              <button id="open-widget-button">Open Widget</button>
+              <button id="update-widget-button">Update Widget</button>
+              <button id="export-widget-button">Export Widget</button>
+              <button id="delete-widget-button" class="danger">Delete Widget</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderers/main.js" type="module"></script>
+</body>
+</html>

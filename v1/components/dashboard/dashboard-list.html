@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self' 'sha256-hPPsdAZF3UZJeMnYzdh7FkbYhux6NBVafRWhTp9LED0=';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self';
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Lahat - Dashboards</title>
+  <link rel="stylesheet" href="../../styles.css">
+  <link rel="stylesheet" href="../../styles/fonts.css">
+  <link rel="stylesheet" href="../../styles/main.css">
+  <style>
+    .dashboard-controls-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .dashboard-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .dashboard-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .dashboard-card {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .dashboard-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .dashboard-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    
+    .dashboard-card p {
+      margin: 5px 0;
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    .dashboard-card .widget-count {
+      display: flex;
+      align-items: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    
+    .dashboard-card .widget-count::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background-color: #4285f4;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .no-dashboards-message {
+      text-align: center;
+      padding: 40px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+    
+    .no-dashboards-message p {
+      margin-bottom: 20px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="drag-region"></div>
+  <div class="window">
+    <div class="titlebar">Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span> - Dashboards</div>
+    <div class="content">
+      <!-- Dashboard Management Section -->
+      <div id="dashboard-management-section" class="section">
+        <div class="dashboard-controls-header">
+          <h2>Dashboards</h2>
+          <div class="dashboard-controls">
+            <button id="back-to-main-button" class="secondary">Back to App Gallery</button>
+            <button id="create-dashboard-button" class="primary">Create New Dashboard</button>
+            <button id="refresh-dashboards-button">Refresh</button>
+          </div>
+        </div>
+        <div id="dashboard-list-container">
+          <div id="dashboard-list" class="dashboard-list"></div>
+          <div id="no-dashboards-message" class="no-dashboards-message hidden">
+            <p>You haven't created any dashboards yet.</p>
+            <button id="create-first-dashboard-button" class="primary">Create Your First Dashboard</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Details Modal -->
+      <div id="dashboard-details-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-dashboard-name">Dashboard Name</h2>
+            <button id="close-modal-button">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="dashboard-details">
+              <p><strong>Created:</strong> <span id="modal-dashboard-created"></span></p>
+              <p><strong>Widgets:</strong> <span id="modal-dashboard-widgets"></span></p>
+              <p><strong>Description:</strong> <span id="modal-dashboard-description"></span></p>
+            </div>
+            <div class="dashboard-actions">
+              <button id="open-dashboard-button">Open Dashboard</button>
+              <button id="edit-dashboard-button">Edit Dashboard</button>
+              <button id="delete-dashboard-button" class="danger">Delete Dashboard</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../renderers/dashboard-list.js" type="module"></script>
+</body>
+</html>
