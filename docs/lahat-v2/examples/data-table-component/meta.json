@@ -1,0 +1,107 @@
+{
+  "componentName": "data-table-component",
+  "version": "1.0.0",
+  "description": "A data table component with sorting, filtering, and row selection capabilities",
+  "events": [
+    {
+      "name": "component-connected",
+      "bubbles": true,
+      "composed": true,
+      "detail": {
+        "id": "string"
+      }
+    },
+    {
+      "name": "component-disconnected",
+      "bubbles": true,
+      "composed": true,
+      "detail": {
+        "id": "string"
+      }
+    },
+    {
+      "name": "data-updated",
+      "bubbles": true,
+      "composed": true,
+      "detail": {
+        "rows": "number",
+        "timestamp": "string"
+      }
+    },
+    {
+      "name": "filter-changed",
+      "bubbles": true,
+      "composed": true,
+      "detail": {
+        "filter": "string"
+      }
+    },
+    {
+      "name": "sort-changed",
+      "bubbles": true,
+      "composed": true,
+      "detail": {
+        "column": "string",
+        "direction": "string"
+      }
+    },
+    {
+      "name": "selection-changed",
+      "bubbles": true,
+      "composed": true,
+      "detail": {
+        "selectedIds": "array"
+      }
+    }
+  ],
+  "attributes": [
+    {
+      "name": "columns",
+      "type": "json",
+      "description": "Column configuration for the table",
+      "default": "[]"
+    },
+    {
+      "name": "sortable",
+      "type": "boolean",
+      "description": "Whether the table can be sorted",
+      "default": "true"
+    },
+    {
+      "name": "filterable",
+      "type": "boolean",
+      "description": "Whether the table can be filtered",
+      "default": "true"
+    },
+    {
+      "name": "selectable",
+      "type": "boolean",
+      "description": "Whether rows can be selected",
+      "default": "true"
+    }
+  ],
+  "methods": [
+    {
+      "name": "setData",
+      "description": "Set the data for the table",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "array",
+          "description": "Array of data objects"
+        }
+      ]
+    },
+    {
+      "name": "setColumns",
+      "description": "Set the columns for the table",
+      "parameters": [
+        {
+          "name": "columns",
+          "type": "array",
+          "description": "Array of column objects"
+        }
+      ]
+    }
+  ]
+}

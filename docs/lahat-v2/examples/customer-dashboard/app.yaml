@@ -1,0 +1,153 @@
+# Customer Dashboard App Configuration
+appName: Customer Dashboard
+version: 1.0.0
+description: A dashboard for customer data analysis and management
+author: Lahat App Creator
+createdAt: 2025-03-21T16:30:00Z
+tags:
+  - dashboard
+  - customers
+  - analytics
+
+# App layout configuration
+layout:
+  type: responsive-grid
+  columns: 12
+  rowHeight: 50
+  gap: 16
+  breakpoints:
+    - width: 768
+      columns: 6
+    - width: 480
+      columns: 2
+
+# App cells (components)
+cells:
+  - id: customer-stats
+    componentName: stats-card-component
+    position:
+      x: 0
+      y: 0
+    size:
+      width: 4
+      height: 2
+    config:
+      title: Customer Statistics
+      metrics:
+        - label: Total Customers
+          value: 1248
+          icon: users
+        - label: Active Customers
+          value: 876
+          icon: user-check
+        - label: New This Month
+          value: 54
+          icon: user-plus
+      refreshInterval: 60
+
+  - id: customer-table
+    componentName: data-table-component
+    position:
+      x: 0
+      y: 2
+    size:
+      width: 8
+      height: 4
+    attributes:
+      sortable: "true"
+      filterable: "true"
+      selectable: "true"
+      columns: '[
+        {"id": "id", "label": "ID", "sortable": true},
+        {"id": "name", "label": "Customer Name", "sortable": true},
+        {"id": "email", "label": "Email", "sortable": true},
+        {"id": "status", "label": "Status", "sortable": true},
+        {"id": "lastOrder", "label": "Last Order", "sortable": true},
+        {"id": "totalSpent", "label": "Total Spent", "sortable": true}
+      ]'
+    initialData:
+      method: loadCustomers
+      params:
+        limit: 100
+        offset: 0
+
+  - id: customer-details
+    componentName: detail-panel-component
+    position:
+      x: 8
+      y: 2
+    size:
+      width: 4
+      height: 4
+    config:
+      title: Customer Details
+      emptyMessage: Select a customer to view details
+      fields:
+        - label: Customer ID
+          key: id
+        - label: Full Name
+          key: name
+        - label: Email
+          key: email
+        - label: Phone
+          key: phone
+        - label: Status
+          key: status
+        - label: Registration Date
+          key: registrationDate
+          format: date
+        - label: Last Order
+          key: lastOrder
+          format: date
+        - label: Total Orders
+          key: totalOrders
+        - label: Total Spent
+          key: totalSpent
+          format: currency
+
+  - id: customer-chart
+    componentName: chart-component
+    position:
+      x: 4
+      y: 0
+    size:
+      width: 8
+      height: 2
+    config:
+      chartType: bar
+      title: Monthly Sales
+      xAxis: month
+      yAxis: sales
+      legend: true
+      colors: ["#4285f4", "#34a853", "#fbbc05", "#ea4335"]
+
+# Event connections between components
+connections:
+  - sourceCell: customer-table
+    sourceEvent: selection-changed
+    targetCell: customer-details
+    action: updateData
+    mapping:
+      selectedIds: customerId
+
+  - sourceCell: customer-table
+    sourceEvent: selection-changed
+    targetCell: customer-chart
+    action: updateData
+    mapping:
+      selectedIds: customerId
+
+# App theme configuration
+theme:
+  primaryColor: "#4285f4"
+  secondaryColor: "#34a853"
+  backgroundColor: "#f5f5f5"
+  textColor: "#333333"
+  fontFamily: "Roboto, sans-serif"
+
+# App settings
+settings:
+  autoRefresh: true
+  refreshInterval: 300
+  defaultView: table
+  dataSource: customers-api

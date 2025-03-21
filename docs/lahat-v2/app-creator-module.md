@@ -78,16 +78,17 @@ The second step displays the generated title and description, allowing the user 
 
 ### Step Three: Component Analysis
 
-The third step analyzes the application requirements to identify logical UI and functional boundaries:
+The third step automatically analyzes the application requirements to identify logical UI and functional boundaries:
 - Determines the core functionality needed in the application
 - Identifies potential reusable patterns and components
 - Analyzes similar existing components for inspiration
 - Identifies logical UI and functional boundaries for component separation
-- Presents initial analysis to the user for feedback
+- Uses an analysis agent to evaluate and refine the component boundaries
+- Iterates until the analysis is satisfactory
 
 ### Step Four: Component Structure
 
-The fourth step determines the optimal structure of webcomponents:
+The fourth step automatically determines the optimal structure of webcomponents:
 - Determines how many webcomponents are needed
 - Defines the responsibility of each component
 - Plans how these components will be instantiated into LahatCells
@@ -95,11 +96,13 @@ The fourth step determines the optimal structure of webcomponents:
   - Completely independent and unaware of Lahat
   - Self-contained with clear boundaries
   - Focused on a single responsibility
-- Presents the proposed component structure to the user for feedback
+- Uses a structure agent to evaluate and refine the component structure
+- Can request clarification from the analysis agent if needed
+- Iterates until the structure is optimal
 
 ### Step Five: Event Communication
 
-The fifth step defines how components will communicate via events:
+The fifth step automatically defines how components will communicate via events:
 - Analyzes each component to identify all CustomEvents it will emit
 - Creates an event manifest for each component listing:
   - Event names
@@ -108,7 +111,8 @@ The fifth step defines how components will communicate via events:
 - Configures LahatCells to intercept the specific events from each component
 - Documents how these events will be consumed by other components via the event bus
 - Ensures components emit properly bubbling events (using `bubbles: true, composed: true`)
-- Presents the complete component architecture to the user for approval
+- Can request clarification from the structure agent if needed
+- Iterates until the event architecture is complete
 
 ### Step Six: Generation
 
@@ -132,14 +136,97 @@ The App Creator uses the Claude API to:
 1. User enters a prompt in Step One
 2. Claude generates a title and description
 3. User confirms or edits the title and description in Step Two
-4. Claude analyzes the requirements and identifies logical component boundaries in Step Three
-5. User provides feedback on the component analysis
-6. Claude proposes a component structure in Step Four
-7. User provides feedback on the component structure
-8. Claude defines event communication patterns in Step Five
-9. User reviews and approves the complete component architecture
-10. Claude generates the application code for each webcomponent in Step Six
-11. The application is saved and appears in the App List
+4. The system enters an automated analysis and generation loop:
+   - Claude analyzes the requirements and identifies logical component boundaries
+   - An analysis agent evaluates and refines the component boundaries
+   - A structure agent determines the optimal component structure
+   - The structure agent may request clarification from the analysis agent
+   - An event agent defines the event communication patterns
+   - The event agent may request clarification from the structure agent
+   - Claude generates the application code based on the complete architecture
+5. The application is saved and appears in the App List
+6. User is notified of completion
+
+### App Generation Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant AppCreator
+    participant Claude
+    participant AnalysisAgent
+    participant StructureAgent
+    participant EventAgent
+    participant AppManager
+    participant AppList
+    
+    User->>AppCreator: Launch App Creator
+    
+    %% Step One: Prompt
+    User->>AppCreator: Enter application prompt
+    AppCreator->>Claude: Send prompt
+    
+    %% Step Two: Title/Description
+    Claude->>AppCreator: Generate title and description
+    AppCreator->>User: Display title and description
+    User->>AppCreator: Confirm or edit title/description
+    
+    %% Automated Analysis and Generation Loop
+    Note over AppCreator,EventAgent: Automated Analysis and Generation Loop
+    
+    %% Component Analysis
+    AppCreator->>Claude: Request component analysis
+    Claude->>AnalysisAgent: Send for evaluation
+    
+    %% Analysis Feedback Loop
+    loop Until analysis is satisfactory
+        AnalysisAgent->>AnalysisAgent: Evaluate component boundaries
+        opt Analysis needs refinement
+            AnalysisAgent->>Claude: Request additional analysis
+            Claude->>AnalysisAgent: Provide refined analysis
+        end
+    end
+    
+    %% Component Structure
+    AnalysisAgent->>StructureAgent: Send analysis results
+    
+    %% Structure Feedback Loop
+    loop Until structure is optimal
+        StructureAgent->>StructureAgent: Evaluate component structure
+        opt Structure needs improvement
+            StructureAgent->>AnalysisAgent: Request boundary clarification
+            AnalysisAgent->>StructureAgent: Provide boundary clarification
+        end
+    end
+    
+    %% Event Communication
+    StructureAgent->>EventAgent: Send component structure
+    
+    %% Event Feedback Loop
+    loop Until event architecture is complete
+        EventAgent->>EventAgent: Define event communication patterns
+        opt Event patterns need refinement
+            EventAgent->>StructureAgent: Request structure clarification
+            StructureAgent->>EventAgent: Provide structure clarification
+        end
+    end
+    
+    %% Code Generation
+    EventAgent->>Claude: Send complete architecture
+    Claude->>AppCreator: Generate all code (components + configuration)
+    
+    %% Display and Save
+    AppCreator->>AppManager: Save generated components
+    AppCreator->>AppList: Add new application to list
+    AppCreator->>User: Notify of completion
+    
+    %% Optional: Open in App Manager
+    opt User chooses to open app
+        User->>AppList: Select new application
+        AppList->>AppManager: Open application
+        AppManager->>User: Display application
+    end
+```
 
 ## Implementation Details
 
@@ -180,13 +267,13 @@ src/
 - **AppCreationStep**: Base class for all steps
 - **AppCreationStepOne**: Handles the prompt input
 - **AppCreationStepTwo**: Handles the title and description
-- **AppCreationStepThree**: Handles the component analysis process
-- **AppCreationStepFour**: Handles the component structure definition
-- **AppCreationStepFive**: Handles the event communication definition
+- **AppCreationStepThree**: Handles the automated component analysis process
+- **AppCreationStepFour**: Handles the automated component structure definition
+- **AppCreationStepFive**: Handles the automated event communication definition
 - **AppCreationStepSix**: Handles the generation process
-- **ComponentAnalysisPreview**: Displays the component analysis results
-- **ComponentStructurePreview**: Displays the proposed component structure
-- **EventCommunicationPreview**: Displays the event communication patterns
+- **AnalysisAgent**: Evaluates and refines component boundaries
+- **StructureAgent**: Evaluates and refines component structures
+- **EventAgent**: Defines and refines event communication patterns
 - **GenerationPreview**: Displays the generated code
 - **GenerationStatus**: Shows the status of the generation process
 - **ClaudeService**: Handles communication with the Claude API
@@ -196,6 +283,7 @@ src/
 - **AppGenerationService**: Manages the app generation process
 - **ComponentUtils**: Utility functions for component decomposition
 - **EventUtils**: Utility functions for event handling and configuration
+- **FeedbackLoopManager**: Manages the iterative feedback loops between agents
 
 ## Communication Architecture
 
@@ -213,23 +301,55 @@ The App Creator module has a single communication layer for internal component c
 
 ### Event Interception Mechanism
 
-The App Creator generates configuration for LahatCells to intercept events from webcomponents:
+The App Creator generates webcomponents with accompanying metadata for efficient event interception:
 
-1. **Event Analysis**: The LLM analyzes each webcomponent to identify all CustomEvents it emits
-2. **Event Manifest**: Creates a manifest of events for each component (names, data structures, bubbling properties)
-3. **LahatCell Configuration**: Generates configuration code that tells LahatCells which events to intercept:
-   ```javascript
-   // Example of configuring a LahatCell with event information
-   lahatCell.configureEventInterception([
-     'data-updated',
-     'selection-changed',
-     'item-added',
-     'item-removed',
-     'form-submitted'
-   ]);
+1. **Event Metadata Generation**: When generating webcomponents, the LLM also creates a `meta.json` file containing event information:
+   ```json
+   {
+     "componentName": "data-table-component",
+     "version": "1.0.0",
+     "events": [
+       {
+         "name": "data-updated",
+         "bubbles": true,
+         "composed": true,
+         "detail": {
+           "type": "object",
+           "properties": {
+             "rows": { "type": "array" },
+             "timestamp": { "type": "string" }
+           }
+         }
+       },
+       {
+         "name": "selection-changed",
+         "bubbles": true,
+         "composed": true,
+         "detail": {
+           "type": "object",
+           "properties": {
+             "selectedIds": { "type": "array" }
+           }
+         }
+       }
+     ]
+   }
    ```
-4. **Dynamic Event Listeners**: LahatCells use this configuration to set up appropriate event listeners
-5. **Event Proxying**: Intercepted events are proxied to the front-end event bus
+
+2. **Efficient LahatCell Configuration**: LahatCells use this metadata to configure event interception without needing to analyze the component code:
+   ```javascript
+   // LahatCell reads the meta.json file
+   const metadata = await fetch(`/components/${componentName}/meta.json`).then(r => r.json());
+   
+   // Configure event interception based on metadata
+   lahatCell.configureEventInterception(metadata.events.map(e => e.name));
+   ```
+
+3. **Dynamic Event Listeners**: LahatCells use this configuration to set up appropriate event listeners
+
+4. **Event Proxying**: Intercepted events are proxied to the front-end event bus
+
+5. **Documentation Generation**: The metadata also serves as documentation for component users, showing what events they can listen for
 
 ## Security Considerations
 
@@ -247,10 +367,12 @@ The App Creator generates webcomponents that follow these principles:
 3. **No Direct Dependencies**: Components have no direct knowledge of or dependencies on other components
 4. **Reusability**: Components are designed to be reusable in different contexts via the widget drawer
 5. **Self-Contained UI**: Each component handles its own UI rendering and internal state
-6. **Explicit Event Interface**: Each component has a well-defined event interface documented in its event manifest
+6. **Explicit Event Interface**: Each component has a well-defined event interface documented in its metadata
+7. **Self-Describing**: Components include metadata files (meta.json) that describe their events and properties
 
 This architecture ensures that the generated webcomponents can be:
 - Instantiated into LahatCells in the App Manager
 - Recomposed into new applications via the widget drawer
 - Maintained and updated independently
 - Properly integrated with the event bus through LahatCell event interception
+- Efficiently configured without runtime analysis
