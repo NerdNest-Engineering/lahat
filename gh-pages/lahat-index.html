@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lahat - Generate Apps Instantly</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            color: #333;
+            background-color: #f8f8f8;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+        
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+        }
+        
+        .hero-image {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .hero-image img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .hero-content {
+            flex: 1;
+        }
+        
+        h1 {
+            font-size: 2.8em;
+            margin: 0 0 10px 0;
+            color: #444;
+        }
+        
+        .tagline {
+            font-size: 1.6em;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            color: #555;
+        }
+        
+        .description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #666;
+        }
+        
+        .download-button {
+            background: white;
+            color: #333;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 1.2em;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .download-button .icon {
+            margin-right: 15px;
+            font-size: 1.3em;
+        }
+        
+        .version-info {
+            font-size: 0.9em;
+            color: #777;
+            margin-bottom: 5px;
+        }
+        
+        .features {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 80px;
+            text-align: center;
+        }
+        
+        .feature {
+            flex: 1;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 400px; /* Fixed height for consistency */
+        }
+        
+        .feature-content {
+            flex-grow: 0; /* Don't allow content to grow */
+            margin-bottom: 20px; /* Consistent spacing */
+        }
+        
+        .feature-image-container {
+            flex-grow: 1; /* Let this container take up remaining space */
+            display: flex;
+            align-items: center; /* Center image vertically */
+            justify-content: center; /* Center horizontally too */
+            width: 100%;
+        }
+        
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            color: #418ac7;
+        }
+        
+        .feature h3 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        
+        .feature p {
+            font-size: 1em;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 0; /* Remove bottom margin */
+        }
+        
+        .feature img {
+            max-width: 80%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            object-fit: contain;
+            aspect-ratio: 4/3;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            color: #777;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="hero">
+            <div class="hero-image">
+                <img src="https://raw.githubusercontent.com/NerdNest-Engineering/lahat/main/assets/icons/lahat.png" alt="Lahat Logo">
+            </div>
+            <div class="hero-content">
+                <p class="tagline">Turn your ideas into apps—instantly.</p>
+                <p class="description">
+                    Whether you need a quick tool, a UI demo, or a full-fledged app, Lahat can generate it. Type your idea, and watch it come to life as a desktop app.
+                </p>
+                <a href="https://github.com/your-repo/lahat/releases/latest" class="download-button">
+                    <span class="icon">↓</span> Download for Mac
+                </a>
+                <p class="version-info">Latest version: vX.Y.Z</p>
+            </div>
+        </section>
+        
+        <section class="features">
+            <div class="feature">
+                <div class="feature-content">
+                    <div class="feature-icon">💡</div>
+                    <h3>Prompt</h3>
+                    <p>Describe your experience, game, or tool.</p>
+                </div>
+                <div class="feature-image-container">
+                    <img src="1.png" alt="Enter a prompt">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-content">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Generate</h3>
+                    <p>Grab a coffee while Lahat gets to work.</p>
+                </div>
+                <div class="feature-image-container">
+                    <img src="2.png" alt="Wait for Lahat">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-content">
+                    <div class="feature-icon">✨</div>
+                    <h3>Play</h3>
+                    <p>Check out your new desktop app.</p>
+                </div>
+                <div class="feature-image-container">
+                    <img src="3.png" alt="Check out your app">
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <footer class="footer">
+        <p>&copy; 2025 Lahat. All rights reserved.</p>
+        <p><a href="https://github.com/your-repo/lahat" style="color: #4CAF50;">View on GitHub</a></p>
+    </footer>
+</body>
+</html>
