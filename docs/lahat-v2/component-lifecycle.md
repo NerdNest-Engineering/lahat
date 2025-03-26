@@ -14,20 +14,17 @@ The creation phase is when a component is first created. This includes:
 - Creating the DOM elements
 - Setting up initial properties
 
-```
-┌─────────────────────────────────────────────┐
-│               Creation Phase                │
-│                                             │
-│  ┌─────────────┐      ┌─────────────────┐   │
-│  │ Instantiate │─────►│  Create DOM     │   │
-│  └─────────────┘      └─────────────────┘   │
-│                              │              │
-│                              ▼              │
-│                      ┌─────────────────┐    │
-│                      │  Set Properties │    │
-│                      └─────────────────┘    │
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Creation["Creation Phase"]
+        A["Instantiate"] --> B["Create DOM"]
+        B --> C["Set Properties"]
+    end
+    
+    style Creation fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style A fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
+    style B fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
+    style C fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
 ```
 
 ### Initialization
@@ -39,21 +36,19 @@ The initialization phase is when a component is initialized and connected to the
 - Initializing state
 - Connecting to the EventBus
 
-```
-┌─────────────────────────────────────────────┐
-│            Initialization Phase             │
-│                                             │
-│  ┌─────────────┐      ┌─────────────────┐   │
-│  │ Connect DOM │─────►│ Setup Listeners │   │
-│  └─────────────┘      └─────────────────┘   │
-│                              │              │
-│                              ▼              │
-│  ┌─────────────┐      ┌─────────────────┐   │
-│  │Connect Event│◄─────│ Initialize State│   │
-│  │    Bus      │      └─────────────────┘   │
-│  └─────────────┘                            │
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Initialization["Initialization Phase"]
+        A["Connect DOM"] --> B["Setup Listeners"]
+        B --> C["Initialize State"]
+        C --> D["Connect Event Bus"]
+    end
+    
+    style Initialization fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style A fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+    style B fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+    style C fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+    style D fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
 ```
 
 ### Update
@@ -65,21 +60,19 @@ The update phase is when a component's properties or state changes. This include
 - Re-rendering the component
 - Dispatching events
 
-```
-┌─────────────────────────────────────────────┐
-│                Update Phase                 │
-│                                             │
-│  ┌─────────────┐      ┌─────────────────┐   │
-│  │ Property    │─────►│  Update State   │   │
-│  │ Change      │      └─────────────────┘   │
-│  └─────────────┘              │             │
-│                               ▼             │
-│  ┌─────────────┐      ┌─────────────────┐   │
-│  │ Dispatch    │◄─────│  Re-render      │   │
-│  │ Events      │      └─────────────────┘   │
-│  └─────────────┘                            │
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Update["Update Phase"]
+        A["Property Change"] --> B["Update State"]
+        B --> C["Re-render"]
+        C --> D["Dispatch Events"]
+    end
+    
+    style Update fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style A fill:#fff8e1,stroke:#ff8f00,stroke-width:1px
+    style B fill:#fff8e1,stroke:#ff8f00,stroke-width:1px
+    style C fill:#fff8e1,stroke:#ff8f00,stroke-width:1px
+    style D fill:#fff8e1,stroke:#ff8f00,stroke-width:1px
 ```
 
 ### Destruction
@@ -91,21 +84,19 @@ The destruction phase is when a component is removed from the DOM and destroyed.
 - Cleaning up resources
 - Disconnecting from the EventBus
 
-```
-┌─────────────────────────────────────────────┐
-│              Destruction Phase              │
-│                                             │
-│  ┌─────────────┐      ┌─────────────────┐   │
-│  │ Disconnect  │─────►│ Remove Listeners│   │
-│  │ DOM         │      └─────────────────┘   │
-│  └─────────────┘              │             │
-│                               ▼             │
-│  ┌─────────────┐      ┌─────────────────┐   │
-│  │ Disconnect  │◄─────│  Clean Up       │   │
-│  │ Event Bus   │      │  Resources      │   │
-│  └─────────────┘      └─────────────────┘   │
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Destruction["Destruction Phase"]
+        A["Disconnect DOM"] --> B["Remove Listeners"]
+        B --> C["Clean Up Resources"]
+        C --> D["Disconnect Event Bus"]
+    end
+    
+    style Destruction fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style A fill:#ffebee,stroke:#c62828,stroke-width:1px
+    style B fill:#ffebee,stroke:#c62828,stroke-width:1px
+    style C fill:#ffebee,stroke:#c62828,stroke-width:1px
+    style D fill:#ffebee,stroke:#c62828,stroke-width:1px
 ```
 
 ## LahatCell Lifecycle

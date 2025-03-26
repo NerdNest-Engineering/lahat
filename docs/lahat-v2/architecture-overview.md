@@ -12,20 +12,19 @@ Lahat v2 is a modular application that enables users to create, manage, and run 
 
 The system architecture follows a modular design with complete module independence and clear separation of concerns:
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│   app-creator   │◄───▶│    app-list     │◄───▶│   app-manager   │
-│                 │     │                 │     │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-        ▲                       ▲                       ▲
-        │                       │                       │
-        ▼                       ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  IPC Interface  │     │  IPC Interface  │     │  IPC Interface  │
-│                 │     │                 │     │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+```mermaid
+graph TD
+    subgraph Modules
+        A[app-creator] <--> B[app-list] <--> C[app-manager]
+    end
+    
+    subgraph Communication
+        D[IPC Interface] <--> E[IPC Interface] <--> F[IPC Interface]
+    end
+    
+    A <--> D
+    B <--> E
+    C <--> F
 ```
 
 ### Module Independence
@@ -99,5 +98,4 @@ For more detailed information about each module, refer to:
 - [App Creator Module](./app-creator-module.md)
 - [App List Module](./app-list-module.md)
 - [App Manager Module](./app-manager-module.md)
-- [Event System](./event-system.md)
 - [Component Lifecycle](./component-lifecycle.md)

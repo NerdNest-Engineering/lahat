@@ -11,7 +11,6 @@ This directory contains documentation for the Lahat v2 architecture. Lahat v2 is
 - [App Creator Module](./app-creator-module.md): Documentation for the app-creator module
 - [App List Module](./app-list-module.md): Documentation for the app-list module
 - [App Manager Module](./app-manager-module.md): Documentation for the app-manager module
-- [Event System](./event-system.md): Documentation for the EventBus and event routing
 - [Component Lifecycle](./component-lifecycle.md): Documentation for component lifecycle management
 - [Implementation Guide](./implementation-guide.md): Guide for implementing the architecture
 - [Migration Strategy](./migration-strategy.md): Strategy for migrating from v1 to v2
@@ -20,12 +19,13 @@ This directory contains documentation for the Lahat v2 architecture. Lahat v2 is
 
 ## Architecture Diagram
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│   app-creator   │────▶│    app-list     │────▶│   app-manager   │
-│                 │     │                 │     │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+```mermaid
+flowchart LR
+    A[app-creator] --> B[app-list] --> C[app-manager]
+    
+    style A fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
+    style B fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+    style C fill:#fff8e1,stroke:#ff8f00,stroke-width:1px
 ```
 
 ## Module Independence

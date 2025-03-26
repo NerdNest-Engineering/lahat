@@ -12,40 +12,51 @@ The App Manager module is implemented as a view that is displayed when a user se
 
 ### Components
 
-```
-┌─────────────────────────────────────────────┐
-│               App Manager                   │
-│                                             │
-│  ┌─────────────────────────────────────────┐│
-│  │              EventBus                   ││
-│  └─────────────────────────────────────────┘│
-│                                             │
-│  ┌─────────────────────────────────────────┐│
-│  │             LahatApp                    ││
-│  │                                         ││
-│  │  ┌───────────────┐  ┌───────────────┐   ││
-│  │  │  LahatCell 1  │  │  LahatCell 2  │   ││
-│  │  │               │  │               │   ││
-│  │  │ ┌───────────┐ │  │ ┌───────────┐ │   ││
-│  │  │ │CustomEvent│ │  │ │CustomEvent│ │   ││
-│  │  │ └───────────┘ │  │ └───────────┘ │   ││
-│  │  │               │  │               │   ││
-│  │  │ ┌───────────┐ │  │ ┌───────────┐ │   ││
-│  │  │ │ WebComp   │ │  │ │ WebComp   │ │   ││
-│  │  │ └───────────┘ │  │ └───────────┘ │   ││
-│  │  └───────────────┘  └───────────────┘   ││
-│  │                                         ││
-│  └─────────────────────────────────────────┘│
-│                                             │
-│  ┌─────────────────────────────────────────┐│
-│  │            Widget Drawer                ││
-│  │                                         ││
-│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐    ││
-│  │  │Widget 1 │ │Widget 2 │ │Widget 3 │ +  ││
-│  │  └─────────┘ └─────────┘ └─────────┘    ││
-│  └─────────────────────────────────────────┘│
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph AppManager["App Manager"]
+        EventBus["EventBus"]
+        
+        subgraph LahatApp["LahatApp"]
+            Cell1["LahatCell 1"]
+            Cell2["LahatCell 2"]
+            
+            subgraph Cell1
+                Event1["CustomEvent"]
+                WebComp1["WebComponent"]
+            end
+            
+            subgraph Cell2
+                Event2["CustomEvent"]
+                WebComp2["WebComponent"]
+            end
+        end
+        
+        subgraph WidgetDrawer["Widget Drawer"]
+            Widget1["Widget 1"]
+            Widget2["Widget 2"]
+            Widget3["Widget 3"]
+            AddButton["+"]
+        end
+        
+        EventBus --- LahatApp
+        LahatApp --- WidgetDrawer
+    end
+    
+    style AppManager fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style EventBus fill:#e8eaf6,stroke:#3f51b5,stroke-width:1px
+    style LahatApp fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
+    style Cell1 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Cell2 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Event1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+    style Event2 fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+    style WebComp1 fill:#fff3e0,stroke:#ff9800,stroke-width:1px
+    style WebComp2 fill:#fff3e0,stroke:#ff9800,stroke-width:1px
+    style WidgetDrawer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px
+    style Widget1 fill:#f5f5f5,stroke:#616161,stroke-width:1px
+    style Widget2 fill:#f5f5f5,stroke:#616161,stroke-width:1px
+    style Widget3 fill:#f5f5f5,stroke:#616161,stroke-width:1px
+    style AddButton fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
 ```
 
 ### LahatApp

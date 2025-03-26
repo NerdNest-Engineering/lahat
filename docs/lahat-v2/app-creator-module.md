@@ -19,53 +19,23 @@ The App Creator module is implemented as a separate window that can be launched 
 
 ### Components
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     App Creator                         │
-│                                                         │
-│  ┌─────────────┐    ┌─────────────────────┐            │
-│  │             │    │                     │            │
-│  │  Step One   │───▶│      Step Two       │            │
-│  │  (Prompt)   │    │  (Title/Description)│            │
-│  │             │    │                     │            │
-│  └─────────────┘    └─────────┬───────────┘            │
-│                               │                        │
-│                               ▼                        │
-│                     ┌─────────────────────┐            │
-│                     │                     │            │
-│                     │    Step Three       │            │
-│                     │   (Component        │            │
-│                     │    Analysis)        │            │
-│                     │                     │            │
-│                     └─────────┬───────────┘            │
-│                               │                        │
-│                               ▼                        │
-│                     ┌─────────────────────┐            │
-│                     │                     │            │
-│                     │     Step Four       │            │
-│                     │    (Component       │            │
-│                     │     Structure)      │            │
-│                     │                     │            │
-│                     └─────────┬───────────┘            │
-│                               │                        │
-│                               ▼                        │
-│                     ┌─────────────────────┐            │
-│                     │                     │            │
-│                     │     Step Five       │            │
-│                     │      (Event         │            │
-│                     │   Communication)    │            │
-│                     │                     │            │
-│                     └─────────┬───────────┘            │
-│                               │                        │
-│                               ▼                        │
-│                     ┌─────────────────────┐            │
-│                     │                     │            │
-│                     │     Step Six        │            │
-│                     │    (Generation)     │            │
-│                     │                     │            │
-│                     └─────────────────────┘            │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph AppCreator["App Creator"]
+        Step1["Step One\n(Prompt)"] --> Step2["Step Two\n(Title/Description)"]
+        Step2 --> Step3["Step Three\n(Component Analysis)"]
+        Step3 --> Step4["Step Four\n(Component Structure)"]
+        Step4 --> Step5["Step Five\n(Event Communication)"]
+        Step5 --> Step6["Step Six\n(Generation)"]
+    end
+    
+    style AppCreator fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style Step1 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Step2 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Step3 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Step4 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Step5 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Step6 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
 ```
 
 ### Step One: Prompt

@@ -17,34 +17,31 @@ The App List module is implemented as the main view of the application and provi
 
 ### Components
 
-```
-┌─────────────────────────────────────────────┐
-│               App List                      │
-│                                             │
-│  ┌─────────────────────────────────────────┐│
-│  │        Navigation Controls              ││
-│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐    ││
-│  │  │Mini Apps│ │ Create  │ │Settings │    ││
-│  │  └─────────┘ └─────────┘ └─────────┘    ││
-│  └─────────────────────────────────────────┘│
-│                                             │
-│  ┌─────────────────────────────────────────┐│
-│  │        App List Container               ││
-│  │                                         ││
-│  │  ┌─────────────────────────────────────┐││
-│  │  │           App Card 1                │││
-│  │  └─────────────────────────────────────┘││
-│  │                                         ││
-│  │  ┌─────────────────────────────────────┐││
-│  │  │           App Card 2                │││
-│  │  └─────────────────────────────────────┘││
-│  │                                         ││
-│  │  ┌─────────────────────────────────────┐││
-│  │  │           App Card 3                │││
-│  │  └─────────────────────────────────────┘││
-│  └─────────────────────────────────────────┘│
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph AppList["App List"]
+        subgraph NavControls["Navigation Controls"]
+            MiniApps["Mini Apps"] --- Create["Create"] --- Settings["Settings"]
+        end
+        
+        subgraph ListContainer["App List Container"]
+            Card1["App Card 1"]
+            Card2["App Card 2"]
+            Card3["App Card 3"]
+        end
+        
+        NavControls --- ListContainer
+    end
+    
+    style AppList fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style NavControls fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+    style ListContainer fill:#e3f2fd,stroke:#1565c0,stroke-width:1px
+    style Card1 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Card2 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style Card3 fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style MiniApps fill:#f1f8e9,stroke:#558b2f,stroke-width:1px
+    style Create fill:#f1f8e9,stroke:#558b2f,stroke-width:1px
+    style Settings fill:#f1f8e9,stroke:#558b2f,stroke-width:1px
 ```
 
 ### Navigation Controls
