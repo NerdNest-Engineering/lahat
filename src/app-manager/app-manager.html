@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self' data:;
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>App Manager</title>
+  <link rel="stylesheet" href="app-manager.css">
+</head>
+<body>
+  <div class="drag-region"></div>
+  <div class="window">
+    <div class="titlebar">App Manager</div>
+    <div class="content">
+      <!-- Main app container -->
+      <div id="lahat-app-container" class="lahat-app-container">
+        <!-- LahatApp will be created by JavaScript -->
+      </div>
+      
+      <!-- Widget drawer -->
+      <div id="widget-drawer-container" class="widget-drawer-container">
+        <!-- WidgetDrawer will be created by JavaScript -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Error container will be created by JavaScript -->
+  
+  <script src="app-manager.js" type="module"></script>
+</body>
+</html>

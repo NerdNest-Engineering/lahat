@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self' 'sha256-hPPsdAZF3UZJeMnYzdh7FkbYhux6NBVafRWhTp9LED0=';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self';
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Lahat - App List</title>
+  <link rel="stylesheet" href="app-list.css">
+  <link rel="stylesheet" href="../../v1/styles.css">
+  <link rel="stylesheet" href="../../v1/styles/fonts.css">
+  <link rel="stylesheet" href="../../v1/styles/main.css">
+  <link rel="stylesheet" href="../../v1/styles/command-palette.css">
+</head>
+<body>
+  <div class="drag-region"></div>
+  <div class="window">
+    <div class="content">
+      <div class="app-list-header">
+        <h2 class="app-title">Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span></h2>
+        <div class="app-controls">
+          <button id="api-settings-button" class="secondary">API Settings</button>
+          <button id="dashboards-button" class="primary">Dashboards</button>
+          <button id="create-app-button" class="primary">Create New App</button>
+          <button id="import-app-button">Import App</button>
+          <button id="refresh-apps-button">Refresh</button>
+          <button id="open-app-directory-button">Open App Directory</button>
+        </div>
+      </div>
+      
+      <div id="app-container">
+        <app-list-container id="app-list">
+          <!-- App cards will be added dynamically -->
+        </app-list-container>
+        <div id="no-apps-message" class="hidden">
+          <p>You haven't created any apps yet.</p>
+          <button id="create-first-app-button" class="primary">Create Your First App</button>
+        </div>
+      </div>
+
+      <!-- App Details Modal -->
+      <div id="app-details-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-app-name">App Name</h2>
+            <button id="close-modal-button">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="app-details">
+              <p><strong>Created:</strong> <span id="modal-app-created"></span></p>
+              <p><strong>Versions:</strong> <span id="modal-app-versions"></span></p>
+            </div>
+            <div class="app-actions">
+              <button id="open-app-button">Open App</button>
+              <button id="update-app-button">Update App</button>
+              <button id="export-app-button">Export App</button>
+              <button id="delete-app-button" class="danger">Delete App</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="components/app-list-container.js" type="module"></script>
+  <script src="components/app-card.js" type="module"></script>
+  <script src="components/navigation-controls.js" type="module"></script>
+  <script src="app-list.js" type="module"></script>
+</body>
+</html>

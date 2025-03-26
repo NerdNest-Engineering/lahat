@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self';
+                 img-src 'self' data:;
+                 font-src 'self';
+                 object-src 'none';
+                 base-uri 'none';
+                 form-action 'none';">
+  <title>Create a Mini App</title>
+  <link rel="stylesheet" href="app-creator.css">
+</head>
+<body>
+  <div class="drag-region"></div>
+  <div class="window">
+    <div class="titlebar">Create a Mini App</div>
+    <div class="content">
+      <!-- Step components will be defined as custom elements -->
+      <app-creation-step-one id="step-1" class="active"></app-creation-step-one>
+      <app-creation-step-two id="step-2"></app-creation-step-two>
+      <app-creation-step-three id="step-3"></app-creation-step-three>
+      <app-creation-step-four id="step-4"></app-creation-step-four>
+      <app-creation-step-five id="step-5"></app-creation-step-five>
+      <app-creation-step-six id="step-6"></app-creation-step-six>
+      
+      <!-- Status indicator -->
+      <generation-status id="generation-status"></generation-status>
+      
+      <!-- Preview component -->
+      <generation-preview id="generation-preview"></generation-preview>
+    </div>
+  </div>
+  
+  <!-- Error container will be created by JavaScript -->
+  
+  <script src="app-creator.js" type="module"></script>
+</body>
+</html>

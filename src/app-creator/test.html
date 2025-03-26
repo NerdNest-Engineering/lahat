@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Creator Test</title>
+  <link rel="stylesheet" href="app-creator.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    .test-controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .test-button {
+      padding: 8px 16px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .test-button:hover {
+      background-color: #3367d6;
+    }
+  </style>
+</head>
+<body>
+  <div class="drag-region"></div>
+  <div class="window">
+    <div class="titlebar">Create a Mini App (Test Mode)</div>
+    <div class="content">
+      <!-- Step components will be defined as custom elements -->
+      <app-creation-step-one id="step-1" class="active"></app-creation-step-one>
+      <app-creation-step-two id="step-2"></app-creation-step-two>
+      
+      <!-- Status indicator -->
+      <generation-status id="generation-status"></generation-status>
+      
+      <!-- Preview component -->
+      <generation-preview id="generation-preview"></generation-preview>
+    </div>
+  </div>
+  
+  <!-- Test controls -->
+  <div class="test-controls">
+    <button id="test-title-description" class="test-button">Test Title/Description</button>
+    <button id="test-generate-app" class="test-button">Test Generate App</button>
+    <button id="test-error" class="test-button">Test Error</button>
+  </div>
+  
+  <script type="module">
+    import { EventBus } from './utils/event-bus.js';
+    import { showError, ErrorLevel } from './utils/error-utils.js';
+    import { ErrorContainer, ErrorMessage } from './components/ui/error-container.js';
+    import { AppCreationStep } from './components/base/app-creation-step.js';
+    import { AppCreationStepOne } from './components/steps/app-creation-step-one.js';
+    import { AppCreationStepTwo } from './components/steps/app-creation-step-two.js';
+    import { GenerationStatus } from './components/ui/generation-status.js';
+    import { GenerationPreview } from './components/ui/generation-preview.js';
+    
+    // Create a module-specific event bus
+    const eventBus = new EventBus();
+    
+    // Register custom elements
+    customElements.define('app-creation-step', AppCreationStep);
+    customElements.define('app-creation-step-one', AppCreationStepOne);
+    customElements.define('app-creation-step-two', AppCreationStepTwo);
+    customElements.define('generation-status', GenerationStatus);
+    customElements.define('generation-preview', GenerationPreview);
+    customElements.define('error-container', ErrorContainer);
+    customElements.define('error-message', ErrorMessage);
+    
+    // Create error container
+    const errorContainer = document.createElement('error-container');
+    document.body.appendChild(errorContainer);
+    
+    // Get DOM elements
+    const stepOne = document.getElementById('step-1');
+    const stepTwo = document.getElementById('step-2');
+    const generationStatus = document.getElementById('generation-status');
+    const generationPreview = document.getElementById('generation-preview');
+    const testTitleDescriptionButton = document.getElementById('test-title-description');
+    const testGenerateAppButton = document.getElementById('test-generate-app');
+    const testErrorButton = document.getElementById('test-error');
+    
+    // Set up event listeners
+    testTitleDescriptionButton.addEventListener('click', testTitleDescription);
+    testGenerateAppButton.addEventListener('click', testGenerateApp);
+    testErrorButton.addEventListener('click', testError);
+    
+    // Set up step numbers and titles
+    stepOne.setStepNumber(1);
+    stepOne.setStepTitle('Describe Your App');
+    
+    stepTwo.setStepNumber(2);
+    stepTwo.setStepTitle('Title and Description');
+    stepTwo.showBackButton(true);
+    
+    // Test title and description generation
+    async function testTitleDescription() {
+      // Show loading indicator
+      generationStatus.show('Generating title and description...');
+      
+      // Show the preview section with a loading message
+      stepTwo.showPreview();
+      stepTwo.setGeneratingState();
+      
+      // Set user input
+      stepTwo.setUserInput('A task management app with categories and due dates');
+      
+      // Simulate streaming response
+      setTimeout(() => {
+        stepTwo.handleInProgressChunk({
+          content: JSON.stringify({
+            title: 'Task',
+            description: ''
+          })
+        });
+      }, 500);
+      
+      setTimeout(() => {
+        stepTwo.handleInProgressChunk({
+          content: JSON.stringify({
+            title: 'Task Master',
+            description: 'A task management app'
+          })
+        });
+      }, 1500);
+      
+      setTimeout(() => {
+        stepTwo.handleCompletedChunk({
+          content: JSON.stringify({
+            title: 'Task Master Pro',
+            description: 'A productivity app that helps users manage their tasks with categories, priorities, and due dates. Features include task sorting, filtering, reminders, and progress tracking.'
+          })
+        });
+        
+        // Hide loading indicator
+        generationStatus.hide();
+        
+        // Activate step two
+        stepOne.setActive(false);
+        stepTwo.setActive(true);
+      }, 2500);
+    }
+    
+    // Test app generation
+    async function testGenerateApp() {
+      // Show loading indicator
+      generationStatus.show('Generating app...');
+      
+      // Reset and show generation preview
+      generationPreview.reset();
+      generationPreview.show();
+      
+      // Simulate streaming response
+      setTimeout(() => {
+        generationPreview.handleGenerationProgress('// COMPONENT: TaskManager\nclass TaskManager extends HTMLElement {\n  constructor() {\n    super();\n');
+      }, 500);
+      
+      setTimeout(() => {
+        generationPreview.handleGenerationProgress('    this.attachShadow({ mode: "open" });\n    this._tasks = [];\n    this.render();\n  }\n\n  render() {\n');
+      }, 1500);
+      
+      setTimeout(() => {
+        generationPreview.handleGenerationProgress('    this.shadowRoot.innerHTML = `\n      <style>\n        :host { display: block; }\n      </style>\n      <div>\n        <h1>Task Master Pro</h1>\n        <p>A productivity app that helps users manage their tasks with categories, priorities, and due dates.</p>\n      </div>\n    `;\n  }\n}\n\ncustomElements.define("task-manager", TaskManager);');
+        generationPreview.handleGenerationComplete();
+        
+        // Hide loading indicator
+        generationStatus.hide();
+        
+        // Show success message
+        showError('App created successfully', 'Your app has been created and added to the app list.', ErrorLevel.INFO);
+      }, 2500);
+    }
+    
+    // Test error
+    function testError() {
+      showError('Test Error', 'This is a test error message.', ErrorLevel.ERROR);
+    }
+  </script>
+</body>
+</html>

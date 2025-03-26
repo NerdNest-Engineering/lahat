@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lahat App List Test</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    #console-output {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 150px;
+      background-color: #f5f5f5;
+      border-top: 1px solid #ddd;
+      overflow-y: auto;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .log-entry {
+      margin-bottom: 4px;
+      padding: 2px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .log-entry.error {
+      color: #d32f2f;
+    }
+    
+    .log-entry.warn {
+      color: #f57c00;
+    }
+    
+    .log-entry.info {
+      color: #0288d1;
+    }
+    
+    #app-container {
+      height: calc(100% - 150px);
+      overflow: hidden;
+    }
+  </style>
+  <link rel="stylesheet" href="app-list.css">
+</head>
+<body>
+  <div id="app-container">
+    <app-list-container id="app-list">
+      <navigation-controls slot="navigation"></navigation-controls>
+      <!-- App cards will be added dynamically -->
+    </app-list-container>
+  </div>
+  
+  <div id="console-output">
+    <div class="log-entry info">Console output will appear here</div>
+  </div>
+  
+  <script>
+    // Override console methods to display in the console-output div
+    const consoleOutput = document.getElementById('console-output');
+    
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+    const originalConsoleInfo = console.info;
+    
+    console.log = function(...args) {
+      originalConsoleLog.apply(console, args);
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      logEntry.textContent = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ).join(' ');
+      consoleOutput.appendChild(logEntry);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    };
+    
+    console.error = function(...args) {
+      originalConsoleError.apply(console, args);
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry error';
+      logEntry.textContent = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ).join(' ');
+      consoleOutput.appendChild(logEntry);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    };
+    
+    console.warn = function(...args) {
+      originalConsoleWarn.apply(console, args);
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry warn';
+      logEntry.textContent = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ).join(' ');
+      consoleOutput.appendChild(logEntry);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    };
+    
+    console.info = function(...args) {
+      originalConsoleInfo.apply(console, args);
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry info';
+      logEntry.textContent = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ).join(' ');
+      consoleOutput.appendChild(logEntry);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    };
+  </script>
+  
+  <!-- Import components -->
+  <script src="components/app-list-container.js" type="module"></script>
+  <script src="components/app-card.js" type="module"></script>
+  <script src="components/navigation-controls.js" type="module"></script>
+  
+  <!-- Import main script -->
+  <script src="app-list.js" type="module"></script>
+</body>
+</html>
