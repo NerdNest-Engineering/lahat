@@ -19,84 +19,45 @@ class ClaudeClient {
       apiKey: this.apiKey || process.env.ANTHROPIC_API_KEY
     });
     
-    this.systemPrompt = `You are an expert web developer specializing in creating self-contained web components using JavaScript. When given a description of an application, you will generate a complete, functional web component implementation.
+    this.systemPrompt = `You are an expert web developer specializing in creating self-contained mini applications using HTML, CSS, and JavaScript. When given a description of an application, you will generate a complete, functional implementation that can run in an Electron window.
 
 IMPORTANT GUIDELINES:
-1. Your response must be a SINGLE JavaScript file that defines a web component class extending HTMLElement.
-2. The web component must use Shadow DOM for encapsulation.
-3. All CSS must be included within the component using a <style> tag in the shadow DOM.
-4. All functionality must be self-contained within the component class.
-5. The component must be fully functional without any external dependencies or network requests.
-6. Use modern JavaScript (ES6+) and CSS features.
-7. Ensure the UI is clean, intuitive, and responsive.
-8. Include appropriate error handling and user feedback.
-9. Add comments to explain complex logic or functionality.
-10. The component will be loaded in a container that already has a draggable region at the top, so you don't need to add one.
+1. Your response must be a SINGLE self-contained HTML file that includes all CSS and JavaScript.
+2. All CSS must be in a <style> tag in the <head> section.
+3. All JavaScript must be in a <script> tag at the end of the <body> section.
+4. The application must be fully functional without any external dependencies or network requests.
+5. Use modern JavaScript (ES6+) and CSS features.
+6. Ensure the UI is clean, intuitive, and responsive.
+7. Include appropriate error handling and user feedback.
+8. Add comments to explain complex logic or functionality.
+9. CRITICAL: You MUST include a transparent draggable region at the top of the window for the Electron app. Add this to your HTML body as the first element: <div style="height: 38px; width: 100%; position: fixed; top: 0; left: 0; -webkit-app-region: drag; z-index: 1000;"></div>
+10. Make sure your content has enough top padding (at least 38px) to account for the draggable region.
 
 RESPONSE FORMAT:
-Your response must be a valid JavaScript file defining a web component class and registering it with customElements.define().
+Your response must be a valid HTML document starting with <!DOCTYPE html> and containing all necessary elements. Do not include any explanations or markdown formatting outside the HTML code.
 
 EXAMPLE OUTPUT:
-/**
- * Mini App Component
- * Description of what this component does
- */
-export class MiniAppComponent extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    
-    // Initialize state
-    this.state = {
-      // Component state here
-    };
-    
-    // Render initial UI
-    this.render();
-  }
-  
-  // Lifecycle methods
-  connectedCallback() {
-    // Component connected to DOM
-    this.setupEventListeners();
-  }
-  
-  disconnectedCallback() {
-    // Component removed from DOM
-    this.removeEventListeners();
-  }
-  
-  // Render method
-  render() {
-    this.shadowRoot.innerHTML = \`
-      <style>
-        /* Component styles */
-        :host {
-          display: block;
-          font-family: system-ui, sans-serif;
-        }
-        .container {
-          padding: 20px;
-        }
-      </style>
-      <div class="container">
-        <!-- Component HTML -->
-      </div>
-    \`;
-  }
-  
-  // Event handling
-  setupEventListeners() {
-    // Set up event listeners
-  }
-  
-  removeEventListeners() {
-    // Clean up event listeners
-  }
-}
-
-// Register the component
-customElements.define('mini-app-component', MiniAppComponent);`;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Application</title>
+  <style>
+    /* CSS styles here */
+    body {
+      padding-top: 38px; /* Add padding for the drag region */
+    }
+  </style>
+</head>
+<body>
+  <div style="height: 38px; width: 100%; position: fixed; top: 0; left: 0; -webkit-app-region: drag; z-index: 1000;"></div>
+  <!-- HTML content here -->
+  <script>
+    // JavaScript code here
+  </script>
+</body>
+</html>`;
 
     this.appStoragePath = path.join(app.getPath('userData'), 'generated-apps');
     this.ensureAppStorageDirectory();
@@ -233,7 +194,7 @@ customElements.define('mini-app-component', MiniAppComponent);`;
     }
   }
 
-  async saveGeneratedApp(appName, componentContent, prompt, conversationId = null) {
+  async saveGeneratedApp(appName, htmlContent, prompt, conversationId = null) {
     // Create a safe folder name from the app name
     const safeAppName = appName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const timestamp = Date.now();
@@ -249,610 +210,9 @@ customElements.define('mini-app-component', MiniAppComponent);`;
       // Create assets folder
       await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
       
-      // Create components folder
-      await fs.mkdir(path.join(folderPath, 'components'), { recursive: true });
-      
-      // Save the component content as a JS file
-      const componentName = `${safeAppName}-component.js`;
-      const componentFilePath = path.join(folderPath, 'components', componentName);
-      await fs.writeFile(componentFilePath, componentContent);
-      
-      // Copy the base-component.js file
-      const baseComponentSrc = path.join(__dirname, 'components', 'core', 'base-component.js');
-      const baseComponentDest = path.join(folderPath, 'base-component.js');
-      try {
-        const baseComponentContent = await fs.readFile(baseComponentSrc, 'utf-8');
-        // Create a simplified version without external dependencies
-        const simplifiedBaseComponent = `/**
- * Simplified Base component class for mini apps
- * Provides common functionality for web components
- */
-
-export class BaseComponent extends HTMLElement {
-  /**
-   * Create a new BaseComponent instance
-   */
-  constructor() {
-    super();
-    
-    // Attach shadow DOM
-    this.attachShadow({ mode: 'open' });
-    
-    // Setup component state
-    this._connected = false;
-    this._initialized = false;
-    this._props = {};
-  }
-  
-  /**
-   * Called when the component is first connected to the DOM
-   */
-  connectedCallback() {
-    this._connected = true;
-    
-    try {
-      // Initialize once if not already initialized
-      if (!this._initialized) {
-        this.initialize();
-        this._initialized = true;
-      }
-      
-      // Call connect hook
-      this.onConnected();
-    } catch (error) {
-      console.error(\`Error connecting component \${this.constructor.name}:\`, error);
-      this.handleError(error);
-    }
-  }
-  
-  /**
-   * Called when the component is disconnected from the DOM
-   */
-  disconnectedCallback() {
-    try {
-      this._connected = false;
-      
-      // Call disconnect hook
-      this.onDisconnected();
-    } catch (error) {
-      console.error(\`Error disconnecting component \${this.constructor.name}:\`, error);
-    }
-  }
-  
-  /**
-   * Initialize component (called once)
-   * Override in subclass
-   */
-  initialize() {
-    // Override in subclass
-  }
-  
-  /**
-   * Connected callback (called each time component is connected)
-   * Override in subclass
-   */
-  onConnected() {
-    // Override in subclass
-  }
-  
-  /**
-   * Disconnected callback
-   * Override in subclass
-   */
-  onDisconnected() {
-    // Override in subclass
-  }
-  
-  /**
-   * Handle component errors
-   * @param {Error} error - Error to handle
-   */
-  handleError(error) {
-    console.error(\`Error in component \${this.constructor.name}:\`, error);
-    
-    // Emit error event for parent components to handle
-    this.emit('component-error', {
-      error,
-      component: this.constructor.name,
-      element: this
-    });
-  }
-  
-  /**
-   * Set a property value
-   * @param {string} name - Property name
-   * @param {any} value - Property value
-   * @returns {any} - Set value (for chaining)
-   */
-  setProp(name, value) {
-    this._props[name] = value;
-    
-    // Reflect to attribute for primitive values
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-      this.setAttribute(\`prop-\${name}\`, value.toString());
-    }
-    
-    return value;
-  }
-  
-  /**
-   * Get a property value
-   * @param {string} name - Property name
-   * @param {any} defaultValue - Default value if property is not set
-   * @returns {any} - Property value
-   */
-  getProp(name, defaultValue = undefined) {
-    return this._props[name] !== undefined ? this._props[name] : defaultValue;
-  }
-  
-  /**
-   * Helper method to render HTML and CSS in the shadow DOM
-   * @param {string} html - HTML template
-   * @param {string} styles - CSS styles
-   */
-  render(html, styles) {
-    // Get a reference to rendered content before updating
-    // to try to preserve focus and selection where possible
-    const activeElement = this.shadowRoot.activeElement;
-    const selectionStart = activeElement?.selectionStart;
-    const selectionEnd = activeElement?.selectionEnd;
-    
-    // Update shadow DOM content
-    this.shadowRoot.innerHTML = \`
-      <style>\${styles}</style>
-      \${html}
-    \`;
-    
-    // Try to restore focus and selection if possible
-    if (activeElement) {
-      const newElement = this.shadowRoot.querySelector(\`#\${activeElement.id}\`);
-      if (newElement && typeof newElement.focus === 'function') {
-        newElement.focus();
-        if (typeof newElement.setSelectionRange === 'function' && 
-            selectionStart !== undefined && 
-            selectionEnd !== undefined) {
-          newElement.setSelectionRange(selectionStart, selectionEnd);
-        }
-      }
-    }
-  }
-  
-  /**
-   * Helper to dispatch custom events
-   * @param {string} eventName - Name of the event to dispatch
-   * @param {Object} detail - Event detail object
-   * @returns {boolean} - Whether the event was canceled
-   */
-  emit(eventName, detail = {}) {
-    const event = new CustomEvent(eventName, {
-      bubbles: true,
-      composed: true,
-      detail
-    });
-    return this.dispatchEvent(event);
-  }
-  
-  /**
-   * Get a reference to an element in the shadow DOM
-   * @param {string} selector - CSS selector
-   * @returns {Element} - Element or null if not found
-   */
-  $(selector) {
-    return this.shadowRoot.querySelector(selector);
-  }
-  
-  /**
-   * Get all elements matching a selector in the shadow DOM
-   * @param {string} selector - CSS selector
-   * @returns {NodeList} - NodeList of matching elements
-   */
-  $$(selector) {
-    return this.shadowRoot.querySelectorAll(selector);
-  }
-  
-  /**
-   * Check if this component is connected to the DOM
-   * @returns {boolean} - True if connected
-   */
-  get isConnected() {
-    return this._connected;
-  }
-  
-  /**
-   * Get all current props
-   * @returns {Object} - Props object
-   */
-  get props() {
-    return { ...this._props };
-  }
-}`;
-        await fs.writeFile(baseComponentDest, simplifiedBaseComponent);
-      } catch (error) {
-        console.error('Error copying base-component.js:', error);
-      }
-      
-      // Copy the mini-app-container.js file
-      const miniAppContainerSrc = path.join(__dirname, 'components', 'mini-app', 'mini-app-container.js');
-      const miniAppContainerDest = path.join(folderPath, 'mini-app-container.js');
-      try {
-        const miniAppContainerContent = await fs.readFile(miniAppContainerSrc, 'utf-8');
-        // Create a simplified version that uses the local base-component.js
-        const simplifiedMiniAppContainer = `/**
- * Mini App Container Component
- * A standard container for hosting generated mini app web components
- */
-
-import { BaseComponent } from './base-component.js';
-
-/**
- * Mini App Container
- * Provides a standardized environment for loading and running mini app components
- * @extends BaseComponent
- */
-export class MiniAppContainer extends BaseComponent {
-  /**
-   * Create a new MiniAppContainer
-   */
-  constructor() {
-    super();
-    
-    // Initialize state
-    this._loadedComponent = null;
-    this._componentInstance = null;
-    
-    // Create base HTML structure
-    this.render(\`
-      <div class="mini-app-container">
-        <div class="mini-app-content">
-          <!-- Mini app component will be loaded here -->
-        </div>
-      </div>
-    \`, \`
-      :host {
-        display: block;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-      }
-      
-      .mini-app-container {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding-top: 38px; /* Space for the drag region */
-        box-sizing: border-box;
-      }
-      
-      .mini-app-content {
-        flex: 1;
-        overflow: auto;
-        position: relative;
-      }
-    \`);
-  }
-  
-  /**
-   * Load a component into the container
-   * @param {Class} ComponentClass - The component class to load
-   * @param {Object} props - Optional props to pass to the component
-   * @returns {HTMLElement} - The instantiated component
-   */
-  loadComponent(ComponentClass, props = {}) {
-    // Store reference to the component class
-    this._loadedComponent = ComponentClass;
-    
-    // Get the content container
-    const contentContainer = this.$('.mini-app-content');
-    
-    // Clear any existing content
-    contentContainer.innerHTML = '';
-    
-    try {
-      // Register the component if it's not already registered
-      const tagName = this._getTagNameFromClass(ComponentClass);
-      
-      if (!customElements.get(tagName)) {
-        customElements.define(tagName, ComponentClass);
-      }
-      
-      // Create an instance of the component
-      const instance = document.createElement(tagName);
-      this._componentInstance = instance;
-      
-      // Set props if provided
-      Object.entries(props).forEach(([key, value]) => {
-        if (typeof instance.setProp === 'function') {
-          instance.setProp(key, value);
-        } else {
-          // Fallback for non-BaseComponent components
-          instance[key] = value;
-        }
-      });
-      
-      // Add the component to the container
-      contentContainer.appendChild(instance);
-      
-      return instance;
-    } catch (error) {
-      console.error('Error loading component:', error);
-      this.handleError(error);
-      return null;
-    }
-  }
-  
-  /**
-   * Get the loaded component instance
-   * @returns {HTMLElement|null} - The component instance or null if not loaded
-   */
-  getComponentInstance() {
-    return this._componentInstance;
-  }
-  
-  /**
-   * Generate a tag name from a component class
-   * @param {Class} ComponentClass - The component class
-   * @returns {string} - A valid tag name for the component
-   * @private
-   */
-  _getTagNameFromClass(ComponentClass) {
-    // Try to get the name from the component's static tagName property
-    if (ComponentClass.tagName) {
-      return ComponentClass.tagName;
-    }
-    
-    // Generate a tag name from the class name
-    let tagName = ComponentClass.name
-      .replace(/([A-Z])/g, '-$1')
-      .toLowerCase()
-      .replace(/^-/, '');
-    
-    // Ensure the tag name contains a hyphen (required for custom elements)
-    if (!tagName.includes('-')) {
-      tagName = \`mini-app-\${tagName}\`;
-    }
-    
-    return tagName;
-  }
-}
-
-// Register the component
-customElements.define('mini-app-container', MiniAppContainer);`;
-        await fs.writeFile(miniAppContainerDest, simplifiedMiniAppContainer);
-      } catch (error) {
-        console.error('Error copying mini-app-container.js:', error);
-      }
-      
-      // Copy CSS files
-      const stylesSrc = path.join(__dirname, 'styles.css');
-      const stylesDest = path.join(folderPath, 'styles.css');
-      try {
-        const stylesContent = await fs.readFile(stylesSrc, 'utf-8');
-        // Create a simplified version with only the essential styles
-        const simplifiedStyles = `/* Base Styles */
-:root {
-  --primary-color: #4285f4;
-  --primary-dark: #3367d6;
-  --secondary-color: #34a853;
-  --danger-color: #ea4335;
-  --warning-color: #fbbc05;
-  --light-gray: #f8f9fa;
-  --medium-gray: #e0e0e0;
-  --dark-gray: #5f6368;
-  --border-radius: 8px;
-  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  --drag-region-height: 38px; /* Height for the draggable region */
-}
-
-/* Draggable region for window dragging */
-.drag-region {
-  height: var(--drag-region-height);
-  width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  -webkit-app-region: drag;
-  z-index: 1000; /* Ensure it's above other content */
-}
-
-/* Ensure elements inside the drag region aren't draggable */
-.drag-region * {
-  -webkit-app-region: no-drag;
-}
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: white;
-  color: #202124;
-}
-
-h1, h2, h3 {
-  font-weight: normal;
-  margin-top: 0;
-}
-
-h1 {
-  font-size: 28px;
-  margin-bottom: 10px;
-}
-
-h2 {
-  font-size: 20px;
-  margin-bottom: 15px;
-}
-
-h3 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-button {
-  padding: 10px 20px;
-  font-size: 14px;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-}
-
-button:hover {
-  background: var(--primary-dark);
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-button.secondary {
-  background: var(--light-gray);
-  color: var(--dark-gray);
-  border: 1px solid var(--medium-gray);
-}
-
-button.secondary:hover {
-  background: var(--medium-gray);
-}
-
-button.danger {
-  background: var(--danger-color);
-}
-
-button.danger:hover {
-  background: #d32f2f;
-}
-
-input, textarea {
-  padding: 12px;
-  font-size: 14px;
-  border: 2px solid var(--medium-gray);
-  border-radius: var(--border-radius);
-  outline: none;
-  transition: border-color 0.2s;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-input:focus, textarea:focus {
-  border-color: var(--primary-color);
-}
-
-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.hidden {
-  display: none !important;
-}`;
-        await fs.writeFile(stylesDest, simplifiedStyles);
-      } catch (error) {
-        console.error('Error copying styles.css:', error);
-      }
-      
-      // Create fonts.css
-      const fontsDest = path.join(folderPath, 'fonts.css');
-      try {
-        // Create fonts directory
-        await fs.mkdir(path.join(folderPath, 'fonts'), { recursive: true });
-        
-        // Copy font files if needed
-        const fontSrc = path.join(__dirname, 'fonts', 'NotoSansTagalog-Regular.ttf');
-        const fontDest = path.join(folderPath, 'fonts', 'NotoSansTagalog-Regular.ttf');
-        try {
-          await fs.copyFile(fontSrc, fontDest);
-        } catch (fontError) {
-          console.error('Error copying font file:', fontError);
-        }
-        
-        // Create a simple fonts.css
-        const fontsContent = `/* Font Declarations */
-
-@font-face {
-  font-family: 'Noto Sans Tagalog';
-  src: url('./fonts/NotoSansTagalog-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Utility class for Tagalog text */
-.tagalog-text {
-  font-family: 'Noto Sans Tagalog', sans-serif;
-}`;
-        await fs.writeFile(fontsDest, fontsContent);
-      } catch (error) {
-        console.error('Error creating fonts.css:', error);
-      }
-      
-      // Read the template HTML file
-      const templatePath = path.join(__dirname, 'templates', 'mini-app-template.html');
-      let templateContent;
-      
-      try {
-        templateContent = await fs.readFile(templatePath, 'utf-8');
-      } catch (error) {
-        console.error('Error reading template file:', error);
-        // Create a basic template if the file doesn't exist
-        templateContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Mini App</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-    }
-    
-    .drag-region {
-      height: 38px;
-      width: 100%;
-      position: fixed;
-      top: 0;
-      left: 0;
-      -webkit-app-region: drag;
-      z-index: 1000;
-    }
-    
-    #app-container {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-</head>
-<body>
-  <div class="drag-region"></div>
-  <mini-app-container id="app-container"></mini-app-container>
-  
-  <script type="module">
-    import { MiniAppContainer } from '../components/mini-app/mini-app-container.js';
-    import { MINI_APP_COMPONENT } from './MINI_APP_PATH';
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('app-container');
-      container.loadComponent(MINI_APP_COMPONENT);
-    });
-  </script>
-</body>
-</html>`;
-      }
-      
-      // Replace the placeholder with the actual component path
-      const relativePath = `./components/${componentName}`;
-      const componentImportName = this._getComponentImportName(componentContent);
-      
-      templateContent = templateContent.replace('./MINI_APP_PATH', relativePath);
-      templateContent = templateContent.replace('MINI_APP_COMPONENT', componentImportName);
-      
-      // Save the HTML file
+      // Save the HTML content as index.html
       const htmlFilePath = path.join(folderPath, 'index.html');
-      await fs.writeFile(htmlFilePath, templateContent);
+      await fs.writeFile(htmlFilePath, htmlContent);
       
       // Create metadata
       const metadata = {
@@ -863,11 +223,9 @@ textarea {
         versions: [
           {
             timestamp,
-            filePath: 'index.html', // Main HTML file
-            componentFilePath: `components/${componentName}` // Component file
+            filePath: 'index.html' // Relative path within the folder
           }
-        ],
-        isWebComponent: true // Flag to indicate this is a web component app
+        ]
       };
       
       // Save metadata
@@ -877,7 +235,6 @@ textarea {
       return {
         folderName,
         filePath: htmlFilePath,
-        componentFilePath: componentFilePath,
         folderPath,
         metadata
       };
@@ -989,7 +346,7 @@ textarea {
     }
   }
 
-  async updateGeneratedApp(conversationId, prompt, componentContent) {
+  async updateGeneratedApp(conversationId, prompt, htmlContent) {
     try {
       // Get all folders in the app storage directory
       const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
@@ -1010,101 +367,18 @@ textarea {
             // Create a new version
             const timestamp = Date.now();
             const versionNumber = metadata.versions.length + 1;
+            const versionFilename = `v${versionNumber}.html`;
+            const versionPath = path.join(this.appStoragePath, folder, versionFilename);
             
-            // Create version-specific filenames
-            const versionHtmlFilename = `v${versionNumber}.html`;
-            const versionHtmlPath = path.join(this.appStoragePath, folder, versionHtmlFilename);
+            console.log('Updating app, saving to:', versionPath);
             
-            // Create components directory if it doesn't exist
-            const componentsDir = path.join(this.appStoragePath, folder, 'components');
-            await fs.mkdir(componentsDir, { recursive: true });
-            
-            // Create a version-specific component filename
-            const safeAppName = metadata.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            const versionComponentFilename = `${safeAppName}-component-v${versionNumber}.js`;
-            const versionComponentPath = path.join(componentsDir, versionComponentFilename);
-            
-            console.log('Updating app, saving component to:', versionComponentPath);
-            
-            // Save the new component version
-            await fs.writeFile(versionComponentPath, componentContent);
-            
-            // Read the template HTML file
-            const templatePath = path.join(__dirname, 'templates', 'mini-app-template.html');
-            let templateContent;
-            
-            try {
-              templateContent = await fs.readFile(templatePath, 'utf-8');
-            } catch (error) {
-              console.error('Error reading template file:', error);
-              // Create a basic template if the file doesn't exist
-              templateContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Mini App</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-    }
-    
-    .drag-region {
-      height: 38px;
-      width: 100%;
-      position: fixed;
-      top: 0;
-      left: 0;
-      -webkit-app-region: drag;
-      z-index: 1000;
-    }
-    
-    #app-container {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-</head>
-<body>
-  <div class="drag-region"></div>
-  <mini-app-container id="app-container"></mini-app-container>
-  
-  <script type="module">
-    import { MiniAppContainer } from '../components/mini-app/mini-app-container.js';
-    import { MINI_APP_COMPONENT } from './MINI_APP_PATH';
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('app-container');
-      container.loadComponent(MINI_APP_COMPONENT);
-    });
-  </script>
-</body>
-</html>`;
-            }
-            
-            // Replace the placeholder with the actual component path
-            const relativePath = `./components/${versionComponentFilename}`;
-            const componentImportName = this._getComponentImportName(componentContent);
-            
-            templateContent = templateContent.replace('./MINI_APP_PATH', relativePath);
-            templateContent = templateContent.replace('MINI_APP_COMPONENT', componentImportName);
-            
-            // Make sure the template uses local paths
-            templateContent = templateContent.replace(/href="\.\.\/styles\.css"/, 'href="./styles.css"');
-            templateContent = templateContent.replace(/href="\.\.\/styles\/fonts\.css"/, 'href="./fonts.css"');
-            templateContent = templateContent.replace(/import\s*{\s*MiniAppContainer\s*}\s*from\s*['"]\.\.\/components\/mini-app\/mini-app-container\.js['"]/, 'import { MiniAppContainer } from \'./mini-app-container.js\'');
-            
-            // Save the HTML file
-            await fs.writeFile(versionHtmlPath, templateContent);
+            // Save the new version
+            await fs.writeFile(versionPath, htmlContent);
             
             // Update metadata
             metadata.versions.push({
               timestamp,
-              filePath: versionHtmlFilename,
-              componentFilePath: `components/${versionComponentFilename}`,
+              filePath: versionFilename,
               prompt
             });
             
@@ -1112,8 +386,7 @@ textarea {
             
             return {
               conversationId,
-              filePath: versionHtmlPath,
-              componentFilePath: path.join(this.appStoragePath, folder, 'components', versionComponentFilename),
+              filePath: versionPath,
               folderPath: path.join(this.appStoragePath, folder),
               versionNumber
             };
@@ -1372,29 +645,6 @@ textarea {
         error: `Failed to import mini app: ${error.message}`
       };
     }
-  }
-  
-  /**
-   * Extract the component class name from the generated code
-   * @param {string} componentContent - The generated component code
-   * @returns {string} - The component class name
-   * @private
-   */
-  _getComponentImportName(componentContent) {
-    // Try to find the export class declaration
-    const exportClassMatch = componentContent.match(/export\s+class\s+(\w+)/);
-    if (exportClassMatch && exportClassMatch[1]) {
-      return exportClassMatch[1];
-    }
-    
-    // Try to find the customElements.define declaration
-    const defineMatch = componentContent.match(/customElements\.define\(['"][\w-]+['"],\s*(\w+)/);
-    if (defineMatch && defineMatch[1]) {
-      return defineMatch[1];
-    }
-    
-    // Default to a generic name if we can't find the class name
-    return 'MiniAppComponent';
   }
   
   /**

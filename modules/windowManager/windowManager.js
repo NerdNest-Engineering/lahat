@@ -30,7 +30,7 @@ const DEFAULT_DIMENSIONS = {
 const WINDOW_HTML = {
   [WindowType.MAIN]: 'main.html',
   [WindowType.API_SETUP]: 'api-setup.html',
-  [WindowType.APP_CREATION]: 'components/app-creation/app-creation.html',
+  [WindowType.APP_CREATION]: 'app-creation.html',
   [WindowType.MINI_APP]: null // Mini apps use dynamic content
 };
 
@@ -85,10 +85,13 @@ export function createWindow(type, options = {}) {
     win.loadFile(path.join(__dirname, '../../', WINDOW_HTML[type]));
   }
   
-  // Enable DevTools in development mode
+  // DevTools are disabled to prevent Autofill API errors
+  // Uncomment the following code if you need DevTools for debugging
+  /*
   if (process.env.NODE_ENV === 'development') {
     win.webContents.openDevTools({ mode: 'detach' });
   }
+  */
   
   // Save window position and size when closed
   win.on('close', () => {

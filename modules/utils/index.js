@@ -6,10 +6,6 @@
  * for easier import and usage throughout the application.
  */
 
-// CSP utilities
-// Functions for working with Content Security Policy
-export * from './cspUtils.js';
-
 // Error handling utilities
 // Provides structured error handling with custom error classes
 export * from './errorHandler.js';
@@ -79,10 +75,6 @@ export const performanceUtils = PerformanceUtils;
 import * as ResourceUtils from './resourceTracker.js';
 export const resourceUtils = ResourceUtils;
 
-// CSP utilities bundle
-import * as CSPUtils from './cspUtils.js';
-export const cspUtils = CSPUtils;
-
 // Default export with all utility bundles
 export default {
   error: errorUtils,
@@ -93,6 +85,5 @@ export default {
   file: fileUtils,
   performance: performanceUtils,
   resource: resourceUtils,
-  csp: cspUtils,
   logger
 };
