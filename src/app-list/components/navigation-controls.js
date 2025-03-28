@@ -19,15 +19,13 @@ export class NavigationControls extends HTMLElement {
    */
   _initializeDOM() {
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: contents; /* Use contents to avoid affecting layout */
-        }
-        
+      <style>        
         .widget-controls {
           display: flex;
+          flex-direction: row;
           gap: 10px;
           flex-wrap: wrap;
+          width: 100%;
         }
       </style>
       

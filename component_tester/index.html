@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Tester</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Component Tester</h1>
+            <p>Upload a component file to test it in isolation with Ollama LLM analysis</p>
+        </header>
+        
+        <div class="upload-section">
+            <label for="component-file">Upload Component (.js):</label>
+            <input type="file" id="component-file" accept=".js">
+            <button id="analyze-btn">Analyze Component</button>
+        </div>
+        
+        <div class="analysis-section" id="analysis-section" style="display: none;">
+            <h2>Component Analysis</h2>
+            <div id="component-details"></div>
+        </div>
+        
+        <div class="test-interface" id="test-interface" style="display: none;">
+            <div class="test-form">
+                <h2>Test Component</h2>
+                <form id="component-form"></form>
+                <button id="update-btn">Update Component</button>
+            </div>
+            
+            <div class="preview-section">
+                <h2>Component Preview</h2>
+                <div id="component-preview"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load code highlighting library -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/prism.min.js"></script>
+    <script src="component-tester.js"></script>
+</body>
+</html>

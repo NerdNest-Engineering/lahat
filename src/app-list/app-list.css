@@ -97,27 +97,58 @@ body {
   overflow: hidden;
 }
 
-/* Layout and structure */
+/* Window and content layout */
 .window {
-  max-width: 1200px;
-  margin: 0 auto;
-  background: white;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   overflow: hidden;
+  border-radius: 0;
 }
 
 .content {
-  padding: 20px;
-  padding-top: calc(20px + var(--drag-region-height));
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  padding-top: calc(0px + var(--drag-region-height)); /* Adjust for drag region */
+}
+
+.section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-medium);
+  overflow: hidden;
+}
+
+#app-management-section {
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* App container styles */
+#app-container {
+  margin-top: var(--spacing-medium);
+  width: 100%;
+  height: calc(100vh - 130px); /* Adjust height to fill remaining window space */
+  overflow-y: auto;
+  padding-right: var(--spacing-small); /* Add some padding for scrollbar */
+}
+
+#app-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--spacing-medium);
+  width: 100%;
+  padding-bottom: var(--spacing-large);
 }
 
 .app-list-header {
@@ -140,10 +171,21 @@ body {
   flex-wrap: wrap;
 }
 
-#app-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+app-card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-light);
+  padding: var(--spacing-medium);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+app-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
 }
 
 /* The app-list-container component will handle its own internal styling through Shadow DOM */
@@ -201,32 +243,49 @@ button.danger:hover {
   background: #d32f2f;
 }
 
-/* App Card styles from v1 */
-.app-card {
-  background: var(--light-gray);
-  border-radius: var(--border-radius);
-  padding: 15px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.app-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.app-card h3 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.app-card p {
-  margin: 5px 0;
+/* App Management Styles */
+.titlebar {
+  height: 36px;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
   font-size: 14px;
+  -webkit-app-region: drag;
+}
+
+.widget-controls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-large);
+}
+
+.widget-controls-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: var(--primary-color);
+}
+
+.widget-controls {
+  display: flex;
+  gap: 10px;
+}
+
+/* No apps message */
+#no-apps-message {
+  text-align: center;
+  padding: var(--spacing-large);
+  background-color: var(--light-gray);
+  border-radius: var(--border-radius);
+  margin-top: var(--spacing-large);
+}
+
+#no-apps-message p {
+  margin-bottom: var(--spacing-medium);
   color: var(--dark-gray);
+  font-size: 16px;
 }
 
 /* Utility classes */
@@ -253,6 +312,32 @@ button.danger:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.full-width {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--spacing-medium);
+  width: 100%;
+}
+
+.full-width-container {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* Ensure app-list-container takes full width */
+app-list-container {
+  width: 100%;
+  display: block;
 }
 
 /* Responsive adjustments */

@@ -26,60 +26,64 @@ export class AppCard extends HTMLElement {
    */
   _initializeDOM() {
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          background: var(--light-gray, #f8f9fa);
-          border-radius: var(--border-radius, 8px);
-          transition: transform 0.2s, box-shadow 0.2s;
-          cursor: pointer;
-          overflow: hidden;
-          margin: 0;
-          height: 100%;
-        }
-        
-        :host(:hover) {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
+      <style>        
         .card {
           padding: 20px;
           display: flex;
+          flex: 1 1 200px;
           flex-direction: column;
-          height: 100%;
+          align-items: center;
           box-sizing: border-box;
         }
         
-        .title {
-          font-size: 20px;
-          font-weight: 500;
-          margin-bottom: 12px;
-          color: var(--text-color, #202124);
+        .content {
+          flex: 1;
         }
         
-        .detail {
+        .app-title {
+          margin: 0 0 5px 0;
+          font-size: 18px;
+          font-weight: 500;
+          color: var(--text-color, #333333);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .metadata-container {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          margin-top: 5px;
+        }
+        
+        .metadata {
           font-size: 14px;
-          color: var(--text-secondary, #5f6368);
-          margin: 3px 0;
-          line-height: 1.5;
+          color: var(--text-secondary, #666666);
         }
         
         .path {
           font-size: 12px;
-          color: var(--text-tertiary, #80868b);
+          color: var(--text-tertiary, #999999);
           word-break: break-all;
-          overflow-wrap: break-word;
-          margin-top: 10px;
-          line-height: 1.3;
-          display: block;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          margin-left: auto;
+          max-width: 200px;
+          text-align: right;
         }
       </style>
       
       <div class="card">
-        <div class="title"></div>
-        <div class="detail created"></div>
-        <div class="detail version"></div>
+        <div class="content">
+          <div class="app-title title"></div>
+          <div class="metadata-container">
+            <div class="metadata created"></div>
+            <div class="metadata version"></div>
+          </div>
+        </div>
         <div class="path"></div>
       </div>
     `;
@@ -115,20 +119,24 @@ export class AppCard extends HTMLElement {
     const versionElement = this.shadowRoot.querySelector('.version');
     const pathElement = this.shadowRoot.querySelector('.path');
     
-    if (titleElement) titleElement.textContent = this._title;
-    
-    if (createdElement && this._created) {
-      // Format the date
-      const formattedDate = this._formatDate(this._created);
-      createdElement.textContent = formattedDate;
+    if (titleElement) {
+      titleElement.textContent = this._title || 'Untitled App';
     }
     
-    if (versionElement && this._version) {
-      versionElement.textContent = `Versions: ${this._version}`;
+    if (createdElement) {
+      const created = this._created ? new Date(this._created) : null;
+      createdElement.textContent = created 
+        ? `Created: ${created.toLocaleDateString()} ${created.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
+        : 'Created: Unknown';
     }
     
-    if (pathElement && this._path) {
-      pathElement.textContent = `Path: ${this._path}`;
+    if (versionElement) {
+      versionElement.textContent = this._version ? `Version: ${this._version}` : 'Version: 1';
+    }
+    
+    if (pathElement) {
+      pathElement.textContent = this._path || '';
+      pathElement.title = this._path || ''; // Add tooltip with full path
     }
   }
   

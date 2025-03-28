@@ -167,17 +167,29 @@ function setupIPCEventListeners(appListService) {
  */
 function renderApps(apps, container) {
   // Clear any existing app cards
-  const existingCards = container.querySelectorAll('app-card:not([slot])');
-  existingCards.forEach(card => card.remove());
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
+  
+  // Show or hide the no apps message
+  const noAppsMessage = document.getElementById('no-apps-message');
+  if (apps.length === 0) {
+    if (noAppsMessage) noAppsMessage.classList.remove('hidden');
+    return;
+  } else {
+    if (noAppsMessage) noAppsMessage.classList.add('hidden');
+  }
   
   // Create and append app cards
   apps.forEach(app => {
     const appCard = document.createElement('app-card');
-    appCard.appId = app.id;
-    appCard.title = app.title;
-    appCard.description = app.description;
     
-    // Set the new properties
+    // Set app properties
+    appCard.appId = app.id;
+    appCard.title = app.title || 'Untitled App';
+    appCard.description = app.description || '';
+    
+    // Set created date
     if (app.created) {
       appCard.created = app.created;
     } else if (app.lastModified) {
@@ -185,11 +197,15 @@ function renderApps(apps, container) {
       appCard.created = app.lastModified;
     }
     
+    // Set version and path
     appCard.version = app.version || '1';
     appCard.path = app.path || '';
     
+    // Append to container (direct child of app-list-container's shadow DOM slot)
     container.appendChild(appCard);
   });
+  
+  console.log(`Rendered ${apps.length} app cards`);
 }
 
 /**

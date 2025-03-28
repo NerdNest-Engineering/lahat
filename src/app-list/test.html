@@ -55,9 +55,28 @@
   <div id="app-container">
     <app-list-container id="app-list">
       <navigation-controls slot="navigation"></navigation-controls>
-      <!-- App cards will be added dynamically -->
+      <!-- Test app cards -->
     </app-list-container>
   </div>
+  
+  <script>
+    // Add some test app cards when the DOM is loaded
+    window.addEventListener('DOMContentLoaded', () => {
+      const appList = document.getElementById('app-list');
+      
+      // Create 5 test app cards
+      for (let i = 1; i <= 5; i++) {
+        const appCard = document.createElement('app-card');
+        appCard.appId = `app-${i}`;
+        appCard.title = `Test App ${i}`;
+        appCard.created = new Date();
+        appCard.version = `1.${i}`;
+        appCard.path = `/path/to/app-${i}`;
+        
+        appList.appendChild(appCard);
+      }
+    });
+  </script>
   
   <div id="console-output">
     <div class="log-entry info">Console output will appear here</div>

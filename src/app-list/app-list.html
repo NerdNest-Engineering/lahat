@@ -4,14 +4,11 @@
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" 
         content="default-src 'self';
-                 script-src 'self' 'sha256-hPPsdAZF3UZJeMnYzdh7FkbYhux6NBVafRWhTp9LED0=';
+                 script-src 'self' 'unsafe-inline' 'unsafe-eval';
                  style-src 'self' 'unsafe-inline';
                  connect-src 'self';
                  img-src 'self';
-                 font-src 'self';
-                 object-src 'none';
-                 base-uri 'none';
-                 form-action 'none';">
+                 font-src 'self';">
   <title>Lahat - App List</title>
   <link rel="stylesheet" href="app-list.css">
   <link rel="stylesheet" href="../../v1/styles.css">
@@ -22,26 +19,29 @@
 <body>
   <div class="drag-region"></div>
   <div class="window">
+    <div class="titlebar">Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span> - App List</div>
     <div class="content">
-      <div class="app-list-header">
-        <h2 class="app-title">Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span></h2>
-        <div class="app-controls">
-          <button id="api-settings-button" class="secondary">API Settings</button>
-          <button id="dashboards-button" class="primary">Dashboards</button>
-          <button id="create-app-button" class="primary">Create New App</button>
-          <button id="import-app-button">Import App</button>
-          <button id="refresh-apps-button">Refresh</button>
-          <button id="open-app-directory-button">Open App Directory</button>
+      <!-- App Management Section -->
+      <div id="app-management-section" class="section">
+        <div class="widget-controls-header">
+          <h2>Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span></h2>
+          <div class="widget-controls">
+            <button id="api-settings-button" class="secondary">API Settings</button>
+            <button id="create-app-button" class="primary">Create New App</button>
+            <button id="import-app-button">Import App</button>
+            <button id="refresh-apps-button">Refresh</button>
+            <button id="open-app-directory-button">Open App Directory</button>
+          </div>
         </div>
-      </div>
-      
-      <div id="app-container">
-        <app-list-container id="app-list">
-          <!-- App cards will be added dynamically -->
-        </app-list-container>
-        <div id="no-apps-message" class="hidden">
-          <p>You haven't created any apps yet.</p>
-          <button id="create-first-app-button" class="primary">Create Your First App</button>
+        
+        <div id="app-container" class="full-width-container">
+          <app-list-container id="app-list">
+            <!-- App cards will be added dynamically -->
+          </app-list-container>
+          <div id="no-apps-message" class="hidden">
+            <p>You haven't created any apps yet.</p>
+            <button id="create-first-app-button" class="primary">Create Your First App</button>
+          </div>
         </div>
       </div>
 
