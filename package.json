@@ -10,15 +10,15 @@
     "start-prod": "NODE_ENV=production electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "dist-mac": "electron-builder --mac",
-    "dist-mac-alpha": "SKIP_NOTARIZATION=true electron-builder --mac --config.mac.notarize=false",
+    "dist-mac": "electron-builder --mac --config.mac.identity=\"$APPLE_DEVELOPER_IDENTITY\"",
+    "dist-mac-alpha": "SKIP_NOTARIZATION=true electron-builder --mac --config.mac.notarize=false --config.mac.identity=null",
     "dist-win": "electron-builder --win",
     "dist-linux": "electron-builder --linux",
     "dist-all": "electron-builder -mwl"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Dorky-Robot/lahat"
+    "url": "https://github.com/NerdNest-Engineering/lahat"
   },
   "keywords": [
     "electron",
@@ -29,14 +29,14 @@
     "lahat"
   ],
   "author": {
-    "name": "Dorky Robot",
-    "email": "contact@dorkyrobot.com"
+    "name": "NerdNest LLC",
+    "email": "support@nerdnest.engineering"
   },
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Dorky-Robot/lahat/issues"
+    "url": "https://github.com/NerdNest-Engineering/lahat/issues"
   },
-  "homepage": "https://github.com/Dorky-Robot/lahat",
+  "homepage": "https://nerdnest-engineering.github.io/lahat/",
   "devDependencies": {
     "@electron/notarize": "^2.5.0",
     "dotenv": "^16.4.7",
@@ -63,7 +63,7 @@
         "zip"
       ],
       "darkModeSupport": true,
-      "notarize": true,
+      "notarize": false,
       "artifactName": "${productName}-${version}.${ext}"
     },
     "afterSign": "scripts/notarize.js",
@@ -85,7 +85,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "Dorky-Robot",
+      "owner": "NerdNest-Engineering",
       "repo": "lahat"
     },
     "asar": true,
