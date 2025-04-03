@@ -13,8 +13,13 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv'; // For loading environment variables from .env file
 
-// Load environment variables
-dotenv.config();
+// Load environment variables with explicit path
+const result = dotenv.config();
+if (result.error) {
+  console.warn('Error loading .env file:', result.error.message);
+} else {
+  console.log('.env file loaded successfully');
+}
 
 export default async function (params) {
   // Skip notarization during development or if explicitly disabled
