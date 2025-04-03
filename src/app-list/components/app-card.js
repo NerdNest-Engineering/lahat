@@ -17,7 +17,6 @@ export class AppCard extends HTMLElement {
     this._path = '';
     
     this._initializeDOM();
-    this._setupEventListeners();
   }
   
   /**
@@ -89,30 +88,6 @@ export class AppCard extends HTMLElement {
     `;
   }
   
-  /**
-   * Set up event listeners
-   * @private
-   */
-  _setupEventListeners() {
-    this.addEventListener('click', this._handleClick.bind(this));
-  }
-  
-  /**
-   * Handle click events
-   * @private
-   */
-  _handleClick() {
-    this.dispatchEvent(new CustomEvent('app-selected', {
-      bubbles: true,
-      composed: true,
-      detail: { appId: this._appId }
-    }));
-  }
-  
-  /**
-   * Update the DOM with the current property values
-   * @private
-   */
   _updateDOM() {
     const titleElement = this.shadowRoot.querySelector('.title');
     const createdElement = this.shadowRoot.querySelector('.created');
@@ -126,7 +101,7 @@ export class AppCard extends HTMLElement {
     if (createdElement) {
       const created = this._created ? new Date(this._created) : null;
       createdElement.textContent = created 
-        ? `Created: ${created.toLocaleDateString()} ${created.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
+        ? `Created: ${created.toLocaleDateString()} ${created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
         : 'Created: Unknown';
     }
     
@@ -138,71 +113,6 @@ export class AppCard extends HTMLElement {
       pathElement.textContent = this._path || '';
       pathElement.title = this._path || ''; // Add tooltip with full path
     }
-  }
-  
-  /**
-   * Format date in a clean, simple format
-   * @private
-   */
-  _formatDate(date) {
-    if (!date) return '';
-    
-    // Format as M/D/YYYY HH:MM AM/PM (matching the design in the screenshot)
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const year = date.getFullYear();
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    
-    // Convert hours from 24-hour format to 12-hour format
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    
-    return `Created: ${month}/${day}/${year} ${hours}:${minutes} ${ampm}`;
-  }
-  
-  /**
-   * Called when the element is connected to the DOM
-   */
-  connectedCallback() {
-    this._updateDOM();
-  }
-  
-  /**
-   * Called when the element is disconnected from the DOM
-   */
-  disconnectedCallback() {
-    // Clean up event listeners if needed
-  }
-  
-  /**
-   * Define observed attributes
-   * @returns {string[]} Array of attribute names to observe
-   */
-  static get observedAttributes() {
-    return ['app-id', 'title'];
-  }
-  
-  /**
-   * Called when an observed attribute changes
-   * @param {string} name - The name of the attribute
-   * @param {string} oldValue - The old value of the attribute
-   * @param {string} newValue - The new value of the attribute
-   */
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue === newValue) return;
-    
-    switch (name) {
-      case 'app-id':
-        this._appId = newValue;
-        break;
-      case 'title':
-        this._title = newValue;
-        break;
-    }
-    
-    this._updateDOM();
   }
   
   // Getters and setters for properties
@@ -221,7 +131,6 @@ export class AppCard extends HTMLElement {
    */
   set appId(value) {
     this._appId = value;
-    this.setAttribute('app-id', value);
   }
   
   /**
@@ -238,7 +147,7 @@ export class AppCard extends HTMLElement {
    */
   set title(value) {
     this._title = value;
-    this.setAttribute('title', value);
+    this._updateDOM();
   }
   
   /**
@@ -261,7 +170,7 @@ export class AppCard extends HTMLElement {
     }
     this._updateDOM();
   }
-  
+
   /**
    * Get the version
    * @returns {string} The version
@@ -269,7 +178,7 @@ export class AppCard extends HTMLElement {
   get version() {
     return this._version;
   }
-  
+
   /**
    * Set the version
    * @param {string|number} value - The version
@@ -278,7 +187,7 @@ export class AppCard extends HTMLElement {
     this._version = value;
     this._updateDOM();
   }
-  
+
   /**
    * Get the file path
    * @returns {string} The file path
@@ -286,7 +195,7 @@ export class AppCard extends HTMLElement {
   get path() {
     return this._path;
   }
-  
+
   /**
    * Set the file path
    * @param {string} value - The file path
@@ -295,7 +204,7 @@ export class AppCard extends HTMLElement {
     this._path = value;
     this._updateDOM();
   }
-  
+
   /**
    * Show or hide the path
    * @param {boolean} show - Whether to show the path
