@@ -44,7 +44,7 @@ If the above methods don't work, you can try:
 ## Reporting Issues
 
 If you encounter any issues or bugs while testing, please report them on our GitHub issue tracker:
-https://github.com/Dorky-Robot/lahat/issues
+https://github.com/NerdNest-Engineering/lahat/issues
 
 Please include:
 - A detailed description of the issue

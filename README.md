@@ -88,7 +88,7 @@ Simply describe what changes you want, and Claude will update your app while pre
 - **App won't generate?** Check your API key and internet connection
 - **App doesn't work as expected?** Try updating with more specific instructions
 - **"Lahat is damaged and can't be opened" on macOS?** This is due to code signing issues. Use the signed releases, see the "macOS Code Signing" section below, or try the "Alpha Builds" approach for testing.
-- **Other issues?** The app will offer to create error reports when crashes occur. You can submit these reports with your GitHub issues or email them to support@nerdnest.io to help us debug.
+- **Other issues?** The app will offer to create error reports when crashes occur. You can submit these reports with your GitHub issues or email them to support@nerdnest.engineering to help us debug.
 
 ## 🔐 macOS Code Signing and Notarization
 

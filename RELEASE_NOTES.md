@@ -40,7 +40,7 @@ For Linux, we provide both AppImage and Deb packages. The AppImage is self-conta
 
 ## Documentation
 
-See the [CHANGELOG.md](https://github.com/Dorky-Robot/lahat/blob/main/CHANGELOG.md) file for detailed information about all changes in this release.
+See the [CHANGELOG.md](https://github.com/NerdNest-Engineering/lahat/blob/main/CHANGELOG.md) file for detailed information about all changes in this release.
 
 ---
 
