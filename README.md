@@ -12,7 +12,7 @@
 ### Easy Install (Recommended)
 
 1. **Download the latest release**:
-   - Go to the [Releases page](https://github.com/Dorky-Robot/lahat/releases/latest)
+   - Go to the [Releases page](https://github.com/NerdNest-Engineering/lahat/releases/latest)
    - Download the appropriate file for your platform:
      - **macOS**: `Lahat-x.x.x-arm64.dmg` or `Lahat-x.x.x-mac.zip`
      - **Windows**: `Lahat-Setup-x.x.x.exe` or `Lahat-x.x.x-win.zip`
@@ -49,7 +49,7 @@ If you're a developer and want to run from source:
 
 ### Creating Your First App
 
-<img src="https://github.com/Dorky-Robot/lahat/assets/screenshots/app-creation.png" alt="App Creation Screenshot" width="600"/>
+<img src="https://github.com/NerdNest-Engineering/lahat/assets/screenshots/app-creation.png" alt="App Creation Screenshot" width="600"/>
 
 1. Enter a name for your app
 2. Describe what you want it to do, for example:
@@ -88,7 +88,7 @@ Simply describe what changes you want, and Claude will update your app while pre
 - **App won't generate?** Check your API key and internet connection
 - **App doesn't work as expected?** Try updating with more specific instructions
 - **"Lahat is damaged and can't be opened" on macOS?** This is due to code signing issues. Use the signed releases, see the "macOS Code Signing" section below, or try the "Alpha Builds" approach for testing.
-- **Other issues?** The app will offer to create error reports when crashes occur. You can submit these reports with your GitHub issues or email them to felix@dorkyrobot.com to help us debug.
+- **Other issues?** The app will offer to create error reports when crashes occur. You can submit these reports with your GitHub issues or email them to support@nerdnest.io to help us debug.
 
 ## 🔐 macOS Code Signing and Notarization
 
@@ -138,6 +138,25 @@ Lahat will automatically check for updates when you start the app. When a new ve
 2. Click "Install and Restart" to update immediately
 3. The app will restart with the latest version
 
+### Update Configuration
+
+Lahat uses `electron-builder` and `electron-updater` for automatic updates:
+
+- By default, updates are fetched from GitHub releases
+- Updates can be configured to use a custom server through environment variables
+- For custom update servers, add the following to your `.env` file:
+  ```
+  UPDATE_URL=https://yourdomain.com/releases/
+  ```
+
+#### For developers publishing updates:
+
+1. Build the application with `npm run dist-mac` (or win/linux)
+2. This automatically generates:
+   - Application distributables (DMG/EXE/etc.)
+   - A `latest-mac.yml` (or equivalent) file with metadata
+3. Upload both files to GitHub releases or your custom update server
+
 ## 🗺 Roadmap
 
 - **Local LLM Support**: Integration with Ollama and other local models
@@ -148,20 +167,20 @@ Lahat will automatically check for updates when you start the app. When a new ve
 
 ## 🤝 Contributing
 
-We welcome contributions! See our [Contributing Guide](https://github.com/Dorky-Robot/lahat/blob/main/CONTRIBUTING.md) to get started.
+We welcome contributions! See our [Contributing Guide](https://github.com/NerdNest-Engineering/lahat/blob/main/CONTRIBUTING.md) to get started.
 
 ## 📝 License
 
-Apache License 2.0 - See [LICENSE](https://github.com/Dorky-Robot/lahat/blob/main/LICENSE.md) for details.
+Apache License 2.0 - See [LICENSE](https://github.com/NerdNest-Engineering/lahat/blob/main/LICENSE.md) for details.
 
 ---
 
 <div align="center">
   <img src="assets/icons/lahat.png" alt="Lahat Logo" width="100"/>
-  <p>Made with ❤️ by Dorky Robot</p>
+  <p>Made with ❤️ by NerdNest LLC</p>
   <p>
-    <a href="https://github.com/Dorky-Robot/lahat/releases/latest">Download Latest Release</a> •
-    <a href="https://github.com/Dorky-Robot/lahat/issues">Report Bug</a> •
-    <a href="https://github.com/Dorky-Robot/lahat/issues">Request Feature</a>
+    <a href="https://github.com/NerdNest-Engineering/lahat/releases/latest">Download Latest Release</a> •
+    <a href="https://github.com/NerdNest-Engineering/lahat/issues">Report Bug</a> •
+    <a href="https://github.com/NerdNest-Engineering/lahat/issues">Request Feature</a>
   </p>
 </div>
