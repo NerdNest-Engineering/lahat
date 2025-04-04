@@ -110,6 +110,24 @@ function setupAutoUpdater() {
     return;
   }
   
+  // Set the feed URL based on environment variable or default to GitHub
+  let updateUrl = process.env.UPDATE_URL;
+  if (!updateUrl) {
+    // Fallback to GitHub if not specified
+    console.log('UPDATE_URL not found in environment, using GitHub as provider');
+    autoUpdater.setFeedURL({
+      provider: 'github',
+      owner: 'NerdNest-Engineering',
+      repo: 'lahat'
+    });
+  } else {
+    console.log(`Setting update URL to: ${updateUrl}`);
+    autoUpdater.setFeedURL({
+      provider: 'generic',
+      url: updateUrl
+    });
+  }
+  
   // Add more detailed logging for debugging
   autoUpdater.logger = console;
   
