@@ -1,4 +1,5 @@
-// Import command palette
+// Import components
+import '../components/ui/modals/app-share-modal.js'; // Import the new share modal component
 import commandPalette from '../components/ui/modals/command-palette.js';
 import { hasActiveMiniApp, getActiveMiniApp } from '../modules/utils/activeAppState.js';
 
@@ -24,6 +25,8 @@ const openAppButton = document.getElementById('open-app-button');
 const updateAppButton = document.getElementById('update-app-button');
 const exportAppButton = document.getElementById('export-app-button');
 const deleteAppButton = document.getElementById('delete-app-button');
+const shareAppButton = document.getElementById('share-app-button'); // Get reference to the share button
+const appShareModal = document.getElementById('app-share-modal'); // Get reference to the share modal component
 
 // State
 let currentAppId = null;
@@ -252,6 +255,28 @@ deleteAppButton.addEventListener('click', async () => {
       alert(`Error: ${error.message}`);
     }
   }
+});
+
+// Share app button listener
+shareAppButton.addEventListener('click', () => {
+  if (!currentAppId || !currentAppName) {
+    console.error('No app selected to share.');
+    alert('Please select an app first.');
+    return;
+  }
+
+  // Set app data on the share modal component
+  appShareModal.setApp({
+    id: currentAppId,
+    name: currentAppName,
+    filePath: currentAppFilePath // Pass filePath if needed by share link generation
+  });
+
+  // Open the share modal
+  appShareModal.open();
+
+  // Optional: Keep the details modal open or close it
+  // appDetailsModal.classList.add('hidden');
 });
 
 // Listen for app updates from other windows
