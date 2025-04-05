@@ -12,7 +12,8 @@ export const WindowType = {
   MAIN: 'main',
   API_SETUP: 'api-setup',
   APP_CREATION: 'app-creation',
-  MINI_APP: 'mini-app'
+  MINI_APP: 'mini-app',
+  APP_ITERATION: 'app-iteration' // New window type
 };
 
 // Track all windows
@@ -23,7 +24,8 @@ const DEFAULT_DIMENSIONS = {
   [WindowType.MAIN]: { width: 1200, height: 800 },
   [WindowType.API_SETUP]: { width: 600, height: 300 },
   [WindowType.APP_CREATION]: { width: 800, height: 600 },
-  [WindowType.MINI_APP]: { width: 800, height: 600 }
+  [WindowType.MINI_APP]: { width: 800, height: 600 },
+  [WindowType.APP_ITERATION]: { width: 900, height: 700 } // New window dimensions
 };
 
 // Window HTML files
@@ -31,7 +33,8 @@ const WINDOW_HTML = {
   [WindowType.MAIN]: 'main.html',
   [WindowType.API_SETUP]: 'api-setup.html',
   [WindowType.APP_CREATION]: 'app-creation.html',
-  [WindowType.MINI_APP]: null // Mini apps use dynamic content
+  [WindowType.MINI_APP]: null, // Mini apps use dynamic content
+  [WindowType.APP_ITERATION]: 'app-iteration.html' // New window HTML
 };
 
 // Window preload scripts
@@ -39,7 +42,8 @@ const WINDOW_PRELOAD = {
   [WindowType.MAIN]: 'preload.cjs',
   [WindowType.API_SETUP]: 'preload.cjs',
   [WindowType.APP_CREATION]: 'preload.cjs',
-  [WindowType.MINI_APP]: 'miniAppPreload.cjs'
+  [WindowType.MINI_APP]: 'miniAppPreload.cjs',
+  [WindowType.APP_ITERATION]: 'preload.cjs' // Using the standard preload
 };
 
 /**

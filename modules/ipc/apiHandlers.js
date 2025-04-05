@@ -115,6 +115,54 @@ async function handleOpenAppDirectory() {
 }
 
 /**
+ * Get details for a specific app by ID
+ * @param {string} appId - App ID (conversation ID)
+ * @returns {Promise<Object>} - Result object with app details
+ */
+export async function getAppDetails(appId) {
+  try {
+    // Get the Claude client
+    const client = getClaudeClient();
+    if (!client) {
+      return {
+        success: false,
+        error: 'Claude API key not set. Please set your API key in settings.'
+      };
+    }
+    
+    // Get the list of all apps
+    const appsList = await client.listGeneratedApps();
+    
+    // Find the app with the matching ID
+    const app = appsList.find(app => app.id === appId);
+    if (!app) {
+      return {
+        success: false,
+        error: `App with ID ${appId} not found`
+      };
+    }
+    
+    return {
+      success: true,
+      metadata: {
+        appId: app.id,
+        name: app.name,
+        created: app.created,
+        filePath: app.filePath,
+        folderPath: app.folderPath,
+        versions: app.versions
+      }
+    };
+  } catch (error) {
+    logger.error('Failed to get app details', error, 'getAppDetails');
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
  * Register API-related IPC handlers
  * @param {Object} ipcHandler - IPC handler instance
  */

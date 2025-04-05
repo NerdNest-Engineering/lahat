@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Iterate on Mini App</title>
+  <link rel="stylesheet" href="styles/fonts.css">
+  <link rel="stylesheet" href="styles/app-iteration.css">
+</head>
+<body>
+  <div class="header">
+    <h2 id="app-name">Iterating on: <span></span></h2>
+  </div>
+  
+  <div class="container">
+    <div class="sidebar">
+      <div class="version-history">
+        <h3>Version History</h3>
+        <div class="version-list" id="version-list">
+          <!-- Version list will be populated dynamically -->
+        </div>
+      </div>
+    </div>
+    
+    <div class="main-content">
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <!-- Chat messages will be populated dynamically -->
+          <div class="system-message">
+            What changes would you like to make to this mini app?
+          </div>
+        </div>
+        
+        <div class="chat-input">
+          <textarea id="message-input" placeholder="Describe how you'd like to modify the app..."></textarea>
+          <button id="send-button">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="renderers/app-iteration.js"></script>
+</body>
+</html>
