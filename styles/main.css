@@ -81,4 +81,15 @@ button.secondary:hover {
   background: var(--medium-gray);
 }
 
+/* Share Button Style */
+#share-app-button {
+  background-color: #34a853; /* Green color for share */
+  color: white;
+  border: none; /* Ensure no default border */
+}
+
+#share-app-button:hover {
+  background-color: #2a8c44; /* Darker green on hover */
+}
+
 /* No longer needed - export dropdown has been removed */
