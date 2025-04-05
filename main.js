@@ -1,14 +1,18 @@
-import { app, BrowserWindow, dialog, shell } from 'electron';
+import { app, BrowserWindow, dialog, shell, Menu, ipcMain } from 'electron'; // Added Menu, ipcMain
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { execFile } from 'child_process';
 import fs from 'fs';
 import store from './store.js';
 import * as windowManager from './modules/windowManager/index.js';
+import { WindowType } from './modules/windowManager/index.js'; // Added WindowType
 import * as apiHandlers from './modules/ipc/apiHandlers.js';
 import * as miniAppHandlers from './modules/ipc/miniAppHandlers.js';
 import * as windowHandlers from './modules/ipc/windowHandlers.js';
 import { ErrorHandler } from './modules/utils/errorHandler.js';
+import { getActiveMiniApp, hasActiveMiniApp } from './modules/utils/activeAppState.js'; // Added activeAppState functions
+import * as versionControl from './modules/utils/versionControl.js'; // Added versionControl
+import * as fileOperations from './modules/utils/fileOperations.js'; // Added fileOperations
 // Import CommonJS module correctly
 import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
@@ -78,7 +82,10 @@ function initializeApp() {
     apiHandlers.initializeClaudeClient();
     
     // Create main window
-    windowManager.showWindow(windowManager.WindowType.MAIN);
+    windowManager.showWindow(WindowType.MAIN); // Use imported WindowType
+    
+    // Build and set the application menu
+    buildAppMenu();
     
     // Setup auto-updater if enabled
     if (store.get('settings.autoUpdate') !== false) {
@@ -92,6 +99,99 @@ function initializeApp() {
     app.quit();
   }
 }
+
+/**
+ * Build and set the application menu
+ */
+function buildAppMenu() {
+  const template = [
+    // { role: 'appMenu' } // Standard macOS app menu
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
+    { role: 'fileMenu' }, // Standard File menu
+    { role: 'editMenu' }, // Standard Edit menu
+    { role: 'viewMenu' }, // Standard View menu
+    { role: 'windowMenu' }, // Standard Window menu
+    {
+      label: 'Mini App',
+      submenu: [
+        {
+          label: 'Iterate with Chat',
+          click: async () => {
+            const activeApp = getActiveMiniApp();
+            if (activeApp) {
+              // Open the iteration window using our handler that sets up git repo
+              const result = await miniAppHandlers.handleOpenIterationWindow(null, {
+                appId: activeApp.id,
+                filePath: activeApp.filePath,
+                name: activeApp.name
+              });
+              
+              if (!result.success) {
+                dialog.showErrorBox('Error Opening Iteration Window', result.error || 'Failed to open iteration window');
+              }
+            } else {
+              dialog.showErrorBox('No Active App', 'Please open a Mini App first to use the iteration feature.');
+            }
+          },
+          // This will be dynamically updated, but set initial state
+          get enabled() { return hasActiveMiniApp(); }
+        },
+        // Add other mini-app related actions here if needed
+        { type: 'separator' },
+        {
+          label: 'Show Version History (Placeholder)', // Example
+          click: async () => {
+             const activeApp = getActiveMiniApp();
+             if (activeApp) {
+                const history = await versionControl.getCommitHistory(activeApp.id);
+                // TODO: Display history (e.g., in a new window or modal)
+                console.log('Version History:', history);
+                dialog.showMessageBox({ title: 'Version History', message: 'History logged to console (implementation pending).' });
+             }
+          },
+          get enabled() { return hasActiveMiniApp(); }
+        }
+      ]
+    },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'Learn More',
+          click: async () => {
+            await shell.openExternal('https://github.com/your-repo/lahat'); // Replace with actual link
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+
+  // Update menu enabled state when active app changes (requires event system)
+  // Placeholder: Rebuild menu periodically or on window focus/blur
+  // A more robust solution would involve an event emitter in activeAppState.js
+  setInterval(() => {
+     const newMenu = Menu.buildFromTemplate(template); // Rebuild based on current state
+     Menu.setApplicationMenu(newMenu);
+  }, 5000); // Rebuild every 5 seconds (simple polling)
+}
+
+// IPC Handler for Iteration Window Initial Data is now registered in miniAppHandlers.js
 
 /**
  * Setup auto-update functionality
