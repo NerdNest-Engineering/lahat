@@ -58,6 +58,9 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "assets/icons/lahat.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "identity": "B83WVGNMG3",
       "target": [
         "dmg",
         "zip"
