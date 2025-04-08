@@ -1,0 +1,92 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on any tag starting with 'v' (e.g., v1.0.0, v1.2.3-alpha.1)
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest]  # For now, only building on macOS for notarization
+        # You can add more OSes if needed: [macos-latest, windows-latest, ubuntu-latest]
+    
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+        
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Set version from tag
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Setting app version to $VERSION"
+          
+          # Update version in package.json
+          npm version $VERSION --no-git-tag-version
+          
+      - name: Check for required secrets
+        if: matrix.os == 'macos-latest'
+        id: check_secrets
+        env:
+          APPLE_ID_SECRET: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD_SECRET: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID_SECRET: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          ERROR_MSG=""
+          
+          if [ -z "$APPLE_ID_SECRET" ]; then
+            ERROR_MSG+="APPLE_ID secret is missing. "
+          fi
+          
+          if [ -z "$APPLE_PASSWORD_SECRET" ]; then
+            ERROR_MSG+="APPLE_PASSWORD secret is missing. "
+          fi
+          
+          if [ -z "$APPLE_TEAM_ID_SECRET" ]; then
+            ERROR_MSG+="APPLE_TEAM_ID secret is missing. "
+          fi
+          
+          if [ ! -z "$ERROR_MSG" ]; then
+            echo "::error::Missing required secrets for notarization: $ERROR_MSG"
+            echo "::error::Please add the missing secrets in the GitHub repository settings (Settings > Secrets and variables > Actions)."
+            echo "::error::See the documentation in docs/release-process.md for detailed instructions."
+            exit 1
+          fi
+          
+          echo "All required secrets are present."
+          
+      - name: Build and Publish macOS
+        if: matrix.os == 'macos-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          npm run dist-mac -- --publish always
+          
+      # Add windows build step when ready
+      # - name: Build and Publish Windows
+      #   if: matrix.os == 'windows-latest'
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   run: npm run dist-win -- --publish always
+      
+      # Add linux build step when ready
+      # - name: Build and Publish Linux
+      #   if: matrix.os == 'ubuntu-latest'
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   run: npm run dist-linux -- --publish always

@@ -69,7 +69,6 @@
       "notarize": true,
       "artifactName": "${productName}-${version}.${ext}"
     },
-    "afterSign": "scripts/notarize.js",
     "win": {
       "icon": "assets/icons/lahat.png",
       "target": [
