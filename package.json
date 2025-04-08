@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Dorky-Robot/lahat"
+    "url": "https://github.com/NerdNest-Engineering/lahat"
   },
   "keywords": [
     "electron",
@@ -34,9 +34,9 @@
   },
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Dorky-Robot/lahat/issues"
+    "url": "https://github.com/NerdNest-Engineering/lahat/issues"
   },
-  "homepage": "https://github.com/Dorky-Robot/lahat",
+  "homepage": "https://github.com/NerdNest-Engineering/lahat",
   "devDependencies": {
     "@electron/notarize": "^2.5.0",
     "dotenv": "^16.4.7",
@@ -67,7 +67,6 @@
       "notarize": true,
       "artifactName": "${productName}-${version}.${ext}"
     },
-    "afterSign": "scripts/notarize.js",
     "win": {
       "icon": "assets/icons/lahat.png",
       "target": [
@@ -86,7 +85,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "Dorky-Robot",
+      "owner": "NerdNest-Engineering",
       "repo": "lahat"
     },
     "asar": true,
