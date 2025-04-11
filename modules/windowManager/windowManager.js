@@ -12,7 +12,8 @@ export const WindowType = {
   MAIN: 'main',
   API_SETUP: 'api-setup',
   APP_CREATION: 'app-creation',
-  MINI_APP: 'mini-app'
+  MINI_APP: 'mini-app',
+  SIGN_IN: 'sign-in'
 };
 
 // Track all windows
@@ -23,7 +24,8 @@ const DEFAULT_DIMENSIONS = {
   [WindowType.MAIN]: { width: 1200, height: 800 },
   [WindowType.API_SETUP]: { width: 600, height: 300 },
   [WindowType.APP_CREATION]: { width: 800, height: 600 },
-  [WindowType.MINI_APP]: { width: 800, height: 600 }
+  [WindowType.MINI_APP]: { width: 800, height: 600 },
+  [WindowType.SIGN_IN]: { width: 400, height: 600 }
 };
 
 // Window HTML files
@@ -31,7 +33,7 @@ const WINDOW_HTML = {
   [WindowType.MAIN]: 'main.html',
   [WindowType.API_SETUP]: 'api-setup.html',
   [WindowType.APP_CREATION]: 'app-creation.html',
-  [WindowType.MINI_APP]: null // Mini apps use dynamic content
+  [WindowType.MINI_APP]: null, // Mini apps use dynamic content
 };
 
 // Window preload scripts
@@ -133,6 +135,67 @@ export function createMiniAppWindow(appName, htmlContent, filePath, conversation
   
   // The rest of the mini app window creation logic will be handled by the caller
   // (main.js) as it involves file operations and other complex logic
+  
+  return win;
+}
+
+/**
+ * Create a window that loads an external URL
+ * @param {string} type - Window type from WindowType enum
+ * @param {string} url - URL to load
+ * @param {Object} options - Additional options for the window
+ * @returns {BrowserWindow} - The created window
+ */
+export function createExternalWindow(type, url, options = {}) {
+  // Get stored window position and size if available
+  const windowConfig = store.get(`windowConfig.${type}`) || {};
+  
+  // Get default dimensions for this window type
+  const defaultDimensions = DEFAULT_DIMENSIONS[type] || { width: 800, height: 600 };
+  
+  // Merge default dimensions with stored config and provided options
+  const windowOptions = {
+    width: windowConfig.width || defaultDimensions.width,
+    height: windowConfig.height || defaultDimensions.height,
+    x: windowConfig.x,
+    y: windowConfig.y,
+    titleBarStyle: 'hidden',
+    backgroundColor: '#ffffff',
+    icon: path.join(rootDir, 'assets/icons/lahat.png'),
+    webPreferences: {
+      // nodeIntegration: false,
+      // contextIsolation: true,
+      // sandbox: true,
+      // preload: path.join(__dirname, '../../', WINDOW_PRELOAD[type]),
+      devTools: process.env.NODE_ENV === 'development'
+    },
+    ...options
+  };
+
+  // Ensure window is visible on screen
+  ensureWindowVisibility(windowOptions);
+  
+  // Create the window
+  const win = new BrowserWindow(windowOptions);
+  
+  // Load the external URL
+  win.loadURL(url);
+  // window.location.href = url;
+  // window.webContents.loadURL('about:blank');
+  
+  // Save window position and size when closed
+  win.on('close', () => {
+    if (!win.isDestroyed()) {
+      const { x, y, width, height } = win.getBounds();
+      store.set(`windowConfig.${type}`, { x, y, width, height });
+    }
+    
+    // Remove from windows map
+    windows.delete(type);
+  });
+  
+  // Store window reference
+  windows.set(type, win);
   
   return win;
 }

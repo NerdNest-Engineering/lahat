@@ -33,6 +33,24 @@ async function handleOpenWindow(event, { type, params = {} }) {
 }
 
 /**
+ * Handle creating an external window
+ * @param {Object} event - IPC event
+ * @param {Object} params - Parameters for creating the window
+ * @returns {Promise<Object>} - Result object with success flag
+ */
+async function handleCreateExternalWindow(event, { type, url }) {
+  try {
+    console.log('Creating external window:', event);
+    console.log('Creating external window:', { type, url });
+    const win = windowManager.createExternalWindow(type, url);
+    return { success: true, windowId: win.id };
+  } catch (error) {
+    console.error('Error creating external window:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Handle closing the current window
  * @param {Object} event - IPC event
  * @returns {Promise<Object>} - Result object with success flag
@@ -123,6 +141,7 @@ async function handleNotifyApiKeyUpdated(event) {
 export function registerHandlers() {
   // Window management IPC handlers
   ipcMain.handle('open-window', handleOpenWindow);
+  ipcMain.handle('create-external-window', handleCreateExternalWindow);
   ipcMain.handle('close-current-window', handleCloseCurrentWindow);
   ipcMain.handle('get-window-params', handleGetWindowParams);
   

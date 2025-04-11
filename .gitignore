@@ -41,3 +41,5 @@ logs/
 # Generated app data
 **/generated-apps/
 agentic-tasks
+
+.history/
