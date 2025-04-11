@@ -326,16 +326,55 @@ class AppShareModal extends HTMLElement {
   }
 
   /**
+   * Upload the current app to the API
+   * @private
+   * @returns {Promise<void>}
+   */
+  async _uploadApp(app) {
+    console.log('app', app);
+    if (!app || !app.id || !app.filePath) {
+      return Promise.reject(new Error('Missing app data for upload'));
+    }
+
+    const formData = new FormData();
+    formData.append('appId', app.id);
+    formData.append('file', app.filePath);
+    const token = await window.electronAPI.getToken();
+
+    return fetch('https://api.lahat.nerdnest.engineering/upload/' + app.id, {
+      method: 'PUT',
+      body: formData,
+      headers: {
+        "Content-Type": 'text/html',
+        "Authorization": token ? `Bearer ${token}` : "",
+      },
+    }).then(response => {
+      console.log('Upload response:', response);
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+      return response.json();
+    }).then(data => {
+      console.log('Upload response data:', data);
+      console.log('App uploaded successfully:', data);
+      if (data.url) {
+        this._currentApp.uploadUrl = data.url;
+      }
+    });
+  }
+
+  /**
    * Generate a share link for the app
    * @param {Object} app - App data object
    * @returns {string} - Share link
    * @private
    */
   _generateShareLink(app) {
-    // This is a placeholder. In a real implementation, this would generate a proper sharing URL
-    // For example, it might link to a web page where others can download the app
-    // Using a simple placeholder for now.
-    return `lahat://share/${app.id || 'unknown'}`; // Example custom protocol link
+    // Use the upload URL if available, otherwise fall back to the custom protocol
+    if (app.uploadUrl) {
+      return app.uploadUrl;
+    }
+    return `lahat://share/${app.id || 'unknown'}`;
   }
 
   /**
@@ -406,6 +445,20 @@ class AppShareModal extends HTMLElement {
    * Open the modal
    */
   open() {
+    if (this._currentApp) {
+      // Open sign-in in new window using window manager
+      window.electronAPI.createExternalWindow('sign-in', 'https://lahat.nerdnest.engineering/sign-in');
+      
+      // Upload the app first, then generate QR code
+      this._uploadApp(this._currentApp).then(() => {
+        console.log('App uploaded successfully:', this._currentApp);
+        this._generateQRCode(this._generateShareLink(this._currentApp));
+      }).catch(error => {
+        console.error('Failed to upload app:', error);
+        // Still generate QR code even if upload fails
+        this._generateQRCode(this._generateShareLink(this._currentApp));
+      });
+    }
     this._elements.container.classList.add('visible');
     this._dispatchCustomEvent('modal-opened');
   }

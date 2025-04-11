@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const QRCode = require('qrcode'); // Require the qrcode library
+const { useAuth, Clerk } = require('@clerk/clerk-js')
 
+
+// const clerkPubKey = ''
+
+const clerk = new Clerk(clerkPubKey)
 // Expose protected methods that allow the renderer process to use
 // IPC communication with the main process
 contextBridge.exposeInMainWorld(
@@ -15,6 +20,27 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    createExternalWindow: async (type, url) => {
+      try {
+        return await ipcRenderer.invoke('create-external-window', { type, url });
+      } catch (error) {
+        console.error('Error creating external window:', error);
+        throw error;
+      }
+    },
+    getToken: async () => {
+      try {
+        await clerk.load()
+        const { getToken } = useAuth();
+        const token = await getToken();
+        return token;
+      } catch (error) {
+        
+        console.error('Error getting token:', error);
+        throw error;
+      }
+    },
+    
     closeCurrentWindow: () => {
       try {
         ipcRenderer.invoke('close-current-window');

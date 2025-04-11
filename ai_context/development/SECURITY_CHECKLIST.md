@@ -66,7 +66,7 @@ async function handleSetApiKey(event, apiKey) {
       content="default-src 'self';
                script-src 'self';
                style-src 'self' 'unsafe-inline';
-               connect-src 'self' https://api.anthropic.com;
+               connect-src 'self' https://api.anthropic.com https://api.lahat.nerdnest.engineering;
                img-src 'self' data:;
                font-src 'self';
                object-src 'none';

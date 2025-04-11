@@ -24,6 +24,7 @@ export const IpcChannels = {
   
   // Window related
   OPEN_WINDOW: 'open-window',
+  CREATE_EXTERNAL_WINDOW: 'create-external-window',
   CLOSE_WINDOW: 'close-current-window',
   GET_WINDOW_PARAMS: 'get-window-params',
   NOTIFY_APP_UPDATED: 'notify-app-updated',

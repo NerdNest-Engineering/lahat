@@ -35,7 +35,7 @@ function createWindow() {
       content="default-src 'self';
                script-src 'self';
                style-src 'self' 'unsafe-inline';
-               connect-src 'self';
+               connect-src 'self' https://api.lahat.nerdnest.engineering https://lahat.nerdnest.engineering;
                img-src 'self';
                font-src 'self';
                object-src 'none';

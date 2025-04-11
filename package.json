@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.38.0",
+    "@clerk/clerk-js": "^5.60.0",
     "archiver": "^6.0.1",
     "archiver-utils": "^4.0.1",
     "electron-store": "^8.1.0",
