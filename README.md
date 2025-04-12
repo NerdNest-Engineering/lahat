@@ -99,11 +99,14 @@ For developers distributing macOS applications:
    APPLE_ID=your.apple.id@example.com
    APPLE_ID_PASSWORD=app-specific-password-from-apple-account
    APPLE_TEAM_ID=your-team-id-if-you-have-multiple-teams
+   APPLE_DEVELOPER_IDENTITY=Your Name (YOUR_TEAM_ID)
    ```
 
 2. For the `APPLE_ID_PASSWORD`, create an app-specific password at https://appleid.apple.com/account/manage
 
-3. Build the application:
+3. The `APPLE_DEVELOPER_IDENTITY` should be in the format "Your Name (YOUR_TEAM_ID)" and matches the identity shown when running `security find-identity -v -p codesigning` in Terminal
+
+4. Build the application:
    ```
    npm run dist-mac
    ```
