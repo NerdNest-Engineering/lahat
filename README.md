@@ -97,12 +97,12 @@ For developers distributing macOS applications:
 1. Create a `.env` file in the project root with your Apple Developer credentials:
    ```
    APPLE_ID=your.apple.id@example.com
-   APPLE_ID_PASSWORD=app-specific-password-from-apple-account
+   APPLE_APP_SPECIFIC_PASSWORD=app-specific-password-from-apple-account
    APPLE_TEAM_ID=your-team-id-if-you-have-multiple-teams
    APPLE_DEVELOPER_IDENTITY=Your Name (YOUR_TEAM_ID)
    ```
 
-2. For the `APPLE_ID_PASSWORD`, create an app-specific password at https://appleid.apple.com/account/manage
+2. For the `APPLE_APP_SPECIFIC_PASSWORD`, create an app-specific password at https://appleid.apple.com/account/manage
 
 3. The `APPLE_DEVELOPER_IDENTITY` should be in the format "Your Name (YOUR_TEAM_ID)" and matches the identity shown when running `security find-identity -v -p codesigning` in Terminal
 

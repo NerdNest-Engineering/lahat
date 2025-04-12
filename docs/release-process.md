@@ -34,10 +34,12 @@ This document outlines the plan for automating the build, notarization, and rele
         *   `electron-builder` will automatically detect pre-release versions from the tag/`package.json` version and mark the corresponding GitHub Release as a "Pre-release". Stable versions will be marked as "Latest".
     *   **Secrets:** The workflow will require the following GitHub Actions secrets configured in the repository settings (`Settings` > `Secrets and variables` > `Actions`):
         *   `APPLE_ID`: Your Apple Developer ID (email address).
-        *   `APPLE_PASSWORD`: Your Apple app-specific password (not your regular account password).
+        *   `APPLE_APP_SPECIFIC_PASSWORD`: Your Apple app-specific password (not your regular account password).
         *   `APPLE_TEAM_ID`: Your Apple Developer Team ID (in your case "B83WVGNMG3").
         *   `APPLE_DEV_ID_P12`: Base64 encoded Apple Developer ID certificate and key pkcs12.
         *   `APPLE_DEV_ID_P12_PASSWORD`: Password to decrypt Apple Developer ID pkcs12.
+        *   `KEY_CHAIN`: Name of temporary keychain for Mac code signing.
+        *   `KEY_CHAIN_PASSOWRD`: Password for temporary keychain.
         *   `GH_TOKEN`: A GitHub Personal Access Token (PAT) with `repo` scope.
 
 ## Mac App Notarization Requirements
@@ -59,7 +61,7 @@ For macOS app notarization to work, your local development environment must alre
 
 If you encounter notarization issues in the GitHub Actions workflow:
 
-1. Ensure all required secrets (`APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID`) are set correctly in your GitHub repository settings.
+1. Ensure all required secrets (`APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, and `APPLE_TEAM_ID`) are set correctly in your GitHub repository settings.
    
 2. Verify that your local environment has the correct Developer ID Application certificate installed and that you're able to sign and notarize apps locally.
 
@@ -84,7 +86,7 @@ graph TD
     C --> D[Setup Node.js]
     D --> E["Install Dependencies (npm ci)"]
     E --> F{"Build & Publish (electron-builder --publish always)"}
-    F -- Uses Secrets --> G((GH_TOKEN, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID, APPLE_DEV_ID_P12, APPLE_DEV_ID_P12_PASSWORD))
+    F -- Uses Secrets --> G((GH_TOKEN, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID, APPLE_DEV_ID_P12, APPLE_DEV_ID_P12_PASSWORD))
     F --> H[Notarize Build (Always)]
     H --> I{Create GitHub Release}
     I -- Detects Pre-release Version? --> J{Mark Release Type}

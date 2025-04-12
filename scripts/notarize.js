@@ -16,7 +16,7 @@ import dotenv from 'dotenv'; // For loading environment variables from .env file
 // Load environment variables with explicit path
 const result = dotenv.config();
 if (result.error) {
-  console.warn('Error loading .env file:', result.error.message);
+  console.warn('Unable to load loading .env file, continuing...', result.error.message);
 } else {
   console.log('.env file loaded successfully');
 }
@@ -29,8 +29,8 @@ export default async function (params) {
   }
 
   // Check for required env variables
-  if (!process.env.APPLE_ID || !process.env.APPLE_ID_PASSWORD) {
-    console.warn('Skipping notarization: APPLE_ID and/or APPLE_ID_PASSWORD not found in environment');
+  if (!process.env.APPLE_ID || !process.env.APPLE_APP_SPECIFIC_PASSWORD) {
+    console.warn('Skipping notarization: APPLE_ID and/or APPLE_APP_SPECIFIC_PASSWORD not found in environment');
     return;
   }
 
@@ -58,7 +58,7 @@ export default async function (params) {
       appBundleId: packager.appInfo.id,
       appPath,
       appleId: process.env.APPLE_ID,
-      appleIdPassword: process.env.APPLE_ID_PASSWORD,
+      appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID // Optional, required for Apple Developer accounts with multiple teams
     });
     console.log(`Successfully notarized ${appName}`);

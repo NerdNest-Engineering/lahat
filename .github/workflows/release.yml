@@ -6,8 +6,10 @@ on:
       - 'v*'  # Trigger on any tag starting with 'v' (e.g., v1.0.0, v1.2.3-alpha.1)
 
 jobs:
-  release:
+  release-mac:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     
     strategy:
       matrix:
@@ -41,10 +43,12 @@ jobs:
         id: check_secrets
         env:
           APPLE_ID_SECRET: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD_SECRET: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_APP_SPECIFIC_PASSWORD_SECRET: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID_SECRET: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_DEV_ID_P12_SECRET: ${{ secrets.APPLE_DEV_ID_P12 }}
           APPLE_DEV_ID_P12_PASSWORD_SECRET: ${{ secrets.APPLE_DEV_ID_P12_PASSWORD }}
+          KEY_CHAIN_SECRET: ${{ secrets.KEY_CHAIN }}
+          KEY_CHAIN_PASSWORD_SECRET: ${{ secrets.KEY_CHAIN_PASSWORD }}
         run: |
           ERROR_MSG=""
           
@@ -52,8 +56,8 @@ jobs:
             ERROR_MSG+="APPLE_ID secret is missing. "
           fi
           
-          if [ -z "$APPLE_PASSWORD_SECRET" ]; then
-            ERROR_MSG+="APPLE_PASSWORD secret is missing. "
+          if [ -z "$APPLE_APP_SPECIFIC_PASSWORD_SECRET" ]; then
+            ERROR_MSG+="APPLE_APP_SPECIFIC_PASSWORD secret is missing. "
           fi
           
           if [ -z "$APPLE_TEAM_ID_SECRET" ]; then
@@ -67,6 +71,14 @@ jobs:
           if [ -z "$APPLE_DEV_ID_P12_PASSWORD_SECRET" ]; then
             ERROR_MSG+="APPLE_DEV_ID_P12_PASSWORD secret is missing. "
           fi
+
+          if [ -z "$KEY_CHAIN_SECRET" ]; then
+            ERROR_MSG+="KEY_CHAIN secret is missing. "
+          fi
+
+          if [ -z "$KEY_CHAIN_PASSWORD_SECRET" ]; then
+            ERROR_MSG+="KEY_CHAIN_PASSWORD secret is missing. "
+          fi
           
           if [ ! -z "$ERROR_MSG" ]; then
             echo "::error::Missing required secrets for notarization: $ERROR_MSG"
@@ -76,36 +88,76 @@ jobs:
           fi
           
           echo "All required secrets are present."
-          
-      - name: Import Developer ID Certificate
+      
+      - name: Import Developer ID Certificate to temporary keychain
         if: matrix.os == 'macos-latest'
         env:
           APPLE_DEV_ID_P12: ${{ secrets.APPLE_DEV_ID_P12 }}
           APPLE_DEV_ID_P12_PASSWORD: ${{ secrets.APPLE_DEV_ID_P12_PASSWORD }}
+          KEY_CHAIN: ${{ secrets.KEY_CHAIN }}
+          KEY_CHAIN_PASSWORD: ${{ secrets.KEY_CHAIN_PASSWORD }}
         run: |
+          security create-keychain -p $KEY_CHAIN_PASSWORD $KEY_CHAIN
+          
+          # Make the keychain the default so identities are found
+          security default-keychain -s $KEY_CHAIN
+          
+          # Unlock the keychain
+          security unlock-keychain -p $KEY_CHAIN_PASSWORD $KEY_CHAIN
+          
+          # Set keychain locking timeout to 3600 seconds
+          security set-keychain-settings -t 3600 -u $KEY_CHAIN
+
+          echo "Add keychain to keychain-list"
+          security list-keychains -s $KEY_CHAIN
+
           echo "$APPLE_DEV_ID_P12" | base64 --decode > developer_cert.p12
-          security import developer_cert.p12 -k ~/Library/Keychains/login.keychain -P "$APPLE_DEV_ID_P12_PASSWORD" -T /usr/bin/codesign
+          security import developer_cert.p12 -k $KEY_CHAIN -P "$APPLE_DEV_ID_P12_PASSWORD" -T /usr/bin/codesign
+          
+          echo "Settting key partition list"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEY_CHAIN_PASSWORD $KEY_CHAIN
+          
+          echo "Removing p12 file"
+          rm developer_cert.p12
+
+      - name: List Signing Identities
+        if: matrix.os == 'macos-latest'
+        run: security find-identity -v -p codesigning
 
       - name: Build and Publish macOS
         if: matrix.os == 'macos-latest'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           npm run dist-mac -- --publish always
-          
+
+      - name: Verify Code Signature
+        if: matrix.os == 'macos-latest'
+        run: |
+          codesign --verify --deep --strict dist/mac-arm64/Lahat.app || { echo "Code signing verification failed"; exit 1; }
+          spctl -a -vv -t install dist/mac-arm64/Lahat.app || { echo "Gatekeeper check failed"; exit 1; }
+             
+      - name: Remove temporary keychain
+        if: matrix.os == 'macos-latest'
+        env:
+          KEY_CHAIN: ${{ secrets.KEY_CHAIN }}
+        run: |
+          echo "Cleaning up: Deleting temporary keychain..."
+          security delete-keychain $KEY_CHAIN
+      
       # Add windows build step when ready
       # - name: Build and Publish Windows
       #   if: matrix.os == 'windows-latest'
       #   env:
-      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #   run: npm run dist-win -- --publish always
       
       # Add linux build step when ready
       # - name: Build and Publish Linux
       #   if: matrix.os == 'ubuntu-latest'
       #   env:
-      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #   run: npm run dist-linux -- --publish always
