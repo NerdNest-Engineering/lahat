@@ -43,6 +43,8 @@ jobs:
           APPLE_ID_SECRET: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD_SECRET: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID_SECRET: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_DEV_ID_P12_SECRET: ${{ secrets.APPLE_DEV_ID_P12 }}
+          APPLE_DEV_ID_P12_PASSWORD_SECRET: ${{ secrets.APPLE_DEV_ID_P12_PASSWORD }}
         run: |
           ERROR_MSG=""
           
@@ -57,6 +59,14 @@ jobs:
           if [ -z "$APPLE_TEAM_ID_SECRET" ]; then
             ERROR_MSG+="APPLE_TEAM_ID secret is missing. "
           fi
+
+          if [ -z "$APPLE_DEV_ID_P12_SECRET" ]; then
+            ERROR_MSG+="APPLE_DEV_ID_P12 secret is missing. "
+          fi
+
+          if [ -z "$APPLE_DEV_ID_P12_PASSWORD_SECRET" ]; then
+            ERROR_MSG+="APPLE_DEV_ID_P12_PASSWORD secret is missing. "
+          fi
           
           if [ ! -z "$ERROR_MSG" ]; then
             echo "::error::Missing required secrets for notarization: $ERROR_MSG"
@@ -67,6 +77,15 @@ jobs:
           
           echo "All required secrets are present."
           
+      - name: Import Developer ID Certificate
+        if: matrix.os == 'macos-latest'
+        env:
+          APPLE_DEV_ID_P12: ${{ secrets.APPLE_DEV_ID_P12 }}
+          APPLE_DEV_ID_P12_PASSWORD: ${{ secrets.APPLE_DEV_ID_P12_PASSWORD }}
+        run: |
+          echo "$APPLE_DEV_ID_P12" | base64 --decode > developer_cert.p12
+          security import developer_cert.p12 -k ~/Library/Keychains/login.keychain -P "$APPLE_DEV_ID_P12_PASSWORD" -T /usr/bin/codesign
+
       - name: Build and Publish macOS
         if: matrix.os == 'macos-latest'
         env:

@@ -36,6 +36,8 @@ This document outlines the plan for automating the build, notarization, and rele
         *   `APPLE_ID`: Your Apple Developer ID (email address).
         *   `APPLE_PASSWORD`: Your Apple app-specific password (not your regular account password).
         *   `APPLE_TEAM_ID`: Your Apple Developer Team ID (in your case "B83WVGNMG3").
+        *   `APPLE_DEV_ID_P12`: Base64 encoded Apple Developer ID certificate and key pkcs12.
+        *   `APPLE_DEV_ID_P12_PASSWORD`: Password to decrypt Apple Developer ID pkcs12.
         *   `GH_TOKEN`: A GitHub Personal Access Token (PAT) with `repo` scope.
 
 ## Mac App Notarization Requirements
@@ -82,7 +84,7 @@ graph TD
     C --> D[Setup Node.js]
     D --> E["Install Dependencies (npm ci)"]
     E --> F{"Build & Publish (electron-builder --publish always)"}
-    F -- Uses Secrets --> G((GH_TOKEN, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID))
+    F -- Uses Secrets --> G((GH_TOKEN, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID, APPLE_DEV_ID_P12, APPLE_DEV_ID_P12_PASSWORD))
     F --> H[Notarize Build (Always)]
     H --> I{Create GitHub Release}
     I -- Detects Pre-release Version? --> J{Mark Release Type}

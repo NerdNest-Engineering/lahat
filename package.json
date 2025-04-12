@@ -10,8 +10,8 @@
     "start-prod": "NODE_ENV=production electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "dist-mac": "electron-builder --mac",
-    "dist-mac-alpha": "SKIP_NOTARIZATION=true electron-builder --mac --config.mac.notarize=false",
+    "dist-mac": "electron-builder --mac --config.mac.identity=\"$APPLE_TEAM_ID\"",
+    "dist-mac-alpha": "SKIP_NOTARIZATION=true electron-builder --mac --config.mac.notarize=false --config.mac.identity=null",
     "dist-win": "electron-builder --win",
     "dist-linux": "electron-builder --linux",
     "dist-all": "electron-builder -mwl"
@@ -60,15 +60,14 @@
       "icon": "assets/icons/lahat.png",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "identity": "B83WVGNMG3",
       "target": [
         "dmg",
         "zip"
       ],
       "darkModeSupport": true,
-      "notarize": true,
       "artifactName": "${productName}-${version}.${ext}"
     },
+    "afterSign": "scripts/notarize.js",
     "win": {
       "icon": "assets/icons/lahat.png",
       "target": [

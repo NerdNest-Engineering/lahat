@@ -114,12 +114,7 @@ The application will be automatically signed and notarized during the build proc
 
 For testing purposes, you can create unnotarized alpha builds that don't require Apple Developer credentials:
 
-1. Use the provided build script:
-   ```
-   ./build-alpha.sh
-   ```
-   
-   Or run the command manually:
+1. Run the command:
    ```
    npm run dist-mac-alpha
    ```
