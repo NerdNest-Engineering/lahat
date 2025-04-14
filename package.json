@@ -29,8 +29,8 @@
     "lahat"
   ],
   "author": {
-    "name": "Dorky Robot",
-    "email": "contact@dorkyrobot.com"
+    "name": "NerdNest LLC",
+    "email": "support@nerdnest.engineering"
   },
   "license": "Apache-2.0",
   "bugs": {
@@ -53,7 +53,7 @@
     "zip-stream": "^5.0.2"
   },
   "build": {
-    "appId": "com.dorkyrobot.lahat",
+    "appId": "com.nerdnest.lahat",
     "productName": "Lahat",
     "mac": {
       "category": "public.app-category.developer-tools",
