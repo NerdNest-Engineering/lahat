@@ -7,7 +7,6 @@ This document outlines the security architecture of Lahat, including the securit
 <!-- RELATED DOCUMENTS -->
 related '../architecture/technical_architecture.md'
 related '../architecture/window_sheets_architecture.md'
-related '../development/code_organization.md'
 <!-- /RELATED DOCUMENTS -->
 
 ## Security Overview

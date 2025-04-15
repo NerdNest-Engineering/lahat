@@ -18,14 +18,6 @@ export * from './stringUtils.js';
 // Functions for date formatting, parsing, and manipulation
 export * from './dateUtils.js';
 
-// Validation utilities
-// Functions for validating user input and data
-export * from './validationUtils.js';
-
-// DOM utilities (only for renderer processes)
-// Functions for DOM manipulation and event handling
-export * from './domUtils.js';
-
 // File operations
 // Functions for reading, writing, and managing files
 export * from './fileOperations.js';
@@ -55,14 +47,6 @@ export const stringUtils = StringUtils;
 import * as DateUtils from './dateUtils.js';
 export const dateUtils = DateUtils;
 
-// Validation utilities bundle
-import * as ValidationUtils from './validationUtils.js';
-export const validationUtils = ValidationUtils;
-
-// DOM utilities bundle
-import * as DOMUtils from './domUtils.js';
-export const domUtils = DOMUtils;
-
 // File utilities bundle
 import * as FileUtils from './fileOperations.js';
 export const fileUtils = FileUtils;
@@ -80,8 +64,6 @@ export default {
   error: errorUtils,
   string: stringUtils,
   date: dateUtils,
-  validation: validationUtils,
-  dom: domUtils,
   file: fileUtils,
   performance: performanceUtils,
   resource: resourceUtils,

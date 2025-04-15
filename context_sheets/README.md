@@ -24,18 +24,6 @@ Documents related to the system design and technical implementation:
 | [Mini App Generation Sequence](architecture/mini_app_generation_sequence.md) | Detailed sequence of the mini app generation process |
 | [Security](architecture/security.md) | Security architecture and measures |
 
-## Development
-
-Documents related to the development process and implementation details:
-
-| Document | Description |
-|----------|-------------|
-| [Project Overview](development/project_overview.md) | Comprehensive overview of the application, features, and development strategy |
-| [Development Roadmap](development/development_roadmap.md) | Current status and future development plans |
-| [Code Organization](development/code_organization.md) | Module structure and code organization |
-| [Prompt Engineering](development/prompt_engineering.md) | Claude prompt design and optimization |
-| [Testing Strategy](development/testing_strategy.md) | Testing approaches, tools, and best practices |
-
 ## User Experience
 
 Documents related to the user interface and experience design:
@@ -73,7 +61,6 @@ Each document includes a "RELATED DOCUMENTS" section that indicates which other 
 ```markdown
 <!-- RELATED DOCUMENTS -->
 related '../architecture/technical_architecture.md'
-related './code_organization.md'
 <!-- /RELATED DOCUMENTS -->
 ```
 

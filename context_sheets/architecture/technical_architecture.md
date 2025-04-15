@@ -8,7 +8,6 @@ This document describes the technical architecture of Lahat, including the main 
 related '../architecture/window_sheets_architecture.md'
 related '../architecture/mini_app_generation_sequence.md'
 related '../architecture/security.md'
-related '../development/code_organization.md'
 <!-- /RELATED DOCUMENTS -->
 
 ## System Architecture Overview
@@ -195,12 +194,10 @@ The application follows a modular directory structure that organizes code by fun
 │   ├── utils/              # Utility functions
 │   │   ├── index.js                    # Utils entry point
 │   │   ├── dateUtils.js                # Date utilities
-│   │   ├── domUtils.js                 # DOM utilities
 │   │   ├── errorHandler.js             # Error handling
 │   │   ├── fileOperations.js           # File operations
 │   │   ├── stringUtils.js              # String utilities
 │   │   ├── titleDescriptionGenerator.js # Title/description generation
-│   │   └── validationUtils.js          # Validation utilities
 │   └── miniAppManager.js   # Mini app management
 ├── renderers/              # Renderer process scripts
 │   ├── main.js             # Main window renderer
@@ -508,8 +505,6 @@ Utility functions have been organized into specialized modules to make them easi
 export * from './errorHandler.js';
 export * from './stringUtils.js';
 export * from './dateUtils.js';
-export * from './validationUtils.js';
-export * from './domUtils.js';
 export * from './fileOperations.js';
 ```
 
@@ -517,8 +512,6 @@ Each utility module focuses on a specific type of functionality:
 
 - **stringUtils.js**: String manipulation functions (truncation, slugification, etc.)
 - **dateUtils.js**: Date formatting and manipulation functions
-- **validationUtils.js**: Input validation functions
-- **domUtils.js**: DOM manipulation functions (for renderer processes)
 - **fileOperations.js**: File system operations
 - **errorHandler.js**: Error handling functions
 

@@ -7,7 +7,6 @@ This document outlines the accessibility considerations, standards, and implemen
 <!-- RELATED DOCUMENTS -->
 related '../user_experience/user_experience.md'
 related '../user_experience/app_creation_flow.md'
-related '../development/testing_strategy.md'
 <!-- /RELATED DOCUMENTS -->
 
 ## Accessibility Overview
