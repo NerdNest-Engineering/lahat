@@ -47,7 +47,7 @@ If you encounter any issues during installation:
 - Check your system meets the minimum requirements
 - Ensure you have administrative/sudo privileges when installing
 - Try restarting your computer
-- For further assistance, visit our [GitHub issues page](https://github.com/Dorky-Robot/lahat/issues)
+- For further assistance, visit our [GitHub issues page](https://github.com/NerdNest-Engineering/lahat/issues)
 
 ## First Steps After Installation
 
