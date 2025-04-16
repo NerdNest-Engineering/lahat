@@ -7,7 +7,6 @@ This document outlines the plan for transitioning Lahat from a monolithic UI to 
 <!-- RELATED DOCUMENTS -->
 related '../architecture/window_sheets_architecture.md'
 related '../user_experience/user_experience.md'
-related '../development/code_organization.md'
 <!-- /RELATED DOCUMENTS -->
 
 ## Current Architecture Overview

@@ -6,7 +6,6 @@ This document details the window sheets architecture that separates Lahat's UI i
 
 <!-- RELATED DOCUMENTS -->
 related '../architecture/technical_architecture.md'
-related '../development/code_organization.md'
 related '../changes/20250305-code-cleanup-and-maintainability-improvements.md'
 <!-- /RELATED DOCUMENTS -->
 

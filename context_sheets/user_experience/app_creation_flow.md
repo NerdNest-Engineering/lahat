@@ -6,7 +6,6 @@ This document details the app creation flow in Lahat, including the 2-step wizar
 
 <!-- RELATED DOCUMENTS -->
 related '../architecture/mini_app_generation_sequence.md'
-related '../development/prompt_engineering.md'
 related '../user_experience/user_experience.md'
 <!-- /RELATED DOCUMENTS -->
 
