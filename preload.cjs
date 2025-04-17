@@ -158,6 +158,18 @@ contextBridge.exposeInMainWorld(
     },
     onTitleDescriptionChunk: (callback) => {
       ipcRenderer.on('title-description-chunk', (_event, chunk) => callback(chunk));
-    }
+    },
+    
+    // Mini App Iteration APIs
+    getAppIterationData: () => ipcRenderer.invoke('get-app-iteration-data'), // Handler added in miniAppHandlers.js
+    iterateOnMiniApp: (params) => ipcRenderer.invoke('iterate-on-mini-app', params),
+    getVersionHistory: (params) => ipcRenderer.invoke('get-version-history', params),
+    restoreVersion: (params) => ipcRenderer.invoke('restore-version', params),
+    
+    // Event listeners for iteration
+    onIterationStatus: (callback) => ipcRenderer.on('iteration-status', (_event, status) => callback(status)),
+    onIterationResponse: (callback) => ipcRenderer.on('iteration-response', (_event, data) => callback(data)),
+    onVersionCreated: (callback) => ipcRenderer.on('version-created', (_event, versionData) => callback(versionData)),
+    onInitAppIteration: (callback) => ipcRenderer.on('init-app-iteration', (_event, data) => callback(data)) // Listener for initial data
   }
 );
