@@ -8,7 +8,9 @@ import * as windowManager from './modules/windowManager/index.js';
 import * as apiHandlers from './modules/ipc/apiHandlers.js';
 import * as miniAppHandlers from './modules/ipc/miniAppHandlers.js';
 import * as windowHandlers from './modules/ipc/windowHandlers.js';
+import * as themeHandlers from './modules/ipc/themeHandlers.js';
 import { ErrorHandler } from './modules/utils/errorHandler.js';
+import themeManager from './modules/utils/themeManager.js';
 // Import CommonJS module correctly
 import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
@@ -69,10 +71,14 @@ function initializeApp() {
     // Initialize window manager
     windowManager.initializeWindowManager();
     
+    // Initialize theme manager
+    themeManager.initialize();
+    
     // Register IPC handlers
     apiHandlers.registerHandlers();
     miniAppHandlers.registerHandlers();
     windowHandlers.registerHandlers();
+    themeHandlers.registerHandlers();
     
     // Initialize Claude client
     apiHandlers.initializeClaudeClient();
