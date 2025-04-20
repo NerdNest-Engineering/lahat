@@ -158,6 +158,27 @@ contextBridge.exposeInMainWorld(
     },
     onTitleDescriptionChunk: (callback) => {
       ipcRenderer.on('title-description-chunk', (_event, chunk) => callback(chunk));
+    },
+    
+    // Theme management
+    getThemeSettings: async () => {
+      try {
+        return await ipcRenderer.invoke('get-theme-settings');
+      } catch (error) {
+        console.error('Error getting theme settings:', error);
+        throw error;
+      }
+    },
+    setTheme: async (params) => {
+      try {
+        return await ipcRenderer.invoke('set-theme', params);
+      } catch (error) {
+        console.error('Error setting theme:', error);
+        throw error;
+      }
+    },
+    onThemeChanged: (callback) => {
+      ipcRenderer.on('theme-changed', (_event, settings) => callback(settings));
     }
   }
 );
