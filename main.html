@@ -11,7 +11,8 @@
                  font-src 'self';
                  object-src 'none';
                  base-uri 'none';
-                 form-action 'none';">
+                 form-action 'none';
+                 worker-src 'self' blob:;">
   <title>Lahat - App Gallery</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="styles/fonts.css">
@@ -27,6 +28,7 @@
       <div id="app-management-section" class="section">
         <div class="app-controls-header">
           <h2>Lahat <span class="tagalog-text">ᜎᜑᜆ᜔</span></h2>
+          <div id="clerk-stuff"></div>
           <div class="app-controls">
             <button id="api-settings-button" class="secondary">API Settings</button>
             <button id="create-app-button" class="primary">Create New App</button>

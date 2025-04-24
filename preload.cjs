@@ -4,8 +4,10 @@ const { useAuth, Clerk } = require('@clerk/clerk-js')
 
 
 // const clerkPubKey = ''
+const clerkPubKey = 'pk_test_bG9naWNhbC1sb25naG9ybi01Ny5jbGVyay5hY2NvdW50cy5kZXYk';
+                     
+const clerk = new Clerk(clerkPubKey);
 
-const clerk = new Clerk(clerkPubKey)
 // Expose protected methods that allow the renderer process to use
 // IPC communication with the main process
 contextBridge.exposeInMainWorld(
@@ -27,6 +29,10 @@ contextBridge.exposeInMainWorld(
         console.error('Error creating external window:', error);
         throw error;
       }
+    },
+    getClerk: async () => {
+      await clerk.load();
+      return clerk;
     },
     getToken: async () => {
       try {
