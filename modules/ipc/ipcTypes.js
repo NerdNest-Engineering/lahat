@@ -31,7 +31,12 @@ export const IpcChannels = {
   // Events
   GENERATION_STATUS: 'generation-status',
   GENERATION_CHUNK: 'generation-chunk',
-  TITLE_DESCRIPTION_CHUNK: 'title-description-chunk'
+  TITLE_DESCRIPTION_CHUNK: 'title-description-chunk',
+  
+  // Theme related
+  GET_THEME_SETTINGS: 'get-theme-settings',
+  SET_THEME: 'set-theme',
+  THEME_CHANGED: 'theme-changed'
 };
 
 /**

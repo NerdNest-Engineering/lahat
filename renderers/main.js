@@ -14,6 +14,10 @@ const openAppDirectoryButton = document.getElementById('open-app-directory-butto
 const appList = document.getElementById('app-list');
 const noAppsMessage = document.getElementById('no-apps-message');
 
+// Theme Elements
+const themeToggle = document.getElementById('theme-toggle');
+const themeLabel = document.getElementById('theme-label');
+
 // Modal Elements
 const appDetailsModal = document.getElementById('app-details-modal');
 const modalAppName = document.getElementById('modal-app-name');
@@ -39,6 +43,9 @@ async function initializeApp() {
     // Open API setup window if API key is not set
     window.electronAPI.openWindow('api-setup');
   }
+  
+  // Initialize theme
+  await initializeTheme();
   
   // Load existing apps
   await loadMiniApps();
@@ -259,6 +266,54 @@ window.electronAPI.onAppUpdated(() => {
   loadMiniApps();
 });
 
+// Theme Management
+async function initializeTheme() {
+  try {
+    // Get current theme settings
+    const themeSettings = await window.electronAPI.getThemeSettings();
+    
+    // Check if we got valid settings
+    if (!themeSettings || !themeSettings.success) {
+      console.error('Failed to get theme settings:', themeSettings);
+      return;
+    }
+    
+    // Update toggle based on current theme
+    themeToggle.checked = themeSettings.theme === 'dark';
+    themeLabel.textContent = themeSettings.theme === 'dark' ? 'Dark' : 'Light';
+    
+    // Set up event listener for toggle
+    themeToggle.addEventListener('change', async () => {
+      console.log('Theme toggle changed, new state:', themeToggle.checked);
+      const newTheme = themeToggle.checked ? 'dark' : 'light';
+      themeLabel.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+      console.log('Setting theme to:', newTheme);
+      try {
+        const result = await window.electronAPI.setTheme({ theme: newTheme });
+        console.log('Theme set result:', result);
+        // Force theme change in the DOM directly
+        document.documentElement.setAttribute('data-theme', newTheme);
+      } catch (error) {
+        console.error('Error setting theme:', error);
+      }
+    });
+    
+    // Listen for theme changes from main process or other windows
+    window.electronAPI.onThemeChanged((settings) => {
+      console.log('Theme changed:', settings);
+      // Update UI when theme changes externally
+      if (settings && settings.currentTheme) {
+        themeToggle.checked = settings.currentTheme === 'dark';
+        themeLabel.textContent = settings.currentTheme === 'dark' ? 'Dark' : 'Light';
+      }
+    });
+    
+    console.log('Theme initialized:', themeSettings);
+  } catch (error) {
+    console.error('Error initializing theme:', error);
+  }
+}
+
 // Command Palette Setup
 function setupCommandPalette() {
   // Register commands
@@ -307,6 +362,14 @@ function setupCommandPalette() {
       event.preventDefault();
       commandPalette.show();
     }
+  });
+  
+  // Add toggle theme command
+  commandPalette.addCommand('toggle-theme', 'Toggle Dark/Light Theme', async () => {
+    themeToggle.checked = !themeToggle.checked;
+    const newTheme = themeToggle.checked ? 'dark' : 'light';
+    themeLabel.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+    await window.electronAPI.setTheme({ theme: newTheme });
   });
 }
 
