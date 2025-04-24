@@ -36,7 +36,7 @@ jobs:
           echo "Setting app version to $VERSION"
           
           # Update version in package.json
-          npm version $VERSION --no-git-tag-version
+          npm version $VERSION --no-git-tag-version --allow-same-version
           
       - name: Check for required secrets
         if: matrix.os == 'macos-latest'
