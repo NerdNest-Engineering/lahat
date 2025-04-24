@@ -30,8 +30,7 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
-    getClerk: async () => {
-      await clerk.load();
+    getClerk: () => {
       return clerk;
     },
     getToken: async () => {

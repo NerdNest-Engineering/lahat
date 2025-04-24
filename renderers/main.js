@@ -43,27 +43,40 @@ async function initializeApp() {
     window.electronAPI.openWindow('api-setup');
   }
   
-  const clerk = await window.electronAPI.getClerk();
-
-  if (clerk.user) {
+  try {
+    // Get the Clerk instance (now synchronous)
+    const clerk = window.electronAPI.getClerk();
+    
+    // Load Clerk explicitly here
+    await clerk.load();
+    console.log('Clerk loaded successfully in renderer.');
+    
+    if (clerk.user) {
+      document.getElementById('clerk-stuff').innerHTML = `
+        <div id="user-button"></div>
+      `;
+      
+      const userButtonDiv = document.getElementById('user-button');
+      clerk.mountUserButton(userButtonDiv);
+    } else {
+      document.getElementById('clerk-stuff').innerHTML = `
+        <div id="sign-in"></div>
+      `;
+      
+      const signInDiv = document.getElementById('sign-in');
+      clerk.mountSignIn(signInDiv);
+    }
+  } catch (error) {
+    // Handle errors if Clerk failed to load
+    console.error('Failed to initialize Clerk:', error);
+    
+    // Display a user-friendly error message in the UI
     document.getElementById('clerk-stuff').innerHTML = `
-      <div id="user-button"></div>
-    `
-  
-    const userButtonDiv = document.getElementById('user-button')
-  
-    clerk.mountUserButton(userButtonDiv)
-  } else {
-    document.getElementById('clerk-stuff').innerHTML = `
-      <div id="sign-in"></div>
-    `
-  
-    const signInDiv = document.getElementById('sign-in')
-  
-    clerk.mountSignIn(signInDiv)
+      <p style="color: red;">Error initializing authentication. Please check console.</p>
+    `;
   }
 
-  // Load existing apps
+  // Load existing apps (runs even if Clerk fails)
   await loadMiniApps();
 }
 
