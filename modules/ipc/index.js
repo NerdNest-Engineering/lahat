@@ -23,6 +23,7 @@ export function initializeIpcHandlers() {
   const apiHandlers = require('./apiHandlers.js');
   const miniAppHandlers = require('./miniAppHandlers.js');
   const windowHandlers = require('./windowHandlers.js');
+  const appCreatorHandlers = require('../../src/app-creator/ipc/main-process-handlers.js');
   
   // Register API handlers
   apiHandlers.registerHandlers(ipcHandler);
@@ -32,6 +33,9 @@ export function initializeIpcHandlers() {
   
   // Register window handlers
   windowHandlers.registerHandlers(ipcHandler);
+  
+  // Register app creator handlers
+  appCreatorHandlers.registerAppCreationHandlers();
   
   console.log('All IPC handlers registered');
   

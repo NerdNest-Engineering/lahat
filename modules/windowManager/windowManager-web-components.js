@@ -32,7 +32,7 @@ const WINDOW_HTML = {
   [WindowType.MAIN]: 'main.html',
   [WindowType.MAIN_WEB_COMPONENTS]: 'main-web-components.html', // New HTML file
   [WindowType.API_SETUP]: 'api-setup.html',
-  [WindowType.APP_CREATION]: 'app-creation.html',
+  [WindowType.APP_CREATION]: 'src/app-creator/app-creator.html',
   [WindowType.MINI_APP]: null // Mini apps use dynamic content
 };
 
@@ -41,7 +41,7 @@ const WINDOW_PRELOAD = {
   [WindowType.MAIN]: 'preload.cjs',
   [WindowType.MAIN_WEB_COMPONENTS]: 'preload.cjs', // Same preload script
   [WindowType.API_SETUP]: 'preload.cjs',
-  [WindowType.APP_CREATION]: 'preload.cjs',
+  [WindowType.APP_CREATION]: 'src/app-creator/ipc/preload.js',
   [WindowType.MINI_APP]: 'miniAppPreload.cjs'
 };
 
