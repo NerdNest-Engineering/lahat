@@ -1,9 +1,9 @@
 /**
  * App Creator Preload Script
  * Sets up IPC communication between the renderer process and the main process
- */
+*/
 
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer } from 'electron';
 
 /**
  * Expose protected methods that allow the renderer process to use

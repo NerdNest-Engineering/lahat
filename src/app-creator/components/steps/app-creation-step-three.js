@@ -3,27 +3,18 @@
  * Displays the generation process and resulting code
  */
 
-import { AppCreationStep } from '../base/app-creation-step.js';
-
 /**
  * App Creation Step Three Component
  * Final step that shows the generation process and result
  */
-export class AppCreationStepThree extends AppCreationStep {
+export class AppCreationStepThree extends HTMLElement {
   constructor() {
-    super();
-    
-    // Get the content container
-    const contentContainer = this.shadowRoot.querySelector('.step-content');
-    
-    // Insert step-specific content before the navigation
-    const navigationElement = this.shadowRoot.querySelector('.step-navigation');
-    
-    // Create generation container
-    const generationContainer = document.createElement('div');
-    generationContainer.className = 'generation-container';
-    generationContainer.innerHTML = `
+    // No super() call needed
+
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `
       <style>
+        /* Keep only styles relevant to this step's content */
         .generation-container {
           margin-bottom: 20px;
         }
@@ -86,72 +77,60 @@ export class AppCreationStepThree extends AppCreationStep {
         <div class="status-message">Your app is being generated...</div>
       </div>
     `;
-    
-    // Insert the generation container before the navigation
-    contentContainer.insertBefore(generationContainer, navigationElement);
-    
+
     // Initialize properties
     this._appName = '';
     this._appDescription = '';
     this._generating = false;
-    
-    // Set initial button text
-    this.setNextButtonText('Create App');
-    
-    // Disable the next button initially
-    this.enableNextButton(false);
+
+    // No button setup needed here (handled by wrapper/controller)
   }
   
   /**
    * Set the app name
    * @param {string} name - The app name
    */
-  setAppName(name) {
-    this._appName = name;
-    
-    // Update the UI
+  /**
+   * Initializes the step with data from the previous step.
+   * Called by the controller.
+   * @param {object} data - Data object. Expected properties: title, description.
+   */
+  initializeData(data) {
+    this._appName = data.title || '';
+    this._appDescription = data.description || '';
+
+    // Update UI elements
     const appNameElement = this.shadowRoot.querySelector('.app-name');
-    if (appNameElement) {
-      appNameElement.textContent = name;
-    }
-  }
-  
-  /**
-   * Set the app description
-   * @param {string} description - The app description
-   */
-  setAppDescription(description) {
-    this._appDescription = description;
-    
-    // Update the UI
     const appDescriptionElement = this.shadowRoot.querySelector('.app-description');
+
+    if (appNameElement) {
+      appNameElement.textContent = this._appName;
+    }
     if (appDescriptionElement) {
-      appDescriptionElement.textContent = description;
+      appDescriptionElement.textContent = this._appDescription;
     }
-  }
-  
-  /**
-   * Handle next button click override
-   * @private
-   */
-  _handleNextClick() {
-    if (this._generating) {
-      return;
-    }
-    
-    // Set generating state
-    this.setGeneratingState();
-    
-    // Dispatch custom event
-    this.dispatchEvent(new CustomEvent('generate-app', {
+
+    // This step is likely always "valid" once initialized, notify controller
+    // The 'Next' button in the wrapper might be labeled 'Create App' by the controller
+    this.dispatchEvent(new CustomEvent('step-validity-change', {
+      detail: { isValid: true },
       bubbles: true,
-      composed: true,
-      detail: {
-        title: this._appName,
-        description: this._appDescription
-      }
+      composed: true
     }));
   }
+
+  /**
+   * Called by the controller to get the step's output data for final generation.
+   * @returns {{title: string, description: string}} The app title and description.
+   */
+  getOutputData() {
+    return {
+      title: this._appName,
+      description: this._appDescription
+    };
+  }
+
+  // _handleNextClick is removed (wrapper handles click, controller handles action)
   
   /**
    * Set the generating state
@@ -159,9 +138,8 @@ export class AppCreationStepThree extends AppCreationStep {
   setGeneratingState() {
     this._generating = true;
     
-    // Disable the next button
-    this.enableNextButton(false);
-    
+    // No need to disable wrapper button from here
+
     // Update the status message
     const statusMessage = this.shadowRoot.querySelector('.status-message');
     if (statusMessage) {
@@ -176,10 +154,8 @@ export class AppCreationStepThree extends AppCreationStep {
   setCompletedState() {
     this._generating = false;
     
-    // Enable the next button and change its text
-    this.enableNextButton(true);
-    this.setNextButtonText('Go to App');
-    
+    // Controller might handle wrapper button text/state
+
     // Update the status message
     const statusMessage = this.shadowRoot.querySelector('.status-message');
     if (statusMessage) {
@@ -187,8 +163,7 @@ export class AppCreationStepThree extends AppCreationStep {
       statusMessage.classList.add('success-message');
     }
     
-    // Mark the step as completed
-    this.setCompleted(true);
+    // Controller might call setCompleted on the wrapper
   }
   
   /**
@@ -198,10 +173,8 @@ export class AppCreationStepThree extends AppCreationStep {
   setErrorState(errorMessage) {
     this._generating = false;
     
-    // Enable the next button and reset its text
-    this.enableNextButton(true);
-    this.setNextButtonText('Try Again');
-    
+    // Controller might handle wrapper button text/state
+
     // Update the status message
     const statusMessage = this.shadowRoot.querySelector('.status-message');
     if (statusMessage) {
@@ -209,19 +182,8 @@ export class AppCreationStepThree extends AppCreationStep {
       statusMessage.style.color = '#ea4335';
     }
   }
-  
-  /**
-   * Reset the button container
-   */
-  resetButtonContainer() {
-    this._generating = false;
-    
-    // Enable the next button
-    this.enableNextButton(true);
-    
-    // Reset button text
-    this.setNextButtonText('Create App');
-  }
+
+  // resetButtonContainer is removed
 }
 
 // Register the component if it hasn't been registered yet

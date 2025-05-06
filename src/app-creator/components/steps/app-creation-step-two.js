@@ -3,20 +3,18 @@
  * Second step in the app creation process - title and description
  */
 
-import { AppCreationStep } from '../base/app-creation-step.js';
-
 /**
  * App Creation Step Two Component
  * Second step in the app creation process - title and description
  */
-export class AppCreationStepTwo extends AppCreationStep {
+export class AppCreationStepTwo extends HTMLElement {
   constructor() {
-    super();
-    
-    // Create the step content
-    const content = document.createElement('div');
-    content.innerHTML = `
+    // No super() call needed
+
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `
       <style>
+        /* Keep only styles relevant to this step's content */
         .title-description-container {
           margin-bottom: 20px;
         }
@@ -149,18 +147,15 @@ export class AppCreationStepTwo extends AppCreationStep {
         </div>
       </div>
     `;
-    
-    // Add the content to the shadow DOM
-    this.shadowRoot.querySelector('.step-content').prepend(content);
-    
-    // Set up event listeners
+
+    // Set up event listeners for elements within this component's shadow DOM
     this._setupEventListeners();
-    
-    // Initialize properties
-    this.generatedTitle = '';
-    this.generatedDescription = '';
-    this.userInput = '';
-    this.isGenerating = false;
+
+    // Initialize properties used for internal preview logic
+    this._generatedTitle = '';
+    this._generatedDescription = '';
+    this._userInput = '';
+    this._isGenerating = false;
   }
   
   /**
@@ -171,20 +166,18 @@ export class AppCreationStepTwo extends AppCreationStep {
     // Get elements
     const titleInput = this.shadowRoot.querySelector('.title-input');
     const descriptionTextarea = this.shadowRoot.querySelector('.description-textarea');
-    const nextButton = this.shadowRoot.querySelector('.next-button');
-    
+    // No next button within this component anymore
+
     // Add event listeners
     if (titleInput) {
       titleInput.addEventListener('input', this._handleInputChange.bind(this));
     }
-    
+
     if (descriptionTextarea) {
       descriptionTextarea.addEventListener('input', this._handleInputChange.bind(this));
     }
-    
-    if (nextButton) {
-      nextButton.addEventListener('click', this._handleNextClick.bind(this));
-    }
+
+    // No listener for next button needed here
   }
   
   /**
@@ -194,77 +187,58 @@ export class AppCreationStepTwo extends AppCreationStep {
   _handleInputChange() {
     const titleInput = this.shadowRoot.querySelector('.title-input');
     const descriptionTextarea = this.shadowRoot.querySelector('.description-textarea');
-    const nextButton = this.shadowRoot.querySelector('.next-button');
-    
-    // Enable or disable the next button based on input content
-    if (nextButton && titleInput && descriptionTextarea) {
-      nextButton.disabled = titleInput.value.trim().length < 3 || descriptionTextarea.value.trim().length < 10;
-    }
+    // No next button to enable/disable here
+
+    // Dispatch validity change event for the controller
+    const isValid = titleInput.value.trim().length >= 3 && descriptionTextarea.value.trim().length >= 10;
+    this.dispatchEvent(new CustomEvent('step-validity-change', {
+      detail: { isValid },
+      bubbles: true,
+      composed: true
+    }));
   }
-  
-  /**
-   * Handle next button click
-   * @private
-   */
-  _handleNextClick() {
-    const titleInput = this.shadowRoot.querySelector('.title-input');
-    const descriptionTextarea = this.shadowRoot.querySelector('.description-textarea');
-    
-    if (titleInput && descriptionTextarea && 
-        titleInput.value.trim().length >= 3 && 
-        descriptionTextarea.value.trim().length >= 10) {
-      
-      // Hide the button container
-      this._hideButtonContainer();
-      
-      // Dispatch event
-      this.dispatchEvent(new CustomEvent('generate-app', {
-        bubbles: true,
-        composed: true,
-        detail: {
-          title: titleInput.value.trim(),
-          description: descriptionTextarea.value.trim()
-        }
-      }));
-    }
-  }
-  
-  /**
-   * Hide the button container
-   * @private
-   */
-  _hideButtonContainer() {
-    const buttonContainer = this.shadowRoot.querySelector('.step-navigation');
-    
-    if (buttonContainer) {
-      buttonContainer.style.display = 'none';
-    }
-  }
-  
-  /**
-   * Reset the button container
-   */
-  resetButtonContainer() {
-    const buttonContainer = this.shadowRoot.querySelector('.step-navigation');
-    
-    if (buttonContainer) {
-      buttonContainer.style.display = 'flex';
-    }
-  }
+
+  // _handleNextClick, _hideButtonContainer, resetButtonContainer are removed
   
   /**
    * Set the user input
    * @param {string} input - The user input
    */
-  setUserInput(input) {
-    this.userInput = input;
-    
-    // Update the UI
+  /**
+   * Initializes the step with data from the previous step or generation.
+   * Called by the controller.
+   * @param {object} data - Data object. Expected properties: userInput, title, description.
+   */
+  initializeData(data) {
+    this._userInput = data.userInput || '';
+    this._generatedTitle = data.title || '';
+    this._generatedDescription = data.description || '';
+
+    // Update UI elements
     const userInputText = this.shadowRoot.querySelector('.user-input-text');
+    const titleInput = this.shadowRoot.querySelector('.title-input');
+    const descriptionTextarea = this.shadowRoot.querySelector('.description-textarea');
+
     if (userInputText) {
-      userInputText.textContent = input;
+      userInputText.textContent = this._userInput;
     }
+    if (titleInput) {
+      titleInput.value = this._generatedTitle;
+    }
+    if (descriptionTextarea) {
+      descriptionTextarea.value = this._generatedDescription;
+    }
+
+    // Show preview container if needed (controller might decide this)
+    // this.showPreview();
+
+    // Update preview content
+    this.updatePreviewContent(this._generatedTitle, this._generatedDescription);
+
+    // Ensure initial validity state is dispatched
+    this._handleInputChange();
   }
+
   
   /**
    * Show the preview
@@ -292,11 +266,16 @@ export class AppCreationStepTwo extends AppCreationStep {
   /**
    * Set the generating state
    */
-  setGeneratingState() {
-    this.isGenerating = true;
-    
+  setGeneratingState(isGenerating = true) {
+    this._isGenerating = isGenerating;
+
     // Update the UI
     const previewContent = this.shadowRoot.querySelector('.preview-content');
+    const previewContainer = this.shadowRoot.querySelector('.preview-container');
+
+    if (previewContainer) {
+       previewContainer.style.display = 'block'; // Ensure preview is visible when generating
+    }
     
     if (previewContent) {
       previewContent.innerHTML = `
@@ -320,10 +299,10 @@ export class AppCreationStepTwo extends AppCreationStep {
         generatingText.textContent += chunk.content;
       } else {
          // If generating text isn't there, maybe it finished early? Update with final text.
-         this.updatePreviewContent(this.generatedTitle, this.generatedDescription);
-      }
-    }
-  }
+         this.updatePreviewContent(this._generatedTitle, this._generatedDescription);
+     }
+   }
+ }
   
   /**
    * Handle completed chunk
@@ -336,8 +315,9 @@ export class AppCreationStepTwo extends AppCreationStep {
     if (chunk.content) {
       try {
         const data = JSON.parse(chunk.content);
-        if (data.title) this.generatedTitle = data.title;
-        if (data.description) this.generatedDescription = data.description;
+        // Update internal state if needed, though initializeData is the primary source now
+        if (data.title) this._generatedTitle = data.title;
+        if (data.description) this._generatedDescription = data.description;
       } catch (error) {
         console.warn('Could not parse final chunk content in Step Two:', error);
         // Use potentially already set properties if parsing fails
@@ -345,13 +325,15 @@ export class AppCreationStepTwo extends AppCreationStep {
     }
 
     // Update the preview content definitively
-    this.updatePreviewContent(this.generatedTitle, this.generatedDescription);
+    // Note: Controller should call initializeData with final results,
+    // but we update preview here too for robustness during streaming.
+    this.updatePreviewContent(this._generatedTitle, this._generatedDescription);
 
-    // Enable the next button (input fields should already be populated by setInitialData)
+    // Ensure validity is checked with potentially updated content
     this._handleInputChange();
 
     // Set generating state to false
-    this.isGenerating = false;
+    this.setGeneratingState(false);
   }
 
   /**
@@ -379,74 +361,30 @@ export class AppCreationStepTwo extends AppCreationStep {
    * @param {string} title
    * @param {string} description
    */
-  setInitialData(title, description) {
-    this.generatedTitle = title;
-    this.generatedDescription = description;
+  // setInitialData is replaced by initializeData(data)
 
+
+  /**
+   * Called by the controller to get the step's output data.
+   * @returns {{title: string, description: string}} The current title and description.
+   */
+  getOutputData() {
     const titleInput = this.shadowRoot.querySelector('.title-input');
     const descriptionTextarea = this.shadowRoot.querySelector('.description-textarea');
+    return {
+      title: titleInput ? titleInput.value.trim() : '',
+      description: descriptionTextarea ? descriptionTextarea.value.trim() : ''
+    };
+  }
 
-    if (titleInput) {
-      titleInput.value = title;
-    }
-    if (descriptionTextarea) {
-      descriptionTextarea.value = description;
-    }
-
-    // Update preview as well, in case streaming didn't finish cleanly
-    this.updatePreviewContent(title, description);
-
-    // Ensure button state is correct
+  /**
+   * Called when the element is connected to the DOM
+   */
+  connectedCallback() {
+    // Initialize validity state on connection
     this._handleInputChange();
   }
-  
-  /**
-   * Get the generated title
-   * @returns {string} - The generated title
-   */
-  get generatedTitle() {
-    return this._generatedTitle || '';
-  }
-  
-  /**
-   * Set the generated title
-   * @param {string} title - The generated title
-   */
-  set generatedTitle(title) {
-    this._generatedTitle = title;
-  }
-  
-  /**
-   * Get the generated description
-   * @returns {string} - The generated description
-   */
-  get generatedDescription() {
-    return this._generatedDescription || '';
-  }
-  
-  /**
-   * Set the generated description
-   * @param {string} description - The generated description
-   */
-  set generatedDescription(description) {
-    this._generatedDescription = description;
-  }
 
-  /**
-   * Get the current title from the input field
-   * @returns {string} - The current title
-   */
-  getTitle() {
-    const titleInput = this.shadowRoot.querySelector('.title-input');
-    return titleInput ? titleInput.value.trim() : this.generatedTitle;
-  }
-
-  /**
-   * Get the current description from the textarea
-   * @returns {string} - The current description
-   */
-  getDescription() {
-    const descriptionTextarea = this.shadowRoot.querySelector('.description-textarea');
-    return descriptionTextarea ? descriptionTextarea.value.trim() : this.generatedDescription;
-  }
+  // Removed internal getters/setters for generatedTitle/Description
+  // Removed getTitle/getDescription as getOutputData serves this purpose
 }
