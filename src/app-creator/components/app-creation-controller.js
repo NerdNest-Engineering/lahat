@@ -19,32 +19,32 @@ export class AppCreationController {
     this.eventBus = eventBus;
 
     // Initialize state
-    this.currentStep = 0; // Start at 0, _activateStep will set it to 1
-    this.stepData = {}; // Store data collected from steps if needed across async calls
-    this.stepValidity = false; // Track validity of the current step
+    // this.currentStep = 0; // Start at 0, _activateStep will set it to 1
+    // this.stepData = {}; // Store data collected from steps if needed across async calls
+    // this.stepValidity = false; // Track validity of the current step
 
-    // Get DOM elements
-    // IMPORTANT: Ensure the <app-creation-step> element in app-creator.html has id="step-container"
-    this.stepContainer = document.getElementById('step-container');
-    this.generationStatus = document.getElementById('generation-status');
-    this.generationPreview = document.getElementById('generation-preview');
-    this.currentStepElement = null; // Reference to the currently slotted step component
+    // // Get DOM elements
+    // // IMPORTANT: Ensure the <app-creation-step> element in app-creator.html has id="step-container"
+    // this.stepContainer = document.getElementById('step-container');
+    // this.generationStatus = document.getElementById('generation-status');
+    // this.generationPreview = document.getElementById('generation-preview');
+    // this.currentStepElement = null; // Reference to the currently slotted step component
 
-    // Bind methods that will be used as event listeners
-    this._handleStepValidityChange = this._handleStepValidityChange.bind(this);
-    this._handleWrapperNext = this._handleWrapperNext.bind(this);
-    this._handleWrapperBack = this._handleWrapperBack.bind(this);
+    // // Bind methods that will be used as event listeners
+    // this._handleStepValidityChange = this._handleStepValidityChange.bind(this);
+    // this._handleWrapperNext = this._handleWrapperNext.bind(this);
+    // this._handleWrapperBack = this._handleWrapperBack.bind(this);
 
-    // Remove _initializeSteps call
+    // // Remove _initializeSteps call
 
-    // Set up event listeners
-    // this._setupEventListeners();
+    // // Set up event listeners
+    // // this._setupEventListeners();
     
-    // Set up IPC event listeners
-    this._setupIpcListeners();
+    // // Set up IPC event listeners
+    // this._setupIpcListeners();
     
-    // Initialize the app
-    this._initializeApp();
+    // // Initialize the app
+    // this._initializeApp();
   }
   
   // Removed _initializeSteps method

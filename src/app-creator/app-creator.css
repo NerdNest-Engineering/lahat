@@ -34,45 +34,7 @@ body {
   overflow: hidden;
 }
 
-/* Drag region for window dragging */
-.drag-region {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 30px;
-  -webkit-app-region: drag;
-  z-index: 1000;
-}
-
-/* Window container */
-.window {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-
-/* Title bar */
-.titlebar {
-  height: 30px;
-  background-color: var(--primary-color);
-  color: white;
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  font-weight: 500;
-  -webkit-app-region: drag;
-}
-
-/* Main content area */
-.content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  position: relative;
-}
+/* These styles are now handled by the lahat-window component */
 
 /* Step components */
 app-creation-step-one,

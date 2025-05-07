@@ -5,6 +5,7 @@
  */
 import '../base/step-header.js';
 import '../base/step-navigation.js';
+import '../base/step-container.js';
 
 export class AppCreationStepOne extends HTMLElement {
   constructor() {
@@ -24,17 +25,6 @@ export class AppCreationStepOne extends HTMLElement {
           margin-bottom: 20px;
         }
         
-        .step-container {
-          border: 1px solid var(--border-color, #e0e0e0);
-          border-radius: var(--border-radius, 8px);
-          overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .step-content {
-          padding: 20px;
-        }
-        
         /* Animation for step transitions */
         @keyframes fadeIn {
           from {
@@ -47,7 +37,7 @@ export class AppCreationStepOne extends HTMLElement {
           }
         }
         
-        :host(.active) .step-container {
+        :host(.active) step-container {
           animation: fadeIn 0.3s ease-out;
         }
         /* Step-specific content styles */
@@ -119,11 +109,11 @@ export class AppCreationStepOne extends HTMLElement {
         }
       </style>
 
-      <div class="step-container">
+      <step-container>
         <!-- Step header component -->
-        <step-header></step-header>
+        <step-header slot="header"></step-header>
         
-        <div class="step-content">
+        <div slot="content">
           <div class="prompt-container">
             <div class="prompt-label">Describe the app you want to create</div>
             <div class="prompt-description">
@@ -144,13 +134,13 @@ export class AppCreationStepOne extends HTMLElement {
               <div class="example-item">A note-taking app with markdown support</div>
             </div>
           </div>
-          
-          <!-- Step navigation component at the bottom with some spacing -->
-          <div style="margin-top: 30px;">
-            <step-navigation></step-navigation>
-          </div>
         </div>
-      </div>
+        
+        <!-- Step navigation component with spacing -->
+        <div slot="navigation" style="margin-top: 30px;">
+          <step-navigation></step-navigation>
+        </div>
+      </step-container>
     `;
 
     // Initialize components and set up event listeners

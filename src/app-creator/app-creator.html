@@ -17,22 +17,22 @@
   <link rel="stylesheet" href="app-creator.css">
 </head>
 <body>
-  <div class="drag-region"></div>
-  <div class="window">
-    <div class="titlebar">Create a Mini App</div>
-    <div class="content">
-      <!-- Step components will be defined as custom elements -->
-      <app-creation-step-one id="step-1" class="active"></app-creation-step-one>
-      <!-- <app-creation-step-two id="step-2"></app-creation-step-two> -->
-      <!-- <app-creation-step-three id="step-3"></app-creation-step-three> -->
-      
-      <!-- Status indicator -->
-      <generation-status id="generation-status"></generation-status>
-      
-      <!-- Preview component -->
-      <generation-preview id="generation-preview"></generation-preview>
-    </div>
-  </div>
+  <!-- Import the lahat-window component -->
+  <script type="module" src="../../components/ui/shell/lahat-window.js"></script>
+  
+  <!-- Main application wrapper using lahat-window -->
+  <lahat-window window-title="Create a Mini App">
+    <!-- Step components will be defined as custom elements -->
+    <app-creation-step-one id="step-1" class="active"></app-creation-step-one>
+    <!-- <app-creation-step-two id="step-2"></app-creation-step-two> -->
+    <!-- <app-creation-step-three id="step-3"></app-creation-step-three> -->
+    
+    <!-- Status indicator -->
+    <generation-status id="generation-status"></generation-status>
+    
+    <!-- Preview component -->
+    <generation-preview id="generation-preview"></generation-preview>
+  </lahat-window>
   
   <!-- Error container will be created by JavaScript -->
   

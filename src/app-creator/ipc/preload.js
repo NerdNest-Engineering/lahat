@@ -2,7 +2,6 @@
  * App Creator Preload Script
  * Sets up IPC communication between the renderer process and the main process
 */
-
 import { contextBridge, ipcRenderer } from 'electron';
 
 /**

@@ -9,7 +9,7 @@ import { AppCreationController } from './components/app-creation-controller.js';
 import { EventBus } from './utils/event-bus.js';
 import { ErrorContainer, ErrorMessage } from './components/ui/error-container.js';
 import { AppCreationStep } from './components/base/app-creation-step.js';
-import { AppCreationStepOne } from './components/steps/app-creation-step-one.js';
+import './components/steps/app-creation-step-one.js';
 import { AppCreationStepTwo } from './components/steps/app-creation-step-two.js';
 import { AppCreationStepThree } from './components/steps/app-creation-step-three.js';
 import { GenerationStatus } from './components/ui/generation-status.js';
@@ -28,10 +28,6 @@ function initializeAppCreator() {
     // Register custom elements if not already registered
     if (!customElements.get('app-creation-step')) {
       customElements.define('app-creation-step', AppCreationStep);
-    }
-    
-    if (!customElements.get('app-creation-step-one')) {
-      customElements.define('app-creation-step-one', AppCreationStepOne);
     }
     
     if (!customElements.get('app-creation-step-two')) {
