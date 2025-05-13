@@ -2,6 +2,36 @@
  * App Creation Step Three Component
  * Displays the generation process and resulting code
  */
+import { EventDefinition } from '../../utils/event-definition.js';
+
+// App Generation
+export const APP_GENERATION_START = new EventDefinition(
+  'app-creator:app-generation-start',
+  'Fired when the main app/widget generation process is initiated, using the confirmed title, description, and original prompt. Signals the start of a potentially long asynchronous operation.',
+  {
+    title: { type: 'string', description: 'The confirmed app title.' },
+    description: { type: 'string', description: 'The confirmed app description.' },
+    prompt: { type: 'string', optional: true, description: 'The original user prompt, if needed for context.' }
+  }
+);
+export const APP_GENERATION_CHUNK_RECEIVED = new EventDefinition(
+  'app-creator:app-generation-chunk-received',
+  'Fired when a new chunk of data (streaming) for the app/widget code or structure is received from the generation service. Allows for displaying generation progress.',
+  {
+    content: { type: 'string', description: 'The chunk of generated content (e.g., code, logs).' },
+    done: { type: 'boolean', description: 'True if this is the final chunk and the generation stream is complete.' }
+  }
+);
+export const APP_GENERATION_SUCCESS = new EventDefinition(
+  'app-creator:app-generation-success',
+  'Fired when the app/widget generation process completes successfully. The generated app might be stored or ready for display/use.',
+  { /* May include path to generated files or other relevant success data if applicable */ }
+);
+export const APP_GENERATION_FAILURE = new EventDefinition(
+  'app-creator:app-generation-failure',
+  'Fired if an error occurs during the app/widget generation process.',
+  { error: { type: 'string', description: 'A message describing the error that occurred.' } }
+);
 
 /**
  * App Creation Step Three Component

@@ -5,6 +5,7 @@
  * This file initializes the app creator module and sets up the event handlers.
  */
 
+import { EventDefinition } from './utils/event-definition.js';
 import { AppCreationController } from './components/app-creation-controller.js';
 import { EventBus } from './utils/event-bus.js';
 import { ErrorContainer, ErrorMessage } from './components/ui/error-container.js';
@@ -17,6 +18,13 @@ import { GenerationPreview } from './components/ui/generation-preview.js';
 
 // Create a module-specific event bus
 const eventBus = new EventBus();
+
+// Initialization
+export const APP_CREATOR_INITIALIZED = new EventDefinition(
+  'app-creator:initialized',
+  'Fired when the App Creator module has completed its initial setup, including DOM checks, component registrations, and initial IPC listener setup (if applicable). Indicates the module is ready for user interaction or to proceed with the first step.',
+  { /* No specific payload expected, but can be an empty object {} */ }
+);
 
 /**
  * Initialize the app creator module

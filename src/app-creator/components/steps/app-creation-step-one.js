@@ -6,6 +6,8 @@
 import '../base/step-header.js';
 import '../base/step-navigation.js';
 import '../base/step-container.js';
+import { STEP_NEXT, STEP_BACK } from '../base/step-navigation.js';
+import { STEP_VALIDITY_CHANGE } from '../base/app-creation-step.js';
 
 export class AppCreationStepOne extends HTMLElement {
   constructor() {
@@ -194,8 +196,8 @@ export class AppCreationStepOne extends HTMLElement {
     
     // Add listeners for step navigation events
     if (this._navigation) {
-      this._navigation.addEventListener('step-next', this._handleStepNext.bind(this));
-      this._navigation.addEventListener('step-back', this._handleStepBack.bind(this));
+      this._navigation.addEventListener(STEP_NEXT, this._handleStepNext.bind(this));
+      this._navigation.addEventListener(STEP_BACK, this._handleStepBack.bind(this));
     }
   }
   
@@ -205,8 +207,8 @@ export class AppCreationStepOne extends HTMLElement {
    * @private
    */
   _handleStepNext(event) {
-    // Forward the event to parent
-    this.dispatchEvent(new CustomEvent('step-next', {
+    // Forward the event to parent using the event registry
+    this.dispatchEvent(new CustomEvent(STEP_NEXT, {
       bubbles: true,
       composed: true,
       detail: { stepNumber: this._stepNumber }
@@ -219,8 +221,8 @@ export class AppCreationStepOne extends HTMLElement {
    * @private
    */
   _handleStepBack(event) {
-    // Forward the event to parent
-    this.dispatchEvent(new CustomEvent('step-back', {
+    // Forward the event to parent using the event registry
+    this.dispatchEvent(new CustomEvent(STEP_BACK, {
       bubbles: true,
       composed: true,
       detail: { stepNumber: this._stepNumber }
@@ -242,7 +244,7 @@ export class AppCreationStepOne extends HTMLElement {
     }
 
     // Dispatch validity change event for the controller
-    this.dispatchEvent(new CustomEvent('step-validity-change', {
+    this.dispatchEvent(new CustomEvent(STEP_VALIDITY_CHANGE, {
       detail: {
         element: textarea,
         isValid

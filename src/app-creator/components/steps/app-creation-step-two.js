@@ -2,6 +2,35 @@
  * App Creation Step Two Component
  * Second step in the app creation process - title and description
  */
+import { EventDefinition } from '../../utils/event-definition.js';
+
+// Title & Description Generation
+export const TITLE_DESCRIPTION_GENERATION_START = new EventDefinition(
+  'app-creator:title-desc-generation-start',
+  'Fired when the process of generating an app title and description is initiated, usually after the user provides an initial app idea/prompt. Signals the start of an asynchronous operation.',
+  { prompt: { type: 'string', description: 'The user-provided text prompt used as input for generation.' } }
+);
+export const TITLE_DESCRIPTION_GENERATION_CHUNK_RECEIVED = new EventDefinition(
+  'app-creator:title-desc-generation-chunk-received',
+  'Fired when a new chunk of data (streaming) for the title and description is received from the generation service (e.g., via IPC). Allows for progressive UI updates.',
+  {
+    chunk: { type: 'object', description: 'The data chunk received. Structure may vary based on the service but often contains partial title/description.' },
+    done: { type: 'boolean', description: 'True if this is the final chunk and the generation stream is complete.' }
+  }
+);
+export const TITLE_DESCRIPTION_GENERATION_SUCCESS = new EventDefinition(
+  'app-creator:title-desc-generation-success',
+  'Fired when the title and description generation process completes successfully and the final content is available.',
+  {
+    title: { type: 'string', description: 'The fully generated app title.' },
+    description: { type: 'string', description: 'The fully generated app description.' }
+  }
+);
+export const TITLE_DESCRIPTION_GENERATION_FAILURE = new EventDefinition(
+  'app-creator:title-desc-generation-failure',
+  'Fired if an error occurs during the title and description generation process.',
+  { error: { type: 'string', description: 'A message describing the error that occurred.' } }
+);
 
 /**
  * App Creation Step Two Component

@@ -3,6 +3,19 @@
  * Base component for all app creation steps
  */
 
+import { EventDefinition } from '../../utils/event-definition.js';
+import { STEP_NEXT, STEP_BACK } from './step-navigation.js'; // Import from step-navigation
+
+// Step Validity
+export const STEP_VALIDITY_CHANGE = new EventDefinition(
+  'app-creator:step-validity-change',
+  'Fired by a step component when its internal validation state changes (e.g., user input meets requirements). The controller uses this to enable/disable navigation controls.',
+  {
+    element: { type: 'HTMLElement', description: 'The specific input element whose validity changed, if applicable.' },
+    isValid: { type: 'boolean', description: 'True if the step/input is currently valid, false otherwise.' }
+  }
+);
+
 /**
  * App Creation Step Component
  * Base component for all app creation steps
@@ -182,8 +195,8 @@ export class AppCreationStep extends HTMLElement {
    * @private
    */
   _handleBackClick() {
-    // Dispatch event
-    this.dispatchEvent(new CustomEvent('step-back', {
+    // Dispatch event using event registry
+    this.dispatchEvent(new CustomEvent(STEP_BACK, {
       bubbles: true,
       composed: true,
       detail: { stepNumber: this._stepNumber }
@@ -195,8 +208,8 @@ export class AppCreationStep extends HTMLElement {
    * @private
    */
   _handleNextClick() {
-    // Dispatch event
-    this.dispatchEvent(new CustomEvent('step-next', {
+    // Dispatch event using event registry
+    this.dispatchEvent(new CustomEvent(STEP_NEXT, {
       bubbles: true,
       composed: true,
       detail: { stepNumber: this._stepNumber }

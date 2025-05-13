@@ -2,6 +2,20 @@
  * Step Navigation Component
  * Reusable navigation component for app creation steps with next/back buttons
  */
+import { EventDefinition } from '../../utils/event-definition.js';
+
+// Step Navigation & Validity
+export const STEP_NEXT = new EventDefinition(
+  'app-creator:step-next',
+  'Fired when the user initiates a "next step" action, typically by clicking a "Next" or "Continue" button within a step. The controller listens to this to advance the workflow.',
+  { stepNumber: { type: 'number', description: 'The number of the step from which the next action was triggered.' } }
+);
+export const STEP_BACK = new EventDefinition(
+  'app-creator:step-back',
+  'Fired when the user initiates a "previous step" action, typically by clicking a "Back" button. The controller listens to this to revert to the previous step in the workflow.',
+  { stepNumber: { type: 'number', description: 'The number of the step from which the back action was triggered.' } }
+);
+
 export class StepNavigation extends HTMLElement {
   constructor() {
     super();
@@ -89,8 +103,8 @@ export class StepNavigation extends HTMLElement {
    * @private
    */
   _handleBackClick() {
-    // Dispatch event
-    this.dispatchEvent(new CustomEvent('step-back', {
+    // Dispatch event using the event registry
+    this.dispatchEvent(new CustomEvent(STEP_BACK, {
       bubbles: true,
       composed: true,
       detail: { stepNumber: this._stepNumber }
@@ -102,8 +116,8 @@ export class StepNavigation extends HTMLElement {
    * @private
    */
   _handleNextClick() {
-    // Dispatch event
-    this.dispatchEvent(new CustomEvent('step-next', {
+    // Dispatch event using the event registry
+    this.dispatchEvent(new CustomEvent(STEP_NEXT, {
       bubbles: true,
       composed: true,
       detail: { stepNumber: this._stepNumber }
