@@ -28,11 +28,17 @@
         api_host: 'https://us.i.posthog.com',
         person_profiles: 'identified_only',
     })
-    document.getElementById("create-game-btn").addEventListener("click", function() {
-        posthog.capture("create_first_game_clicked", {
-            location: "home",
-            variant: "lahat-for-gamers"
-        });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const button = document.getElementById("create-game-btn");
+        if (button) {
+            button.addEventListener("click", function () {
+                posthog.capture("create_first_game_clicked", {
+                    location: "home",
+                    variant: "lahat-for-gamers"
+                });
+            });
+        }
     });
   </script>
 </head>
