@@ -1,210 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lahat - Generate Apps Instantly</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            color: #333;
-            background-color: #f8f8f8;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 50px 20px;
-        }
-        
-        .hero {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 50px;
-        }
-        
-        .hero-image {
-            flex: 1;
-            text-align: center;
-        }
-        
-        .hero-image img {
-            max-width: 100%;
-            height: auto;
-        }
-        
-        .hero-content {
-            flex: 1;
-        }
-        
-        h1 {
-            font-size: 2.8em;
-            margin: 0 0 10px 0;
-            color: #444;
-        }
-        
-        .tagline {
-            font-size: 1.6em;
-            font-weight: bold;
-            margin: 0 0 20px 0;
-            color: #555;
-        }
-        
-        .description {
-            font-size: 1.1em;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            color: #666;
-        }
-        
-        .download-button {
-            background: white;
-            color: #333;
-            padding: 15px 30px;
-            text-decoration: none;
-            border-radius: 30px;
-            font-size: 1.2em;
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .download-button .icon {
-            margin-right: 15px;
-            font-size: 1.3em;
-        }
-        
-        .version-info {
-            font-size: 0.9em;
-            color: #777;
-            margin-bottom: 5px;
-        }
-        
-        .features {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 80px;
-            text-align: center;
-        }
-        
-        .feature {
-            flex: 1;
-            padding: 0 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 400px; /* Fixed height for consistency */
-        }
-        
-        .feature-content {
-            flex-grow: 0; /* Don't allow content to grow */
-            margin-bottom: 20px; /* Consistent spacing */
-        }
-        
-        .feature-image-container {
-            flex-grow: 1; /* Let this container take up remaining space */
-            display: flex;
-            align-items: center; /* Center image vertically */
-            justify-content: center; /* Center horizontally too */
-            width: 100%;
-        }
-        
-        .feature-icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-            color: #418ac7;
-        }
-        
-        .feature h3 {
-            font-size: 1.4em;
-            margin-bottom: 10px;
-            color: #444;
-        }
-        
-        .feature p {
-            font-size: 1em;
-            color: #666;
-            line-height: 1.5;
-            margin-bottom: 0; /* Remove bottom margin */
-        }
-        
-        .feature img {
-            max-width: 80%;
-            height: auto;
-            display: block;
-            border-radius: 8px;
-            object-fit: contain;
-            aspect-ratio: 4/3;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 30px 0;
-            margin-top: 50px;
-            color: #777;
-            font-size: 0.9em;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lahat is for gamers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Open Sans', sans-serif; text-align: center; margin: 0; padding: 0; background: #f8f8f8; color: #111; }
+    header { display: flex; justify-content: space-between; padding: 10px 30px; background: #fff; }
+    nav a { margin-left: 20px; text-decoration: none; color: black; font-weight: bold; }
+    .game-images img { width: 200px; height: 150px; object-fit: cover; margin: 0 10px; }
+    .hero, .section { padding: 60px 20px; }
+    button { padding: 12px 24px; font-weight: bold; border: none; background: black; color: white; border-radius: 6px; }
+    .cta-button {
+        display: inline-block;
+        background-color: #000;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        font-weight: bold;
+        border-radius: 6px;
+    }
+  </style>
+  <script>
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init bs ws ge fs capture De calculateEventProperties $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+    posthog.init('phc_TjQeGOAfTXdreTkbkylerGbmg76jrg8BSZXfhfnF3kO', {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'identified_only',
+    })
+    document.getElementById("create-game-btn").addEventListener("click", function() {
+        posthog.capture("create_first_game_clicked", {
+            location: "home",
+            variant: "lahat-for-gamers"
+        });
+    });
+  </script>
 </head>
 <body>
-    <div class="container">
-        <section class="hero">
-            <div class="hero-image">
-                <img src="https://raw.githubusercontent.com/NerdNest-Engineering/lahat/main/assets/icons/lahat.png" alt="Lahat Logo">
-            </div>
-            <div class="hero-content">
-                <p class="tagline">Turn your ideas into apps—instantly.</p>
-                <p class="description">
-                    Whether you need a quick tool, a UI demo, or a full-fledged app, Lahat can generate it. Type your idea, and watch it come to life as a desktop app.
-                </p>
-                <a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.11/Lahat-1.0.11.dmg" class="download-button">
-                    <span class="icon">↓</span> Download for Mac
-                </a>
-                <p class="version-info">Latest version: v1.0.11</p>
-            </div>
-        </section>
-        
-        <section class="features">
-            <div class="feature">
-                <div class="feature-content">
-                    <div class="feature-icon">💡</div>
-                    <h3>Prompt</h3>
-                    <p>Describe your experience, game, or tool.</p>
-                </div>
-                <div class="feature-image-container">
-                    <img src="1.png" alt="Enter a prompt">
-                </div>
-            </div>
-            <div class="feature">
-                <div class="feature-content">
-                    <div class="feature-icon">⚙️</div>
-                    <h3>Generate</h3>
-                    <p>Grab a coffee while Lahat gets to work.</p>
-                </div>
-                <div class="feature-image-container">
-                    <img src="2.png" alt="Wait for Lahat">
-                </div>
-            </div>
-            <div class="feature">
-                <div class="feature-content">
-                    <div class="feature-icon">✨</div>
-                    <h3>Play</h3>
-                    <p>Check out your new desktop app.</p>
-                </div>
-                <div class="feature-image-container">
-                    <img src="3.png" alt="Check out your app">
-                </div>
-            </div>
-        </section>
+  <header>
+    <div><strong>NerdNest Engineering</strong></div>
+    <nav>
+      <a href="https://nerdnest.engineering/support/">Support</a>
+      <a href="https://nerdnest.engineering/privacy-policy/">Privacy Policy</a>
+    </nav>
+  </header>
+  <div class="hero">
+    <h1>Lahat is for gamers</h1>
+  </div>
+  <div class="section">
+    <h2>Take your next break with Lahat</h2>
+    <p>Turn any idea into a playable desktop app in seconds.</p>
+    <div class="game-images">
+      <img src="./neon-beat.gif" alt="Game 1" />
+      <img src="./tower-defense.gif" alt="Game 2" />
+      <img src="./SnakeTris.gif" alt="Game 3" />
     </div>
-    
-    <footer class="footer">
-        <p>&copy; 2025 NerdNest Engineering. All rights reserved.</p>
-        <p><a href="https://github.com/NerdNest-Engineering/lahat" style="color: #4CAF50;">View on GitHub</a></p>
-    </footer>
+    <p><a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" id="create-game-btn" class="cta-button">Create Your First Game</a></p>
+  </div>
+  <div class="section">
+    <h2>How it works</h2>
+    <p>Prompt</p>
+    <img src="./prompt.png" alt="Prompt UI" style="width:90%; max-width:800px; border-radius:8px;" />
+    <p>Generate</p>
+    <img src="./generate.gif" alt="Prompt UI" style="width:90%; max-width:800px; border-radius:8px;" />
+    <p>Play</p>
+    <img src="./SnakeTris.gif" alt="Prompt UI" style="width:90%; max-width:800px; border-radius:8px;" />
+    <p>Share</p>
+    <img src="./share.png" alt="Prompt UI" style="width:90%; max-width:800px; border-radius:8px;" />
+  </div>
 </body>
 </html>
