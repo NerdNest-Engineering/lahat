@@ -33,7 +33,7 @@
         const button = document.getElementById("create-game-btn");
         if (button) {
             button.addEventListener("click", function () {
-                posthog.capture("create_first_game_clicked", {
+                posthog.capture("user_downloaded", {
                     location: "home",
                     variant: "lahat-for-gamers"
                 });
@@ -57,9 +57,9 @@
     <h2>Take your next break with Lahat</h2>
     <p>Turn any idea into a playable desktop app in seconds.</p>
     <div class="game-images">
-      <img src="./neon-beat.gif" alt="Game 1" />
-      <img src="./tower-defense.gif" alt="Game 2" />
-      <img src="./SnakeTris.gif" alt="Game 3" />
+      <img src="./neon-beat.gif" />
+      <img src="./tower-defense.gif" />
+      <img src="./SnakeTris.gif" />
     </div>
     <p><a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" id="create-game-btn" class="cta-button">Create Your First Game</a></p>
   </div>
