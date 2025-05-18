@@ -665,14 +665,14 @@
             
             if (scrollPosition <= 10) {
                 // When at the top, show the large logo
-                headerLogo.style.height = '100px';
+                headerLogo.style.height = '85px';
             } else if (scrollPosition > 10 && scrollPosition <= maxScroll) {
                 // During transition - gradually reduce size
-                const newSize = Math.max(50, 100 - scrollPosition * 0.5);
+                const newSize = Math.max(55, 85 - scrollPosition * 0.3);
                 headerLogo.style.height = `${newSize}px`;
             } else {
                 // When fully scrolled, show the smaller logo
-                headerLogo.style.height = '50px';
+                headerLogo.style.height = '55px';
             }
         });
         
