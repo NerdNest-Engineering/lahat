@@ -35,6 +35,7 @@
             button.addEventListener("click", function () {
                 posthog.capture("user_downloaded", {
                     location: "home",
+                    button: "create-game",
                     variant: "lahat-for-gamers"
                 });
             });
