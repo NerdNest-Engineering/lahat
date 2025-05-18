@@ -81,6 +81,10 @@ export class AppCreationController {
     // Store the event bus
     this.eventBus = eventBus;
 
+
+    
+    
+
     // Initialize state
     // this.currentStep = 0; // Start at 0, _activateStep will set it to 1
     // this.stepData = {}; // Store data collected from steps if needed across async calls
@@ -101,7 +105,7 @@ export class AppCreationController {
     // // Remove _initializeSteps call
 
     // // Set up event listeners
-    // // this._setupEventListeners();
+    this._setupEventListeners();
     
     // // Set up IPC event listeners
     // this._setupIpcListeners();
@@ -207,168 +211,170 @@ export class AppCreationController {
    * @private
    */
   async _handleWrapperNext() {
-    if (!this.currentStepElement || !this.stepValidity) {
-      logError('_handleWrapperNext', `Next called on invalid state. Step: ${this.currentStep}, Validity: ${this.stepValidity}`, ErrorLevel.WARN);
-      return; // Should not happen if button is correctly disabled
-    }
+
+
+    // if (!this.currentStepElement || !this.stepValidity) {
+    //   logError('_handleWrapperNext', `Next called on invalid state. Step: ${this.currentStep}, Validity: ${this.stepValidity}`, ErrorLevel.WARN);
+    //   return; // Should not happen if button is correctly disabled
+    // }
 
     // Disable buttons during processing
-    this.stepContainer.enableNextButton(false);
-    this.stepContainer.showBackButton(false); // Hide back button too? Optional.
+    // this.stepContainer.enableNextButton(false);
+    // this.stepContainer.showBackButton(false); // Hide back button too? Optional.
 
-    try {
-      // --- Step 1 Logic ---
-      if (this.currentStep === 1) {
-        const prompt = this.currentStepElement.getOutputData();
-        this.stepData.prompt = prompt; // Store for potential use in step 2/3
+    // try {
+    //   // --- Step 1 Logic ---
+    //   if (this.currentStep === 1) {
+    //     const prompt = this.currentStepElement.getOutputData();
+    //     this.stepData.prompt = prompt; // Store for potential use in step 2/3
 
-        // Show generating state in step 2's preview area (if step 2 exists and has the method)
-        // We need to anticipate step 2 existing to show its loading state *before* activating it.
-        // This requires either preloading step 2 or making the loading indicator more generic.
-        // For now, let's assume a generic loading indicator or handle it post-activation.
-        if (this.generationStatus) this.generationStatus.show('Generating title...');
+    //     // Show generating state in step 2's preview area (if step 2 exists and has the method)
+    //     // We need to anticipate step 2 existing to show its loading state *before* activating it.
+    //     // This requires either preloading step 2 or making the loading indicator more generic.
+    //     // For now, let's assume a generic loading indicator or handle it post-activation.
+    //     if (this.generationStatus) this.generationStatus.show('Generating title...');
 
-        console.log('Starting title and description generation...');
+    //     console.log('Starting title and description generation...');
         
-        // Publish title & description generation start event
-        this.eventBus.publish(TITLE_DESCRIPTION_GENERATION_START, {
-          prompt
-        });
+    //     // Publish title & description generation start event
+    //     this.eventBus.publish(TITLE_DESCRIPTION_GENERATION_START, {
+    //       prompt
+    //     });
         
-        let result;
-        if (window.electronAPI) {
-          result = await window.electronAPI.generateTitleAndDescription({ input: prompt });
-        } else {
-          // Placeholder for browser mode
-          await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay
-          result = { success: true, title: "Generated Title", description: "Generated Description" };
-        }
-        console.log('Title and description generation completed:', result);
+    //     let result;
+    //     if (window.electronAPI) {
+    //       result = await window.electronAPI.generateTitleAndDescription({ input: prompt });
+    //     } else {
+    //       // Placeholder for browser mode
+    //       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay
+    //       result = { success: true, title: "Generated Title", description: "Generated Description" };
+    //     }
+    //     console.log('Title and description generation completed:', result);
 
-        if (this.generationStatus) this.generationStatus.hide();
+    //     if (this.generationStatus) this.generationStatus.hide();
 
-        // Publish title & description generation success event
-        if (result.success && result.title && result.description) {
-          this.eventBus.publish(TITLE_DESCRIPTION_GENERATION_SUCCESS, {
-            title: result.title,
-            description: result.description
-          });
-          // Pass necessary data to step 2
-          await this._activateStep(2, {
-            userInput: prompt,
-            title: result.title,
-            description: result.description
-          });
-        } else {
-          console.error('Title/description generation failed:', result.error);
-          // Publish title & description generation failure event
-          this.eventBus.publish(TITLE_DESCRIPTION_GENERATION_FAILURE, {
-            error: result.error || 'Unknown error'
-          });
-          showError('Failed to generate title and description', result.error);
-          // Re-enable buttons on failure
-          this.stepContainer.enableNextButton(this.stepValidity); // Re-enable based on current validity
-          this.stepContainer.showBackButton(this.currentStep > 1);
-        }
-      }
-      // --- Step 2 Logic ---
-      else if (this.currentStep === 2) {
-        const { title, description } = this.currentStepElement.getOutputData();
-        this.stepData.title = title;
-        this.stepData.description = description;
-        // Pass data to step 3 if needed
-        await this._activateStep(3, { title, description, prompt: this.stepData.prompt });
-      }
-      // --- Step 3 Logic ---
-      else if (this.currentStep === 3) {
-        // Assuming step 3 provides the final data needed for generation
-        const finalData = this.currentStepElement.getOutputData(); // Or use stored this.stepData
+    //     // Publish title & description generation success event
+    //     if (result.success && result.title && result.description) {
+    //       this.eventBus.publish(TITLE_DESCRIPTION_GENERATION_SUCCESS, {
+    //         title: result.title,
+    //         description: result.description
+    //       });
+    //       // Pass necessary data to step 2
+    //       await this._activateStep(2, {
+    //         userInput: prompt,
+    //         title: result.title,
+    //         description: result.description
+    //       });
+    //     } else {
+    //       console.error('Title/description generation failed:', result.error);
+    //       // Publish title & description generation failure event
+    //       this.eventBus.publish(TITLE_DESCRIPTION_GENERATION_FAILURE, {
+    //         error: result.error || 'Unknown error'
+    //       });
+    //       showError('Failed to generate title and description', result.error);
+    //       // Re-enable buttons on failure
+    //       this.stepContainer.enableNextButton(this.stepValidity); // Re-enable based on current validity
+    //       this.stepContainer.showBackButton(this.currentStep > 1);
+    //     }
+    //   }
+    //   // --- Step 2 Logic ---
+    //   else if (this.currentStep === 2) {
+    //     const { title, description } = this.currentStepElement.getOutputData();
+    //     this.stepData.title = title;
+    //     this.stepData.description = description;
+    //     // Pass data to step 3 if needed
+    //     await this._activateStep(3, { title, description, prompt: this.stepData.prompt });
+    //   }
+    //   // --- Step 3 Logic ---
+    //   else if (this.currentStep === 3) {
+    //     // Assuming step 3 provides the final data needed for generation
+    //     const finalData = this.currentStepElement.getOutputData(); // Or use stored this.stepData
 
-        if (this.generationStatus) this.generationStatus.show('Generating app...');
-        if (this.generationPreview) {
-          this.generationPreview.reset();
-          this.generationPreview.show();
-        }
-        // Optionally call a method on step 3 to show its internal generating state
-        if (typeof this.currentStepElement.setGeneratingState === 'function') {
-           this.currentStepElement.setGeneratingState(true);
-        }
+    //     if (this.generationStatus) this.generationStatus.show('Generating app...');
+    //     if (this.generationPreview) {
+    //       this.generationPreview.reset();
+    //       this.generationPreview.show();
+    //     }
+    //     // Optionally call a method on step 3 to show its internal generating state
+    //     if (typeof this.currentStepElement.setGeneratingState === 'function') {
+    //        this.currentStepElement.setGeneratingState(true);
+    //     }
 
 
-        console.log('Starting app generation...');
+    //     console.log('Starting app generation...');
         
-        // Publish app generation start event
-        this.eventBus.publish(APP_GENERATION_START, {
-          title: finalData.title,
-          description: finalData.description,
-          prompt: this.stepData.prompt
-        });
+    //     // Publish app generation start event
+    //     this.eventBus.publish(APP_GENERATION_START, {
+    //       title: finalData.title,
+    //       description: finalData.description,
+    //       prompt: this.stepData.prompt
+    //     });
         
-        let result;
-        if (window.electronAPI) {
-          result = await window.electronAPI.generateWidget({
-            appName: finalData.title, // Use data from step 3 or stored data
-            prompt: finalData.description // Use data from step 3 or stored data
-          });
-        } else {
-          // Placeholder for browser mode
-           await new Promise(resolve => setTimeout(resolve, 2500)); // Simulate delay
-          result = { success: true };
-        }
-        console.log('App generation completed:', result);
+    //     let result;
+    //     if (window.electronAPI) {
+    //       result = await window.electronAPI.generateWidget({
+    //         appName: finalData.title, // Use data from step 3 or stored data
+    //         prompt: finalData.description // Use data from step 3 or stored data
+    //       });
+    //     } else {
+    //       // Placeholder for browser mode
+    //        await new Promise(resolve => setTimeout(resolve, 2500)); // Simulate delay
+    //       result = { success: true };
+    //     }
+    //     console.log('App generation completed:', result);
 
-        if (this.generationStatus) this.generationStatus.hide();
-         if (typeof this.currentStepElement.setGeneratingState === 'function') {
-           this.currentStepElement.setGeneratingState(false);
-        }
+    //     if (this.generationStatus) this.generationStatus.hide();
+    //      if (typeof this.currentStepElement.setGeneratingState === 'function') {
+    //        this.currentStepElement.setGeneratingState(false);
+    //     }
 
 
-        if (result.success) {
-          // Publish app generation success event
-          this.eventBus.publish(APP_GENERATION_SUCCESS, {});
+    //     if (result.success) {
+    //       // Publish app generation success event
+    //       this.eventBus.publish(APP_GENERATION_SUCCESS, {});
           
-          if (window.electronAPI) {
-            window.electronAPI.notifyAppUpdated();
-            this.eventBus.publish(NOTIFY_APP_UPDATED, {});
-          }
-          showError('App created successfully', 'Your app has been created.', ErrorLevel.INFO);
-           if (typeof this.currentStepElement.setCompletedState === 'function') {
-             this.currentStepElement.setCompletedState();
-          }
-          // Optionally close window after delay
-          setTimeout(() => {
-            if (window.electronAPI) {
-              window.electronAPI.closeCurrentWindow();
-              this.eventBus.publish(CLOSE_CURRENT_WINDOW_REQUEST, {});
-            }
-          }, 3000);
-        } else {
-          console.error('App generation failed:', result.error);
-          // Publish app generation failure event
-          this.eventBus.publish(APP_GENERATION_FAILURE, {
-            error: result.error
-          });
-          showError('Failed to generate app', result.error);
-           if (typeof this.currentStepElement.setErrorState === 'function') {
-             this.currentStepElement.setErrorState(result.error);
-          }
-          // Re-enable buttons on failure
-          this.stepContainer.enableNextButton(this.stepValidity);
-          this.stepContainer.showBackButton(this.currentStep > 1);
-        }
-      }
-    } catch (error) {
-      logError(`_handleWrapperNext (Step ${this.currentStep})`, error, ErrorLevel.ERROR);
-      showError('An unexpected error occurred', error.message);
-      if (this.generationStatus) this.generationStatus.hide();
-      // Ensure buttons are re-enabled on unexpected error
-      this.stepContainer.enableNextButton(this.stepValidity);
-      this.stepContainer.showBackButton(this.currentStep > 1);
-       if (this.currentStepElement && typeof this.currentStepElement.setErrorState === 'function') {
-         this.currentStepElement.setErrorState(error.message);
-      }
-    }
-    // Note: Buttons might remain disabled on success if the window closes or moves to a final state.
+    //       if (window.electronAPI) {
+    //         window.electronAPI.notifyAppUpdated();
+    //         this.eventBus.publish(NOTIFY_APP_UPDATED, {});
+    //       }
+    //       showError('App created successfully', 'Your app has been created.', ErrorLevel.INFO);
+    //        if (typeof this.currentStepElement.setCompletedState === 'function') {
+    //          this.currentStepElement.setCompletedState();
+    //       }
+    //       // Optionally close window after delay
+    //       setTimeout(() => {
+    //         if (window.electronAPI) {
+    //           window.electronAPI.closeCurrentWindow();
+    //           this.eventBus.publish(CLOSE_CURRENT_WINDOW_REQUEST, {});
+    //         }
+    //       }, 3000);
+    //     } else {
+    //       console.error('App generation failed:', result.error);
+    //       // Publish app generation failure event
+    //       this.eventBus.publish(APP_GENERATION_FAILURE, {
+    //         error: result.error
+    //       });
+    //       showError('Failed to generate app', result.error);
+    //        if (typeof this.currentStepElement.setErrorState === 'function') {
+    //          this.currentStepElement.setErrorState(result.error);
+    //       }
+    //       // Re-enable buttons on failure
+    //       this.stepContainer.enableNextButton(this.stepValidity);
+    //       this.stepContainer.showBackButton(this.currentStep > 1);
+    //     }
+    //   }
+    // } catch (error) {
+    //   logError(`_handleWrapperNext (Step ${this.currentStep})`, error, ErrorLevel.ERROR);
+    //   showError('An unexpected error occurred', error.message);
+    //   if (this.generationStatus) this.generationStatus.hide();
+    //   // Ensure buttons are re-enabled on unexpected error
+    //   this.stepContainer.enableNextButton(this.stepValidity);
+    //   this.stepContainer.showBackButton(this.currentStep > 1);
+    //    if (this.currentStepElement && typeof this.currentStepElement.setErrorState === 'function') {
+    //      this.currentStepElement.setErrorState(error.message);
+    //   }
+    // }
+    // // Note: Buttons might remain disabled on success if the window closes or moves to a final state.
   }
 
   /**
