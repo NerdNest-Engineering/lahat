@@ -4,107 +4,541 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ditch Your Subscriptions | Lahat</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Open Sans', sans-serif;
-      background: #f9f9f9;
-      color: #111;
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #7209b7;
+      --accent: #f72585;
+      --text: #2b2d42;
+      --text-light: #555b6e;
+      --light: #f8f9fa;
+      --white: #ffffff;
+      --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      --gradient-accent: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+      --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 6px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 15px 25px rgba(0, 0, 0, 0.1);
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background-color: var(--light);
+      position: relative;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(67, 97, 238, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(114, 9, 183, 0.03) 0%, transparent 60%),
+        radial-gradient(circle at 50% 50%, rgba(247, 37, 133, 0.02) 0%, transparent 70%);
+      animation: backgroundShift 40s ease-in-out infinite alternate;
+      z-index: -1;
+      filter: blur(30px);
+    }
+
+    @keyframes backgroundShift {
+      0% {
+        background-position: 0% 0%;
+      }
+      100% {
+        background-position: 100% 100%;
+      }
+    }
+
+    /* Floating elements animation */
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
     /* Responsive images */
     img {
       max-width: 100%;
       height: auto;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
     }
+
+    h1, h2, h3, h4, h5 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    /* Modern header */
     header {
       padding: 20px 40px;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
     }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      transition: var(--transition);
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
     nav a {
       margin-left: 20px;
       text-decoration: none;
-      color: #111;
-      font-weight: bold;
+      color: var(--text);
+      font-weight: 600;
+      position: relative;
+      transition: var(--transition);
     }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gradient-primary);
+      transition: var(--transition);
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    /* Hero section with animated elements */
     .hero {
       text-align: center;
-      padding: 100px 20px 60px;
-      background: #fff;
+      padding: 120px 20px 100px;
+      background: var(--white);
+      position: relative;
+      overflow: hidden;
     }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(67, 97, 238, 0.03) 0%, transparent 70%);
+      animation: rotate 30s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes rotate {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
     .hero h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
+      font-size: 3.5em;
+      margin-bottom: 20px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: float 6s ease-in-out infinite;
     }
+
     .hero p {
-      font-size: 1.25em;
-      margin-bottom: 30px;
+      font-size: 1.5em;
+      margin-bottom: 40px;
+      color: var(--text-light);
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
     }
+
     .cta-button {
-      background: #000;
+      background: var(--gradient-primary);
       color: white;
-      padding: 14px 28px;
-      border-radius: 6px;
+      padding: 16px 32px;
+      border-radius: 50px;
       text-decoration: none;
       font-weight: bold;
+      display: inline-block;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
     }
-    .features, .break-free, .use-cases, .footer, .section {
-      padding: 60px 20px;
+
+    .cta-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--gradient-accent);
+      z-index: -1;
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .cta-button:hover::before {
+      opacity: 1;
+    }
+
+    .cta-button:active {
+      transform: translateY(0);
+    }
+
+    /* Features section with cards */
+    .features {
+      padding: 80px 20px;
+      max-width: 1000px;
+      margin: auto;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-md);
+      margin-top: -40px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .feature-card {
+      background: var(--light);
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 0;
+      background: var(--gradient-primary);
+      transition: var(--transition);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .feature-card:hover::before {
+      height: 100%;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+
+    .feature-card p {
+      color: var(--text-light);
+    }
+
+    /* Break free section with gradient background */
+    .break-free {
+      padding: 100px 20px;
+      max-width: 900px;
+      margin: auto;
+      text-align: center;
+      position: relative;
+    }
+
+    .break-free h2 {
+      font-size: 2.5em;
+      margin-bottom: 30px;
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+    }
+
+    .break-free p {
+      font-size: 1.3em;
+      line-height: 1.8;
+      margin-bottom: 40px;
+    }
+
+    /* Use cases section */
+    .use-cases {
+      padding: 80px 20px;
       max-width: 900px;
       margin: auto;
     }
-    .features ul {
-      list-style-type: disc;
-      margin-left: 20px;
-      font-size: 1.1em;
-    }
-    .break-free h2 {
+
+    .use-cases h3 {
+      font-size: 1.8em;
+      margin-bottom: 30px;
       text-align: center;
-      font-size: 2em;
-      margin-bottom: 20px;
     }
-    .footer {
-      text-align: center;
-      font-size: 0.9em;
-      color: #777;
-    }
-    
-    /* Image gallery styling */
-    .section .use-cases {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+
+    .use-cases ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
+    }
+
+    .use-cases li {
+      padding: 20px;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      position: relative;
+      padding-left: 35px;
+    }
+
+    .use-cases li::before {
+      content: '✓';
+      position: absolute;
+      left: 15px;
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .use-cases li:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Image gallery styling */
+    .section {
+      padding: 80px 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .section h3 {
+      text-align: center;
+      font-size: 1.8em;
+      margin-bottom: 40px;
+    }
+
+    .section .use-cases-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
       margin-top: 30px;
     }
     
-    .section .use-cases img {
-      max-width: 100%;
-      width: 280px;
+    .section .use-cases-gallery img {
+      width: 100%;
       height: auto;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+      transform-origin: center;
     }
     
-    .section .use-cases img:hover {
-      transform: translateY(-5px);
+    .section .use-cases-gallery img:hover {
+      transform: scale(1.03);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Final CTA section */
+    .final-cta {
+      text-align: center;
+      padding: 100px 20px 80px;
+      background: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .final-cta::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(67, 97, 238, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(114, 9, 183, 0.05) 0%, transparent 50%);
+      z-index: 0;
+    }
+
+    .final-cta h2 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .final-cta p {
+      font-size: 1.3em;
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Footer styling */
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 0.9em;
+      color: var(--text-light);
+      background: var(--light);
+      position: relative;
+    }
+
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 3px;
+      background: var(--gradient-primary);
+      border-radius: 3px;
     }
     
     /* Responsive adjustments */
     @media (max-width: 768px) {
-      .section .use-cases {
-        gap: 15px;
+      .hero h1 {
+        font-size: 2.5em;
       }
       
-      .section .use-cases img {
-        width: 100%;
-        max-width: 400px;
+      .hero p {
+        font-size: 1.2em;
+      }
+      
+      .break-free h2 {
+        font-size: 2em;
+      }
+      
+      .break-free p {
+        font-size: 1.1em;
+      }
+      
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .section .use-cases-gallery {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Floating particles animation */
+    .particles {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.08;
+      filter: blur(20px);
+      animation-name: float-particle;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      animation-direction: alternate;
+    }
+
+    @keyframes float-particle {
+      0% {
+        transform: translateY(0) translateX(0);
+      }
+      100% {
+        transform: translateY(-15px) translateX(8px);
       }
     }
   </style>
@@ -136,13 +570,76 @@
                 });
             });
         }
+
+        // Create floating particles
+        createParticles();
+
+        // Add scroll reveal animation
+        const elements = document.querySelectorAll('.feature-card, .use-cases li, .section img');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        elements.forEach(el => {
+            el.style.opacity = 0;
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
     });
+
+    // Function to create floating particles
+    function createParticles() {
+        try {
+            const colors = ['rgba(67, 97, 238, 0.4)', 'rgba(114, 9, 183, 0.4)', 'rgba(247, 37, 133, 0.4)'];
+            const particlesContainer = document.createElement('div');
+            particlesContainer.className = 'particles';
+            
+            // Make sure body is available before appending
+            if (document.body) {
+                document.body.appendChild(particlesContainer);
+                
+                // Create fewer, larger particles
+                for (let i = 0; i < 12; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    
+                    // Random properties - larger, more diffuse particles
+                    const size = Math.random() * 80 + 40; // Much larger particles
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const left = Math.random() * 100;
+                    const top = Math.random() * 100;
+                    const duration = Math.random() * 20 + 30; // Slower animation
+                    const delay = Math.random() * 10;
+                    
+                    // Apply styles
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.backgroundColor = color;
+                    particle.style.left = `${left}%`;
+                    particle.style.top = `${top}%`;
+                    particle.style.animationDuration = `${duration}s`;
+                    particle.style.animationDelay = `${delay}s`;
+                    
+                    particlesContainer.appendChild(particle);
+                }
+            }
+        } catch (error) {
+            console.log("Error creating particles:", error);
+        }
+    }
   </script>
 </head>
 <body>
 
 <header>
-  <div><strong>Lahat</strong></div>
+  <div class="logo">Lahat</div>
   <nav>
     <a href="#">Support</a>
     <a href="#">Privacy</a>
@@ -150,26 +647,39 @@
 </header>
 
 <section class="hero">
-  <h1>Cut the costs. Keep the power.</h1>
-  <p>Build apps you control. One click. Yours forever.</p>
-  <a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" id="create-app-btn" class="cta-button">Create your first app</a>
+  <div class="hero-content">
+    <h1>Cut the costs. Keep the power.</h1>
+    <p>Build apps you control. One click. Yours forever.</p>
+    <a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" id="create-app-btn" class="cta-button">Create your first app</a>
+  </div>
 </section>
 
 <section class="features">
-  <ul>
-    <li>No vendor lock-in</li>
-    <li>No usage caps</li>
-    <li>No monthly bills</li>
-  </ul>
+  <h2 style="text-align: center; margin-bottom: 30px;">Why Choose Lahat?</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <h3>No Vendor Lock-in</h3>
+      <p>Own your apps completely. No dependencies on third-party services that can change terms or shut down.</p>
+    </div>
+    <div class="feature-card">
+      <h3>No Usage Caps</h3>
+      <p>Use your apps as much as you want. No artificial limits or tiered pricing based on usage.</p>
+    </div>
+    <div class="feature-card">
+      <h3>No Monthly Bills</h3>
+      <p>Pay once, use forever. Eliminate recurring subscription costs from your business expenses.</p>
+    </div>
+  </div>
 </section>
 
 <section class="break-free">
   <h2>Break Free</h2>
-  <p style="text-align: center; font-size: 1.2em;">
+  <p>
     You don't need to rent your workflows.<br>
     Lahat lets you create and own your own tooling.<br>
     For once, the software works for you — not the other way around.
   </p>
+  <a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" class="cta-button">Get Started Now</a>
 </section>
 
 <section class="use-cases">
@@ -179,22 +689,28 @@
     <li>Internal dashboards and reporting tools</li>
     <li>Offline calculators and quoting tools</li>
     <li>Lightweight workflow trackers</li>
+    <li>Inventory management systems</li>
+    <li>Client onboarding portals</li>
+    <li>Project estimation tools</li>
+    <li>Employee time tracking solutions</li>
+    <li>Sales pipeline visualizers</li>
+    <li>Resource allocation planners</li>
   </ul>
 </section>
 
 <section class="section">
-  <h3 style="text-align: center;">Turn any idea into a business app in seconds.</h3>
-  <div class="use-cases">
-    <img src="./expenses.png" />
-    <img src="./invoices.png" />
-    <img src="./kanban.png" />
+  <h3>Turn any idea into a business app in seconds.</h3>
+  <div class="use-cases-gallery">
+    <img src="./expenses.png" alt="Expense tracking app" />
+    <img src="./invoices.png" alt="Invoice management app" />
+    <img src="./kanban.png" alt="Kanban board app" />
   </div>
 </section>
 
-<section class="hero" style="padding-top: 40px;">
+<section class="final-cta">
   <h2>Ready to cancel something?</h2>
   <p>Start with Lahat.</p>
-  <p><a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" id="break-free-btn" class="cta-button">Break free</a></p>
+  <a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" id="break-free-btn" class="cta-button">Break free</a>
 </section>
 
 <footer class="footer">
