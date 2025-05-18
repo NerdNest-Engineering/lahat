@@ -133,12 +133,24 @@
       height: auto; /* Auto height to fit content */
     }
 
+    /* Header container to hold logo and maintain layout */
+    .header-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      position: relative;
+      transition: all 0.4s ease;
+    }
+
     .logo {
       display: flex;
       align-items: center;
       transition: all 0.4s ease;
       position: relative;
       height: 100%;
+      z-index: 1;
+      transform-origin: center;
     }
 
     .logo-image {
@@ -147,8 +159,32 @@
       border-radius: 0;
       box-shadow: none;
       transition: all 0.4s ease;
-      transform-origin: left center;
+      transform-origin: center center;
       margin: 5px 0;
+    }
+
+    /* Top header state (when at the top of the page) */
+    .header-top {
+      padding: 30px 40px 15px;
+    }
+
+    .header-top .logo-image {
+      height: 120px;
+      transform-origin: center center;
+    }
+
+    /* Navigation always stays at the top right */
+    nav {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: all 0.4s ease;
+      z-index: 2;
+    }
+
+    nav a {
+      margin: 0 0 0 20px;
     }
 
     .logo:hover {
@@ -186,7 +222,7 @@
     /* Hero section with animated elements */
     .hero {
       text-align: center;
-      padding: 80px 20px 60px;
+      padding: 40px 20px 60px;
       background: var(--white);
       position: relative;
       overflow: hidden;
@@ -658,21 +694,46 @@
         // Header logo scroll animation
         const headerLogo = document.querySelector('.logo-image');
         const header = document.querySelector('header');
+        const logo = document.querySelector('.logo');
+        const headerContainer = document.querySelector('.header-container');
         
         window.addEventListener('scroll', function() {
             const scrollPosition = window.scrollY;
             const maxScroll = 100; // The scroll position where the animation completes
             
             if (scrollPosition <= 10) {
-                // When at the top, show the large logo
-                headerLogo.style.height = '85px';
+                // When at the top, show the centered large header
+                header.classList.add('header-top');
+                headerLogo.style.height = '120px';
+                
+                // Center the logo
+                headerContainer.style.justifyContent = 'center';
+                headerContainer.style.alignItems = 'center';
+                logo.style.transform = 'translateX(0)';
             } else if (scrollPosition > 10 && scrollPosition <= maxScroll) {
-                // During transition - gradually reduce size
-                const newSize = Math.max(55, 85 - scrollPosition * 0.3);
+                // During transition - gradually transform
+                header.classList.remove('header-top');
+                
+                // Gradually reduce logo size
+                const newSize = Math.max(55, 120 - scrollPosition * 0.65);
                 headerLogo.style.height = `${newSize}px`;
+                
+                // Smooth transition for logo position - move from center to left
+                const transitionProgress = scrollPosition / maxScroll;
+                headerContainer.style.justifyContent = 'flex-start';
+                headerContainer.style.alignItems = 'center';
+                
+                // Calculate the left position based on scroll progress
+                // This moves the logo from center to left
+                const leftPosition = -50 + (transitionProgress * 50); // From -50% (center) to 0% (left)
+                logo.style.transform = `translateX(${leftPosition}%)`;
             } else {
                 // When fully scrolled, show the smaller logo
+                header.classList.remove('header-top');
                 headerLogo.style.height = '55px';
+                headerContainer.style.justifyContent = 'flex-start';
+                headerContainer.style.alignItems = 'center';
+                logo.style.transform = 'translateX(0)';
             }
         });
         
@@ -725,11 +786,13 @@
 <body>
 
 <header>
-  <div class="logo"><img src="./logo-title.png" alt="Lahat Logo" class="logo-image"></div>
-  <nav>
-    <a href="#">Support</a>
-    <a href="#">Privacy</a>
-  </nav>
+  <div class="header-container">
+    <div class="logo"><img src="./logo-title.png" alt="Lahat Logo" class="logo-image"></div>
+    <nav>
+      <a href="#">Support</a>
+      <a href="#">Privacy</a>
+    </nav>
+  </div>
 </header>
 
 <section class="hero">
