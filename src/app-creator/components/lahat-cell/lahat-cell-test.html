@@ -281,378 +281,385 @@
   
   <script src="lahat-cell.js"></script>
   <script>
-    // Helper function for logging events
-    function logEvent(message) {
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
-      const eventLog = document.getElementById('event-log');
-      eventLog.appendChild(entry);
-      eventLog.scrollTop = eventLog.scrollHeight;
-    }
-    
-    // 1. Basic Cell Structure and API
-    const rootCell = document.getElementById('root-cell');
-    const addCellBtn = document.getElementById('add-cell');
-    const removeCellBtn = document.getElementById('remove-cell');
-    const clearCellsBtn = document.getElementById('clear-cells');
-    
-    let cellCount = 0;
-    
-    addCellBtn.addEventListener('click', () => {
-      cellCount++;
-      const newCell = document.createElement('lahat-cell');
-      newCell.innerHTML = `<div class="cell-content">Dynamically Added Cell ${cellCount}</div>`;
-      newCell.style.border = '1px solid #e0e0e0';
-      rootCell.addCell(newCell);
-      logEvent(`Added new cell #${cellCount} to root cell`);
-    });
-    
-    removeCellBtn.addEventListener('click', () => {
-      const cells = rootCell.getCells();
-      if (cells.length > 0) {
-        const removed = rootCell.removeCell(cells[cells.length - 1]);
-        logEvent(`Removed cell from root cell`);
-      } else {
-        logEvent('No cells to remove');
+    document.addEventListener('DOMContentLoaded', function() {
+      // Helper function for logging events
+      function logEvent(message) {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+        const eventLog = document.getElementById('event-log');
+        eventLog.appendChild(entry);
+        eventLog.scrollTop = eventLog.scrollHeight;
       }
-    });
-    
-    clearCellsBtn.addEventListener('click', () => {
-      rootCell.clearCells();
-      cellCount = 0;
-      logEvent('Cleared all cells from root cell');
-    });
-    
-    // 2. Layout Types
-    const layoutCell = document.getElementById('layout-cell');
-    const setRowBtn = document.getElementById('set-row');
-    const setColumnBtn = document.getElementById('set-column');
-    const setGridBtn = document.getElementById('set-grid');
-    const setGridOptionsBtn = document.getElementById('set-grid-options');
-    const setFlexOptionsBtn = document.getElementById('set-flex-options');
-    
-    setRowBtn.addEventListener('click', () => {
-      layoutCell.setLayout('flex-row');
-      logEvent('Set layout to flex-row');
-    });
-    
-    setColumnBtn.addEventListener('click', () => {
-      layoutCell.setLayout('flex-column');
-      logEvent('Set layout to flex-column');
-    });
-    
-    setGridBtn.addEventListener('click', () => {
-      layoutCell.setLayout('grid');
-      logEvent('Set layout to grid');
-    });
-    
-    setGridOptionsBtn.addEventListener('click', () => {
-      layoutCell.setLayout('grid', {
-        columns: 'repeat(2, 1fr)',
-        rows: 'auto',
-        gap: '15px'
+      
+      // 1. Basic Cell Structure and API
+      const rootCell = document.getElementById('root-cell');
+      const addCellBtn = document.getElementById('add-cell');
+      const removeCellBtn = document.getElementById('remove-cell');
+      const clearCellsBtn = document.getElementById('clear-cells');
+      
+      let cellCount = 0;
+      
+      addCellBtn.addEventListener('click', () => {
+        cellCount++;
+        const newCell = document.createElement('lahat-cell');
+        newCell.innerHTML = `<div class="cell-content">Dynamically Added Cell ${cellCount}</div>`;
+        newCell.style.border = '1px solid #e0e0e0';
+        rootCell.addCell(newCell);
+        logEvent(`Added new cell #${cellCount} to root cell`);
       });
-      logEvent('Set layout to grid with custom options');
-    });
-    
-    setFlexOptionsBtn.addEventListener('click', () => {
-      layoutCell.setLayout('flex-row', {
-        gap: '20px',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+      
+      removeCellBtn.addEventListener('click', () => {
+        const cells = rootCell.getCells();
+        if (cells.length > 0) {
+          const removed = rootCell.removeCell(cells[cells.length - 1]);
+          logEvent(`Removed cell from root cell`);
+        } else {
+          logEvent('No cells to remove');
+        }
       });
-      logEvent('Set layout to flex-row with custom options');
-    });
-    
-    // Add buttons to test setStyles and grid-area in layout section
-    const setCellStylesBtn = document.getElementById('set-cell-styles');
-    const setCellGridAreaBtn = document.getElementById('set-cell-grid-area');
-    
-    setCellStylesBtn.addEventListener('click', () => {
-      // Get the first cell
-      const firstCell = layoutCell.querySelector('.demo-cell');
-      if (firstCell) {
+      
+      clearCellsBtn.addEventListener('click', () => {
+        rootCell.clearCells();
+        cellCount = 0;
+        logEvent('Cleared all cells from root cell');
+      });
+      
+      // 2. Layout Types
+      const layoutCell = document.getElementById('layout-cell');
+      const setRowBtn = document.getElementById('set-row');
+      const setColumnBtn = document.getElementById('set-column');
+      const setGridBtn = document.getElementById('set-grid');
+      const setGridOptionsBtn = document.getElementById('set-grid-options');
+      const setFlexOptionsBtn = document.getElementById('set-flex-options');
+      
+      setRowBtn.addEventListener('click', () => {
+        layoutCell.setLayout('flex-row');
+        logEvent('Set layout to flex-row');
+      });
+      
+      setColumnBtn.addEventListener('click', () => {
+        layoutCell.setLayout('flex-column');
+        logEvent('Set layout to flex-column');
+      });
+      
+      setGridBtn.addEventListener('click', () => {
+        layoutCell.setLayout('grid');
+        logEvent('Set layout to grid');
+      });
+      
+      setGridOptionsBtn.addEventListener('click', () => {
+        layoutCell.setLayout('grid', {
+          columns: 'repeat(2, 1fr)',
+          rows: 'auto',
+          gap: '15px'
+        });
+        logEvent('Set layout to grid with custom options');
+      });
+      
+      setFlexOptionsBtn.addEventListener('click', () => {
+        layoutCell.setLayout('flex-row', {
+          gap: '20px',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        });
+        logEvent('Set layout to flex-row with custom options');
+      });
+      
+      // Add buttons to test setStyles and grid-area in layout section
+      const setCellStylesBtn = document.getElementById('set-cell-styles');
+      const setCellGridAreaBtn = document.getElementById('set-cell-grid-area');
+      
+      setCellStylesBtn.addEventListener('click', () => {
+        // Get the first cell
+        const firstCell = layoutCell.querySelector('.demo-cell');
+        if (firstCell) {
+          // Test setStyles method
+          firstCell.setStyles({
+            backgroundColor: 'rgba(66, 133, 244, 0.1)',
+            padding: '15px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+          });
+          logEvent('Set custom styles on first cell');
+        }
+      });
+      
+      setCellGridAreaBtn.addEventListener('click', () => {
+        // Get the second cell
+        const cells = layoutCell.querySelectorAll('.demo-cell');
+        if (cells.length >= 2) {
+          // Test grid-area attribute
+          cells[1].setAttribute('grid-area', '1 / 1 / 3 / 2');
+          logEvent('Set grid-area on second cell');
+        }
+      });
+      
+      // 4. Event Handling and Bubbling
+      const eventCell = document.getElementById('event-cell');
+      const eventChild1 = document.getElementById('event-child-1');
+      const eventChild2 = document.getElementById('event-child-2');
+      const eventGrandchild = document.getElementById('event-grandchild');
+      const publishEventBtn = document.getElementById('publish-event');
+      const subscribeEventBtn = document.getElementById('subscribe-event');
+      const unsubscribeEventBtn = document.getElementById('unsubscribe-event');
+      const clearLogBtn = document.getElementById('clear-log');
+      
+      // Get the shared EventBus
+      const eventBus = LahatCell.createEventBus();
+      
+      // Listen for events using the EventBus
+      eventBus.subscribe('user-action', (data) => {
+        logEvent(`EventBus received: user-action from ${data.cell.id}`);
+      });
+      
+      // Listen for events using the cell's subscribe method
+      eventCell.subscribe('user-action', (data) => {
+        logEvent(`Root subscribed: user-action from ${data.cell.id}`);
+      });
+      
+      eventChild1.subscribe('user-action', (data) => {
+        logEvent(`Child1 subscribed: user-action from ${data.cell.id}`);
+      });
+      
+      // Store unsubscribe function
+      let unsubscribeFunc = null;
+      
+      publishEventBtn.addEventListener('click', () => {
+        eventGrandchild.publishEvent('user-action', {
+          cell: eventGrandchild,
+          action: 'click',
+          timestamp: Date.now()
+        });
+        logEvent('Published "user-action" event from grandchild');
+      });
+      
+      subscribeEventBtn.addEventListener('click', () => {
+        if (!unsubscribeFunc) {
+          unsubscribeFunc = LahatCell.createEventBus().subscribe('user-action', (data) => {
+            logEvent(`Subscription callback: user-action from ${data.cell.id}`);
+          });
+          logEvent('Subscribed to "user-action" events');
+        } else {
+          logEvent('Already subscribed to events');
+        }
+      });
+      
+      unsubscribeEventBtn.addEventListener('click', () => {
+        if (unsubscribeFunc) {
+          unsubscribeFunc();
+          unsubscribeFunc = null;
+          logEvent('Unsubscribed from events');
+        } else {
+          logEvent('Not currently subscribed to events');
+        }
+      });
+      
+      clearLogBtn.addEventListener('click', () => {
+        document.getElementById('event-log').innerHTML = '';
+      });
+      
+      // 5. Styles and Attributes
+      const styleCell1 = document.getElementById('style-cell-1');
+      const styleCell2 = document.getElementById('style-cell-2');
+      const styleCell3 = document.getElementById('style-cell-3');
+      const gridAreaCell = document.getElementById('grid-area-cell');
+      const setStylesBtn = document.getElementById('set-styles');
+      const resetStylesBtn = document.getElementById('reset-styles');
+      const setGridAreaBtn = document.getElementById('set-grid-area');
+      
+      // Original styles to restore later
+      const originalStyles = {
+        backgroundColor: styleCell1.style.backgroundColor,
+        padding: styleCell1.style.padding,
+        borderRadius: styleCell1.style.borderRadius,
+        boxShadow: styleCell1.style.boxShadow
+      };
+      
+      setStylesBtn.addEventListener('click', () => {
         // Test setStyles method
-        firstCell.setStyles({
+        styleCell1.setStyles({
           backgroundColor: 'rgba(66, 133, 244, 0.1)',
           padding: '15px',
           borderRadius: '8px',
           boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
         });
-        logEvent('Set custom styles on first cell');
-      }
-    });
-    
-    setCellGridAreaBtn.addEventListener('click', () => {
-      // Get the second cell
-      const cells = layoutCell.querySelectorAll('.demo-cell');
-      if (cells.length >= 2) {
+        
+        logEvent('Set custom styles on Cell 1');
+      });
+      
+      resetStylesBtn.addEventListener('click', () => {
+        // Reset styles
+        styleCell1.setStyles(originalStyles);
+        logEvent('Reset styles on Cell 1');
+      });
+      
+      setGridAreaBtn.addEventListener('click', () => {
         // Test grid-area attribute
-        cells[1].setAttribute('grid-area', '1 / 1 / 3 / 2');
-        logEvent('Set grid-area on second cell');
-      }
-    });
-    
-    // 4. Event Handling and Bubbling
-    const eventCell = document.getElementById('event-cell');
-    const eventChild1 = document.getElementById('event-child-1');
-    const eventChild2 = document.getElementById('event-child-2');
-    const eventGrandchild = document.getElementById('event-grandchild');
-    const publishEventBtn = document.getElementById('publish-event');
-    const subscribeEventBtn = document.getElementById('subscribe-event');
-    const unsubscribeEventBtn = document.getElementById('unsubscribe-event');
-    const clearLogBtn = document.getElementById('clear-log');
-    
-    // Listen for events at different levels
-    eventCell.addEventListener('cell-event', (e) => {
-      logEvent(`Root received: ${e.detail.type} from ${e.detail.originalSource.id}`);
-    });
-    
-    eventChild1.addEventListener('cell-event', (e) => {
-      logEvent(`Child1 received: ${e.detail.type} from ${e.detail.originalSource.id}`);
-    });
-    
-    eventChild2.addEventListener('cell-event', (e) => {
-      logEvent(`Child2 received: ${e.detail.type} from ${e.detail.originalSource.id}`);
-    });
-    
-    // Store unsubscribe function
-    let unsubscribeFunc = null;
-    
-    publishEventBtn.addEventListener('click', () => {
-      eventGrandchild.publishEvent('user-action', {
-        action: 'click',
-        timestamp: Date.now()
+        gridAreaCell.setAttribute('grid-area', '2 / 1 / 3 / 3');
+        logEvent('Set grid-area on Cell 4 to span two columns');
       });
-      logEvent('Published "user-action" event from grandchild');
-    });
-    
-    subscribeEventBtn.addEventListener('click', () => {
-      if (!unsubscribeFunc) {
-        unsubscribeFunc = eventCell.subscribe('user-action', (detail) => {
-          logEvent(`Subscription callback: user-action from ${detail.originalSource.id}`);
+      
+      // 6. Generic Component Integration
+      const genericContainer = document.getElementById('generic-container');
+      let genericGrid = document.getElementById('generic-grid');
+      const addGenericBtn = document.getElementById('add-generic');
+      const customizeGenericBtn = document.getElementById('customize-generic');
+      const changeLayoutBtn = document.getElementById('change-layout');
+      
+      let genericCount = 4; // We already have 4 components
+      let currentLayout = 'mixed'; // Start with mixed layout (row + grid)
+      
+      // Listen for generic component events
+      genericContainer.addEventListener('generic-component-action', (e) => {
+        logEvent(`Generic component action: ${e.detail.action} from ${e.detail.source.getAttribute('title')}`);
+      });
+      
+      // Add a new generic component
+      addGenericBtn.addEventListener('click', () => {
+        genericCount++;
+        
+        // Create a new cell with a generic component
+        const newCell = document.createElement('lahat-cell');
+        newCell.id = `generic-cell-${genericCount}`;
+        newCell.style.border = '1px solid #e0e0e0';
+        
+        // Create and configure the generic component
+        const component = document.createElement('generic-component');
+        component.setAttribute('title', `Glass Component ${genericCount}`);
+        component.setAttribute('content', `This is a dynamically added glass component #${genericCount}`);
+        
+        // Add the component to the cell
+        newCell.appendChild(component);
+        
+        // Add the cell to the appropriate container based on current layout
+        if (currentLayout === 'grid' || currentLayout === 'mixed') {
+          genericGrid.addCell(newCell);
+        } else {
+          genericContainer.addCell(newCell);
+        }
+        
+        logEvent(`Added new generic component #${genericCount}`);
+      });
+      
+      // Customize all generic components
+      customizeGenericBtn.addEventListener('click', () => {
+        // Get all generic components
+        const components = document.querySelectorAll('generic-component');
+        
+        // Customize each component
+        components.forEach((component, index) => {
+          component.setTitle(`Customized Component ${index + 1}`);
+          component.setContent(`This component was customized at ${new Date().toLocaleTimeString()}`);
         });
-        logEvent('Subscribed to "user-action" events');
-      } else {
-        logEvent('Already subscribed to events');
-      }
-    });
-    
-    unsubscribeEventBtn.addEventListener('click', () => {
-      if (unsubscribeFunc) {
-        unsubscribeFunc();
-        unsubscribeFunc = null;
-        logEvent('Unsubscribed from events');
-      } else {
-        logEvent('Not currently subscribed to events');
-      }
-    });
-    
-    clearLogBtn.addEventListener('click', () => {
-      document.getElementById('event-log').innerHTML = '';
-    });
-    
-    // 5. Styles and Attributes
-    const styleCell1 = document.getElementById('style-cell-1');
-    const styleCell2 = document.getElementById('style-cell-2');
-    const styleCell3 = document.getElementById('style-cell-3');
-    const gridAreaCell = document.getElementById('grid-area-cell');
-    const setStylesBtn = document.getElementById('set-styles');
-    const resetStylesBtn = document.getElementById('reset-styles');
-    const setGridAreaBtn = document.getElementById('set-grid-area');
-    
-    // Original styles to restore later
-    const originalStyles = {
-      backgroundColor: styleCell1.style.backgroundColor,
-      padding: styleCell1.style.padding,
-      borderRadius: styleCell1.style.borderRadius,
-      boxShadow: styleCell1.style.boxShadow
-    };
-    
-    setStylesBtn.addEventListener('click', () => {
-      // Test setStyles method
-      styleCell1.setStyles({
-        backgroundColor: 'rgba(66, 133, 244, 0.1)',
-        padding: '15px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+        
+        logEvent('Customized all generic components');
       });
       
-      logEvent('Set custom styles on Cell 1');
-    });
-    
-    resetStylesBtn.addEventListener('click', () => {
-      // Reset styles
-      styleCell1.setStyles(originalStyles);
-      logEvent('Reset styles on Cell 1');
-    });
-    
-    setGridAreaBtn.addEventListener('click', () => {
-      // Test grid-area attribute
-      gridAreaCell.setAttribute('grid-area', '2 / 1 / 3 / 3');
-      logEvent('Set grid-area on Cell 4 to span two columns');
-    });
-    
-    // 6. Generic Component Integration
-    const genericContainer = document.getElementById('generic-container');
-    let genericGrid = document.getElementById('generic-grid');
-    const addGenericBtn = document.getElementById('add-generic');
-    const customizeGenericBtn = document.getElementById('customize-generic');
-    const changeLayoutBtn = document.getElementById('change-layout');
-    
-    let genericCount = 4; // We already have 4 components
-    let currentLayout = 'mixed'; // Start with mixed layout (row + grid)
-    
-    // Listen for generic component events
-    genericContainer.addEventListener('generic-component-action', (e) => {
-      logEvent(`Generic component action: ${e.detail.action} from ${e.detail.source.getAttribute('title')}`);
-    });
-    
-    // Add a new generic component
-    addGenericBtn.addEventListener('click', () => {
-      genericCount++;
-      
-      // Create a new cell with a generic component
-      const newCell = document.createElement('lahat-cell');
-      newCell.id = `generic-cell-${genericCount}`;
-      newCell.style.border = '1px solid #e0e0e0';
-      
-      // Create and configure the generic component
-      const component = document.createElement('generic-component');
-      component.setAttribute('title', `Glass Component ${genericCount}`);
-      component.setAttribute('content', `This is a dynamically added glass component #${genericCount}`);
-      
-      // Add the component to the cell
-      newCell.appendChild(component);
-      
-      // Add the cell to the appropriate container based on current layout
-      if (currentLayout === 'grid' || currentLayout === 'mixed') {
-        genericGrid.addCell(newCell);
-      } else {
-        genericContainer.addCell(newCell);
-      }
-      
-      logEvent(`Added new generic component #${genericCount}`);
-    });
-    
-    // Customize all generic components
-    customizeGenericBtn.addEventListener('click', () => {
-      // Get all generic components
-      const components = document.querySelectorAll('generic-component');
-      
-      // Customize each component
-      components.forEach((component, index) => {
-        component.setTitle(`Customized Component ${index + 1}`);
-        component.setContent(`This component was customized at ${new Date().toLocaleTimeString()}`);
+      // Change layout
+      changeLayoutBtn.addEventListener('click', () => {
+        // Cycle through layouts: mixed -> row -> column -> grid -> mixed
+        switch (currentLayout) {
+          case 'mixed':
+            // Change to all row layout
+            genericContainer.setLayout('flex-row');
+            
+            // Move all cells from grid to main container
+            const gridCells = genericGrid.getCells();
+            gridCells.forEach(cell => {
+              genericGrid.removeCell(cell);
+              genericContainer.addCell(cell);
+            });
+            
+            currentLayout = 'row';
+            logEvent('Changed to row layout');
+            break;
+            
+          case 'row':
+            // Change to column layout
+            genericContainer.setLayout('flex-column');
+            currentLayout = 'column';
+            logEvent('Changed to column layout');
+            break;
+            
+          case 'column':
+            // Change to grid layout
+            genericContainer.setLayout('grid', {
+              columns: 'repeat(3, 1fr)',
+              gap: '10px'
+            });
+            currentLayout = 'grid';
+            logEvent('Changed to grid layout');
+            break;
+            
+          case 'grid':
+            // Reset to mixed layout (row + grid)
+            // First, create the structure again
+            genericContainer.innerHTML = '';
+            
+            const rowContainer = document.createElement('lahat-cell');
+            rowContainer.setAttribute('layout', 'flex-row');
+            rowContainer.style.height = '50%';
+            rowContainer.style.border = '1px solid #e0e0e0';
+            
+            const gridContainer = document.createElement('lahat-cell');
+            gridContainer.id = 'generic-grid';
+            gridContainer.setAttribute('layout', 'grid');
+            gridContainer.style.height = '50%';
+            gridContainer.style.border = '1px solid #e0e0e0';
+            
+            genericContainer.appendChild(rowContainer);
+            genericContainer.appendChild(gridContainer);
+            
+            // Create new components
+            for (let i = 1; i <= 2; i++) {
+              const cell = document.createElement('lahat-cell');
+              cell.id = `generic-cell-${i}`;
+              cell.style.border = '1px solid #e0e0e0';
+              
+              const component = document.createElement('generic-component');
+              component.setAttribute('title', `Glass Component ${i}`);
+              component.setAttribute('content', `This is component ${i} in the row layout.`);
+              
+              cell.appendChild(component);
+              rowContainer.appendChild(cell);
+            }
+            
+            for (let i = 3; i <= 4; i++) {
+              const cell = document.createElement('lahat-cell');
+              cell.id = `generic-cell-${i}`;
+              cell.style.border = '1px solid #e0e0e0';
+              
+              const component = document.createElement('generic-component');
+              component.setAttribute('title', `Glass Grid Cell ${i-2}`);
+              component.setAttribute('content', `This is component ${i} in the grid layout.`);
+              
+              cell.appendChild(component);
+              gridContainer.appendChild(cell);
+            }
+            
+            // Update references
+            genericGrid = document.getElementById('generic-grid');
+            genericCount = 4;
+            
+            currentLayout = 'mixed';
+            logEvent('Reset to mixed layout');
+            break;
+        }
       });
       
-      logEvent('Customized all generic components');
-    });
-    
-    // Change layout
-    changeLayoutBtn.addEventListener('click', () => {
-      // Cycle through layouts: mixed -> row -> column -> grid -> mixed
-      switch (currentLayout) {
-        case 'mixed':
-          // Change to all row layout
-          genericContainer.setLayout('flex-row');
-          
-          // Move all cells from grid to main container
-          const gridCells = genericGrid.getCells();
-          gridCells.forEach(cell => {
-            genericGrid.removeCell(cell);
-            genericContainer.addCell(cell);
-          });
-          
-          currentLayout = 'row';
-          logEvent('Changed to row layout');
-          break;
-          
-        case 'row':
-          // Change to column layout
-          genericContainer.setLayout('flex-column');
-          currentLayout = 'column';
-          logEvent('Changed to column layout');
-          break;
-          
-        case 'column':
-          // Change to grid layout
-          genericContainer.setLayout('grid', {
-            columns: 'repeat(3, 1fr)',
-            gap: '10px'
-          });
-          currentLayout = 'grid';
-          logEvent('Changed to grid layout');
-          break;
-          
-        case 'grid':
-          // Reset to mixed layout (row + grid)
-          // First, create the structure again
-          genericContainer.innerHTML = '';
-          
-          const rowContainer = document.createElement('lahat-cell');
-          rowContainer.setAttribute('layout', 'flex-row');
-          rowContainer.style.height = '50%';
-          rowContainer.style.border = '1px solid #e0e0e0';
-          
-          const gridContainer = document.createElement('lahat-cell');
-          gridContainer.id = 'generic-grid';
-          gridContainer.setAttribute('layout', 'grid');
-          gridContainer.style.height = '50%';
-          gridContainer.style.border = '1px solid #e0e0e0';
-          
-          genericContainer.appendChild(rowContainer);
-          genericContainer.appendChild(gridContainer);
-          
-          // Create new components
-          for (let i = 1; i <= 2; i++) {
-            const cell = document.createElement('lahat-cell');
-            cell.id = `generic-cell-${i}`;
-            cell.style.border = '1px solid #e0e0e0';
-            
-            const component = document.createElement('generic-component');
-            component.setAttribute('title', `Glass Component ${i}`);
-            component.setAttribute('content', `This is component ${i} in the row layout.`);
-            
-            cell.appendChild(component);
-            rowContainer.appendChild(cell);
-          }
-          
-          for (let i = 3; i <= 4; i++) {
-            const cell = document.createElement('lahat-cell');
-            cell.id = `generic-cell-${i}`;
-            cell.style.border = '1px solid #e0e0e0';
-            
-            const component = document.createElement('generic-component');
-            component.setAttribute('title', `Glass Grid Cell ${i-2}`);
-            component.setAttribute('content', `This is component ${i} in the grid layout.`);
-            
-            cell.appendChild(component);
-            gridContainer.appendChild(cell);
-          }
-          
-          // Update references
-          genericGrid = document.getElementById('generic-grid');
-          genericCount = 4;
-          
-          currentLayout = 'mixed';
-          logEvent('Reset to mixed layout');
-          break;
+      // Initialize with default layouts
+      layoutCell.setLayout('flex-column');
+      
+      // Log initial setup
+      logEvent('LahatCell test page initialized');
+      
+      // Helper function to generate random colors
+      function getRandomColor() {
+        const hue = Math.floor(Math.random() * 360);
+        return `hsl(${hue}, 70%, 80%)`;
       }
     });
-    
-    // Initialize with default layouts
-    layoutCell.setLayout('flex-column');
-    
-    // Log initial setup
-    logEvent('LahatCell test page initialized');
-    
-    // Helper function to generate random colors
-    function getRandomColor() {
-      const hue = Math.floor(Math.random() * 360);
-      return `hsl(${hue}, 70%, 80%)`;
-    }
   </script>
 </body>
 </html>

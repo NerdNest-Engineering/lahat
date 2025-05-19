@@ -9,7 +9,7 @@ A self-contained web component for creating recursive cell structures. The Lahat
 3. **Recursive Nesting**: Cells can contain any number of other cells to any depth
 4. **Slot-Based Structure**: Uses slots for declarative and intuitive composition
 5. **Flexible Layouts**: Support for different layout patterns (flex row, flex column, grid)
-6. **Event Bubbling**: Hierarchical event system for component communication
+6. **EventBus Integration**: Centralized event system for component communication
 
 ## Usage
 
@@ -134,24 +134,30 @@ cell.setLayout('flex-row', {
 
 ### Event Handling
 
+LahatCell uses a centralized EventBus for communication between components. This approach provides a cleaner, more decoupled way to handle events compared to DOM event bubbling.
+
 ```javascript
-// Listen for all cell events
-cell.addEventListener('cell-event', (event) => {
-  const { type, originalSource, data } = event.detail;
-  console.log(`Event ${type} from ${originalSource.id}`, data);
+// Get the shared EventBus
+const eventBus = LahatCell.createEventBus();
+
+// Subscribe to specific event types
+const unsubscribe = eventBus.subscribe('layout-changed', (data) => {
+  console.log('Layout changed:', data);
 });
 
-// Listen for specific event types
-cell.addEventListener('lahat-cell-layout-changed', (event) => {
-  console.log('Layout changed:', event.detail.data);
-});
-
-// Subscribe to specific event types (with unsubscribe function)
-const unsubscribe = cell.subscribe('user-action', (detail) => {
-  console.log('User action:', detail.data);
+// Or use the convenience methods on a cell instance
+const unsubscribe = cell.subscribe('layout-changed', (data) => {
+  console.log('Layout changed:', data);
 });
 
 // Publish an event
+eventBus.publish('user-action', {
+  action: 'click',
+  timestamp: Date.now(),
+  cell: someCell
+});
+
+// Or use the convenience method on a cell instance
 cell.publishEvent('user-action', {
   action: 'click',
   timestamp: Date.now()
@@ -199,34 +205,31 @@ cell.setStyles({
 
 ## Event System
 
-The LahatCell component uses a hierarchical event system where events bubble up from child cells to parent cells. This allows for communication between cells at different levels of the hierarchy.
+The LahatCell component uses a centralized EventBus system for communication between components. This provides a more flexible and decoupled approach compared to DOM event bubbling.
 
 ### Event Types
 
 - **connected**: Cell was connected to DOM
 - **disconnected**: Cell was disconnected from DOM
-- **children-changed**: Child cells were added/removed
 - **layout-changed**: Cell layout was changed
 - **Custom events**: Any custom event published with `publishEvent()`
 
-### Event Detail Structure
+### Event Data Structure
+
+Events published through the EventBus typically include the following data:
 
 ```javascript
 {
-  // The cell that originally emitted the event
-  originalSource: HTMLElement,
-  
-  // The immediate source of the event (for bubbled events)
-  immediateSource: HTMLElement,
-  
-  // Array of cells the event has bubbled through
-  bubbledThrough: HTMLElement[],
-  
-  // The event type
-  type: String,
+  // The cell that emitted the event
+  cell: HTMLElement,
   
   // Event-specific data
-  data: Object
+  // For layout-changed events:
+  type: String,  // The layout type
+  options: Object  // The layout options
+  
+  // For custom events:
+  // Any custom data you want to include
 }
 ```
 

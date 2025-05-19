@@ -10,8 +10,56 @@
  * - Uses Shadow DOM with slots for content
  * - Supports recursive nesting of cells
  * - Flexible layout options (flex-row, flex-column, grid)
- * - Event bubbling for communication between cells
  */
+
+// Create a simple EventBus implementation for the test page
+// This avoids having to import from outside the component directory
+class EventBus {
+  constructor() {
+    this.subscribers = {};
+  }
+  
+  subscribe(event, callback) {
+    if (!this.subscribers[event]) {
+      this.subscribers[event] = [];
+    }
+    
+    this.subscribers[event].push(callback);
+    
+    return () => {
+      this.subscribers[event] = this.subscribers[event].filter(cb => cb !== callback);
+    };
+  }
+  
+  publish(event, data) {
+    if (!this.subscribers[event]) {
+      return;
+    }
+    
+    this.subscribers[event].forEach(callback => {
+      try {
+        callback(data);
+      } catch (error) {
+        console.error(`Error in event handler for ${event}:`, error);
+      }
+    });
+  }
+  
+  once(event, callback) {
+    const unsubscribe = this.subscribe(event, data => {
+      unsubscribe();
+      callback(data);
+    });
+  }
+  
+  clear(event) {
+    if (event) {
+      this.subscribers[event] = [];
+    } else {
+      this.subscribers = {};
+    }
+  }
+}
 
 // Define the LahatCell component in the global scope
 window.LahatCell = class LahatCell extends HTMLElement {
@@ -86,103 +134,25 @@ window.LahatCell = class LahatCell extends HTMLElement {
   }
   
   /**
+   * Get or create an EventBus for LahatCell components
+   * This provides a convenient way for consumers to use the EventBus pattern
+   * @returns {EventBus} - A shared EventBus instance for LahatCell components
+   */
+  static createEventBus() {
+    // Create a singleton EventBus if not already created
+    if (!window.LahatCellEventBus) {
+      window.LahatCellEventBus = new EventBus();
+    }
+    return window.LahatCellEventBus;
+  }
+
+  /**
    * Set up event handlers for the cell
    * @private
    */
   _setupEventHandlers() {
-    const slot = this.shadowRoot.querySelector('slot');
-    
-    // Listen for slotchange events to detect when children are added/removed
-    slot.addEventListener('slotchange', () => {
-      this._handleSlotChange();
-    });
-    
-    // Listen for events from slotted elements
-    this.addEventListener('cell-event', (event) => {
-      // Only handle events from direct children, not from this element
-      if (event.target !== this) {
-        // Bubble the event up
-        this._bubbleEvent(event);
-        
-        // Stop propagation of the original event
-        event.stopPropagation();
-      }
-    });
-  }
-  
-  /**
-   * Handle slot change events
-   * @private
-   */
-  _handleSlotChange() {
-    // Get all assigned elements
-    const slot = this.shadowRoot.querySelector('slot');
-    const assignedElements = slot.assignedElements();
-    
-    // Process only lahat-cell elements
-    const childCells = assignedElements.filter(el => el.tagName.toLowerCase() === 'lahat-cell');
-    
-    // Emit event with the new children
-    this._emitEvent('children-changed', { 
-      cells: childCells,
-      count: childCells.length
-    });
-  }
-  
-  /**
-   * Bubble an event up to parent cells
-   * @param {CustomEvent} originalEvent - Original event to bubble
-   * @private
-   */
-  _bubbleEvent(originalEvent) {
-    // Create a new event to bubble up
-    const bubbledEvent = new CustomEvent('cell-event', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        originalSource: originalEvent.detail.originalSource || originalEvent.target,
-        immediateSource: originalEvent.target,
-        bubbledThrough: [...(originalEvent.detail.bubbledThrough || []), this],
-        type: originalEvent.detail.type,
-        data: originalEvent.detail.data
-      }
-    });
-    
-    this.dispatchEvent(bubbledEvent);
-  }
-  
-  /**
-   * Emit a cell event
-   * @param {string} type - Event type
-   * @param {Object} data - Event data
-   * @private
-   */
-  _emitEvent(type, data = {}) {
-    const event = new CustomEvent('cell-event', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        originalSource: this,
-        immediateSource: this,
-        bubbledThrough: [],
-        type,
-        data
-      }
-    });
-    
-    this.dispatchEvent(event);
-    
-    // Also emit a specific named event for easier listening
-    const namedEvent = new CustomEvent(`lahat-cell-${type}`, {
-      bubbles: true,
-      composed: true,
-      detail: {
-        source: this,
-        data
-      }
-    });
-    
-    this.dispatchEvent(namedEvent);
+    // Slot change events can be observed by consumers using EventBus if needed
+    // No default event handling behavior
   }
   
   // Public API
@@ -229,8 +199,8 @@ window.LahatCell = class LahatCell extends HTMLElement {
     // Update the layout attribute
     this.setAttribute('layout', type);
     
-    // Emit layout change event
-    this._emitEvent('layout-changed', { type, options });
+    // Publish layout change event using EventBus
+    this.publishEvent('layout-changed', { cell: this, type, options });
   }
   
   /**
@@ -286,31 +256,22 @@ window.LahatCell = class LahatCell extends HTMLElement {
   }
   
   /**
-   * Publish an event to be bubbled up through the cell hierarchy
+   * Publish an event using the LahatCell EventBus
    * @param {string} type - Event type
    * @param {Object} data - Event data
    */
   publishEvent(type, data = {}) {
-    this._emitEvent(type, data);
+    LahatCell.createEventBus().publish(type, data);
   }
   
   /**
-   * Subscribe to events of a specific type
+   * Subscribe to events of a specific type using the LahatCell EventBus
    * @param {string} type - Event type to listen for
    * @param {Function} callback - Callback function
    * @returns {Function} - Unsubscribe function
    */
   subscribe(type, callback) {
-    const handler = (event) => {
-      if (event.detail.type === type) {
-        callback(event.detail);
-      }
-    };
-    
-    this.addEventListener('cell-event', handler);
-    
-    // Return unsubscribe function
-    return () => this.removeEventListener('cell-event', handler);
+    return LahatCell.createEventBus().subscribe(type, callback);
   }
   
   /**
@@ -342,11 +303,13 @@ window.LahatCell = class LahatCell extends HTMLElement {
       this.style.gridArea = this.getAttribute('grid-area');
     }
     
-    this._emitEvent('connected');
+    // Publish connected event using EventBus if consumers need it
+    this.publishEvent('connected', { cell: this });
   }
   
   disconnectedCallback() {
-    this._emitEvent('disconnected');
+    // Publish disconnected event using EventBus if consumers need it
+    this.publishEvent('disconnected', { cell: this });
   }
   
   // Attribute handling
