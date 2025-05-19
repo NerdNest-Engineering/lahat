@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LahatCell Test</title>
+  <title>LahatCell Component Test</title>
   <script src="generic-component.js"></script>
   <style>
     body {
@@ -95,73 +95,80 @@
   <div class="container">
     <h1>LahatCell Component Test</h1>
     
+    <!-- 1. Basic Cell Structure and API -->
     <div class="test-section">
-      <h2>Basic Cell Structure</h2>
+      <h2>1. Basic Cell Structure and API</h2>
       <div class="controls">
         <button id="add-cell">Add Cell</button>
         <button id="remove-cell">Remove Last Cell</button>
         <button id="clear-cells">Clear All Cells</button>
       </div>
       
-      <lahat-cell id="root-cell" style="height: 400px;">
+      <lahat-cell id="root-cell" style="height: 400px; border: 1px dashed #ccc;">
         <div class="cell-content">Root Cell Content</div>
       </lahat-cell>
     </div>
     
+    <!-- 2. Layout Types -->
     <div class="test-section">
-      <h2>Layout Types</h2>
+      <h2>2. Layout Types</h2>
       
       <div class="controls">
         <button id="set-row">Row Layout</button>
         <button id="set-column">Column Layout</button>
         <button id="set-grid">Grid Layout</button>
+        <button id="set-grid-options">Grid with Options</button>
+        <button id="set-flex-options">Flex with Options</button>
+        <button id="set-cell-styles">Set Cell Styles</button>
+        <button id="set-cell-grid-area">Set Cell Grid Area</button>
       </div>
       
-      <lahat-cell id="layout-cell" style="height: 400px;">
-        <lahat-cell class="demo-cell">
+      <lahat-cell id="layout-cell" style="height: 400px; border: 1px dashed #ccc;">
+        <lahat-cell class="demo-cell" style="border: 1px solid #e0e0e0;">
           <div class="cell-content">Cell 1</div>
         </lahat-cell>
-        <lahat-cell class="demo-cell">
+        <lahat-cell class="demo-cell" style="border: 1px solid #e0e0e0;">
           <div class="cell-content">Cell 2</div>
         </lahat-cell>
-        <lahat-cell class="demo-cell">
+        <lahat-cell class="demo-cell" style="border: 1px solid #e0e0e0;">
           <div class="cell-content">Cell 3</div>
         </lahat-cell>
-        <lahat-cell class="demo-cell">
+        <lahat-cell class="demo-cell" style="border: 1px solid #e0e0e0;">
           <div class="cell-content">Cell 4</div>
         </lahat-cell>
       </lahat-cell>
     </div>
     
+    <!-- 3. Nested Cells -->
     <div class="test-section">
-      <h2>Nested Cells</h2>
+      <h2>3. Nested Cells</h2>
       
-      <lahat-cell id="nested-cell" style="height: 400px;">
-        <lahat-cell layout="flex-row" style="height: 150px;">
-          <lahat-cell>
+      <lahat-cell id="nested-cell" style="height: 400px; border: 1px dashed #ccc;">
+        <lahat-cell layout="flex-row" style="height: 150px; border: 1px solid #e0e0e0;">
+          <lahat-cell style="border: 1px solid #e0e0e0;">
             <div class="cell-content">Header Left</div>
           </lahat-cell>
-          <lahat-cell>
+          <lahat-cell style="border: 1px solid #e0e0e0;">
             <div class="cell-content">Header Right</div>
           </lahat-cell>
         </lahat-cell>
         
-        <lahat-cell layout="flex-row" style="flex: 1;">
-          <lahat-cell style="width: 200px;">
+        <lahat-cell layout="flex-row" style="flex: 1; border: 1px solid #e0e0e0;">
+          <lahat-cell style="width: 200px; border: 1px solid #e0e0e0;">
             <div class="cell-content">Sidebar</div>
           </lahat-cell>
           
-          <lahat-cell layout="grid" style="flex: 1;">
-            <lahat-cell>
+          <lahat-cell layout="grid" style="flex: 1; border: 1px solid #e0e0e0;">
+            <lahat-cell style="border: 1px solid #e0e0e0;">
               <div class="cell-content">Main Content 1</div>
             </lahat-cell>
-            <lahat-cell>
+            <lahat-cell style="border: 1px solid #e0e0e0;">
               <div class="cell-content">Main Content 2</div>
             </lahat-cell>
-            <lahat-cell>
+            <lahat-cell style="border: 1px solid #e0e0e0;">
               <div class="cell-content">Main Content 3</div>
             </lahat-cell>
-            <lahat-cell>
+            <lahat-cell style="border: 1px solid #e0e0e0;">
               <div class="cell-content">Main Content 4</div>
             </lahat-cell>
           </lahat-cell>
@@ -169,22 +176,25 @@
       </lahat-cell>
     </div>
     
+    <!-- 4. Event Handling and Bubbling -->
     <div class="test-section">
-      <h2>Event Handling</h2>
+      <h2>4. Event Handling and Bubbling</h2>
       
       <div class="controls">
         <button id="publish-event">Publish Event</button>
+        <button id="subscribe-event">Subscribe to Events</button>
+        <button id="unsubscribe-event">Unsubscribe</button>
         <button id="clear-log">Clear Log</button>
       </div>
       
-      <lahat-cell id="event-cell" style="height: 200px;">
-        <lahat-cell id="event-child-1">
+      <lahat-cell id="event-cell" style="height: 200px; border: 1px dashed #ccc;">
+        <lahat-cell id="event-child-1" style="border: 1px solid #e0e0e0;">
           <div class="cell-content">Child Cell 1</div>
-          <lahat-cell id="event-grandchild">
+          <lahat-cell id="event-grandchild" style="border: 1px solid #e0e0e0;">
             <div class="cell-content">Grandchild Cell</div>
           </lahat-cell>
         </lahat-cell>
-        <lahat-cell id="event-child-2">
+        <lahat-cell id="event-child-2" style="border: 1px solid #e0e0e0;">
           <div class="cell-content">Child Cell 2</div>
         </lahat-cell>
       </lahat-cell>
@@ -193,26 +203,41 @@
       <div id="event-log"></div>
     </div>
     
+    <!-- 5. Styles and Attributes -->
     <div class="test-section">
-      <h2>Edit Mode Demo</h2>
+      <h2>5. Styles and Attributes</h2>
       
       <div class="controls">
-        <button id="toggle-edit-mode">Toggle Edit Mode</button>
-        <button id="toggle-all-edit-mode">Toggle All Edit Mode</button>
+        <button id="set-styles">Set Custom Styles</button>
+        <button id="reset-styles">Reset Styles</button>
+        <button id="set-grid-area">Set Grid Area</button>
       </div>
       
-      <lahat-cell id="edit-mode-cell" style="height: 300px;">
-        <lahat-cell id="edit-child-1" style="height: 50%;">
-          <div class="cell-content">This cell can be edited when edit mode is enabled</div>
+      <lahat-cell layout="grid" style="height: 300px; border: 1px dashed #ccc; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 10px;">
+        <lahat-cell id="style-cell-1" style="border: 1px solid #e0e0e0;">
+          <div class="cell-content">Cell with custom styles</div>
         </lahat-cell>
-        <lahat-cell id="edit-child-2" style="height: 50%;">
-          <div class="cell-content">Edit mode shows drag handles and resize controls</div>
+        <lahat-cell id="style-cell-2" style="border: 1px solid #e0e0e0;">
+          <div class="cell-content">Cell 2</div>
+        </lahat-cell>
+        <lahat-cell id="style-cell-3" style="border: 1px solid #e0e0e0;">
+          <div class="cell-content">Cell 3</div>
+        </lahat-cell>
+        <lahat-cell id="grid-area-cell" style="border: 1px solid #e0e0e0;">
+          <div class="cell-content">Cell with grid-area</div>
+        </lahat-cell>
+        <lahat-cell style="border: 1px solid #e0e0e0;">
+          <div class="cell-content">Cell 5</div>
+        </lahat-cell>
+        <lahat-cell style="border: 1px solid #e0e0e0;">
+          <div class="cell-content">Cell 6</div>
         </lahat-cell>
       </lahat-cell>
     </div>
     
+    <!-- 6. Generic Component Integration -->
     <div class="test-section">
-      <h2>Generic Component Demo</h2>
+      <h2>6. Generic Component Integration</h2>
       
       <div class="controls">
         <button id="add-generic">Add Generic Component</button>
@@ -220,15 +245,15 @@
         <button id="change-layout">Change Layout</button>
       </div>
       
-      <lahat-cell id="generic-container" style="height: 500px; background-color: #f5f5f5;">
-        <lahat-cell layout="flex-row" style="height: 50%;">
-          <lahat-cell id="generic-cell-1">
+      <lahat-cell id="generic-container" style="height: 500px; background-color: #f5f5f5; border: 1px dashed #ccc;">
+        <lahat-cell layout="flex-row" style="height: 50%; border: 1px solid #e0e0e0;">
+          <lahat-cell id="generic-cell-1" style="border: 1px solid #e0e0e0;">
             <generic-component 
               title="Glass Component 1" 
               content="This is a glass-like component inside a LahatCell. It demonstrates how web components can be used within the LahatCell container.">
             </generic-component>
           </lahat-cell>
-          <lahat-cell id="generic-cell-2">
+          <lahat-cell id="generic-cell-2" style="border: 1px solid #e0e0e0;">
             <generic-component 
               title="Glass Component 2" 
               content="Click the Interact button to see events bubble up through the cell hierarchy.">
@@ -236,14 +261,14 @@
           </lahat-cell>
         </lahat-cell>
         
-        <lahat-cell layout="grid" style="height: 50%;" id="generic-grid">
-          <lahat-cell id="generic-cell-3">
+        <lahat-cell layout="grid" style="height: 50%; border: 1px solid #e0e0e0;" id="generic-grid">
+          <lahat-cell id="generic-cell-3" style="border: 1px solid #e0e0e0;">
             <generic-component 
               title="Glass Grid Cell 1" 
               content="This component is in a grid layout. The glass-like appearance makes it easy to see the structure.">
             </generic-component>
           </lahat-cell>
-          <lahat-cell id="generic-cell-4">
+          <lahat-cell id="generic-cell-4" style="border: 1px solid #e0e0e0;">
             <generic-component 
               title="Glass Grid Cell 2" 
               content="The dimensions shown in the corner update automatically when the cell is resized.">
@@ -254,11 +279,19 @@
     </div>
   </div>
   
-  <script src="lahat-cell-v2.js"></script>
+  <script src="lahat-cell.js"></script>
   <script>
-    // No need to import, LahatCell is now available globally
+    // Helper function for logging events
+    function logEvent(message) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      const eventLog = document.getElementById('event-log');
+      eventLog.appendChild(entry);
+      eventLog.scrollTop = eventLog.scrollHeight;
+    }
     
-    // Basic Cell Structure Demo
+    // 1. Basic Cell Structure and API
     const rootCell = document.getElementById('root-cell');
     const addCellBtn = document.getElementById('add-cell');
     const removeCellBtn = document.getElementById('remove-cell');
@@ -270,58 +303,106 @@
       cellCount++;
       const newCell = document.createElement('lahat-cell');
       newCell.innerHTML = `<div class="cell-content">Dynamically Added Cell ${cellCount}</div>`;
+      newCell.style.border = '1px solid #e0e0e0';
       rootCell.addCell(newCell);
+      logEvent(`Added new cell #${cellCount} to root cell`);
     });
     
     removeCellBtn.addEventListener('click', () => {
       const cells = rootCell.getCells();
       if (cells.length > 0) {
-        rootCell.removeCell(cells[cells.length - 1]);
+        const removed = rootCell.removeCell(cells[cells.length - 1]);
+        logEvent(`Removed cell from root cell`);
+      } else {
+        logEvent('No cells to remove');
       }
     });
     
     clearCellsBtn.addEventListener('click', () => {
       rootCell.clearCells();
       cellCount = 0;
+      logEvent('Cleared all cells from root cell');
     });
     
-    // Layout Types Demo
+    // 2. Layout Types
     const layoutCell = document.getElementById('layout-cell');
     const setRowBtn = document.getElementById('set-row');
     const setColumnBtn = document.getElementById('set-column');
     const setGridBtn = document.getElementById('set-grid');
+    const setGridOptionsBtn = document.getElementById('set-grid-options');
+    const setFlexOptionsBtn = document.getElementById('set-flex-options');
     
     setRowBtn.addEventListener('click', () => {
       layoutCell.setLayout('flex-row');
+      logEvent('Set layout to flex-row');
     });
     
     setColumnBtn.addEventListener('click', () => {
       layoutCell.setLayout('flex-column');
+      logEvent('Set layout to flex-column');
     });
     
     setGridBtn.addEventListener('click', () => {
-      layoutCell.setLayout('grid', {
-        columns: 'repeat(2, 1fr)',
-        gap: '10px'
-      });
+      layoutCell.setLayout('grid');
+      logEvent('Set layout to grid');
     });
     
-    // Event Handling Demo
+    setGridOptionsBtn.addEventListener('click', () => {
+      layoutCell.setLayout('grid', {
+        columns: 'repeat(2, 1fr)',
+        rows: 'auto',
+        gap: '15px'
+      });
+      logEvent('Set layout to grid with custom options');
+    });
+    
+    setFlexOptionsBtn.addEventListener('click', () => {
+      layoutCell.setLayout('flex-row', {
+        gap: '20px',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      });
+      logEvent('Set layout to flex-row with custom options');
+    });
+    
+    // Add buttons to test setStyles and grid-area in layout section
+    const setCellStylesBtn = document.getElementById('set-cell-styles');
+    const setCellGridAreaBtn = document.getElementById('set-cell-grid-area');
+    
+    setCellStylesBtn.addEventListener('click', () => {
+      // Get the first cell
+      const firstCell = layoutCell.querySelector('.demo-cell');
+      if (firstCell) {
+        // Test setStyles method
+        firstCell.setStyles({
+          backgroundColor: 'rgba(66, 133, 244, 0.1)',
+          padding: '15px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+        });
+        logEvent('Set custom styles on first cell');
+      }
+    });
+    
+    setCellGridAreaBtn.addEventListener('click', () => {
+      // Get the second cell
+      const cells = layoutCell.querySelectorAll('.demo-cell');
+      if (cells.length >= 2) {
+        // Test grid-area attribute
+        cells[1].setAttribute('grid-area', '1 / 1 / 3 / 2');
+        logEvent('Set grid-area on second cell');
+      }
+    });
+    
+    // 4. Event Handling and Bubbling
     const eventCell = document.getElementById('event-cell');
     const eventChild1 = document.getElementById('event-child-1');
     const eventChild2 = document.getElementById('event-child-2');
     const eventGrandchild = document.getElementById('event-grandchild');
     const publishEventBtn = document.getElementById('publish-event');
+    const subscribeEventBtn = document.getElementById('subscribe-event');
+    const unsubscribeEventBtn = document.getElementById('unsubscribe-event');
     const clearLogBtn = document.getElementById('clear-log');
-    const eventLog = document.getElementById('event-log');
-    
-    function logEvent(message) {
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
-      eventLog.appendChild(entry);
-      eventLog.scrollTop = eventLog.scrollHeight;
-    }
     
     // Listen for events at different levels
     eventCell.addEventListener('cell-event', (e) => {
@@ -336,6 +417,9 @@
       logEvent(`Child2 received: ${e.detail.type} from ${e.detail.originalSource.id}`);
     });
     
+    // Store unsubscribe function
+    let unsubscribeFunc = null;
+    
     publishEventBtn.addEventListener('click', () => {
       eventGrandchild.publishEvent('user-action', {
         action: 'click',
@@ -344,40 +428,73 @@
       logEvent('Published "user-action" event from grandchild');
     });
     
+    subscribeEventBtn.addEventListener('click', () => {
+      if (!unsubscribeFunc) {
+        unsubscribeFunc = eventCell.subscribe('user-action', (detail) => {
+          logEvent(`Subscription callback: user-action from ${detail.originalSource.id}`);
+        });
+        logEvent('Subscribed to "user-action" events');
+      } else {
+        logEvent('Already subscribed to events');
+      }
+    });
+    
+    unsubscribeEventBtn.addEventListener('click', () => {
+      if (unsubscribeFunc) {
+        unsubscribeFunc();
+        unsubscribeFunc = null;
+        logEvent('Unsubscribed from events');
+      } else {
+        logEvent('Not currently subscribed to events');
+      }
+    });
+    
     clearLogBtn.addEventListener('click', () => {
-      eventLog.innerHTML = '';
+      document.getElementById('event-log').innerHTML = '';
     });
     
-    // Initialize with default layouts
-    layoutCell.setLayout('flex-column');
+    // 5. Styles and Attributes
+    const styleCell1 = document.getElementById('style-cell-1');
+    const styleCell2 = document.getElementById('style-cell-2');
+    const styleCell3 = document.getElementById('style-cell-3');
+    const gridAreaCell = document.getElementById('grid-area-cell');
+    const setStylesBtn = document.getElementById('set-styles');
+    const resetStylesBtn = document.getElementById('reset-styles');
+    const setGridAreaBtn = document.getElementById('set-grid-area');
     
-    // Log initial setup
-    logEvent('Test page initialized');
+    // Original styles to restore later
+    const originalStyles = {
+      backgroundColor: styleCell1.style.backgroundColor,
+      padding: styleCell1.style.padding,
+      borderRadius: styleCell1.style.borderRadius,
+      boxShadow: styleCell1.style.boxShadow
+    };
     
-    // Edit Mode Demo
-    const editModeCell = document.getElementById('edit-mode-cell');
-    const editChild1 = document.getElementById('edit-child-1');
-    const editChild2 = document.getElementById('edit-child-2');
-    const toggleEditModeBtn = document.getElementById('toggle-edit-mode');
-    const toggleAllEditModeBtn = document.getElementById('toggle-all-edit-mode');
-    
-    let editModeEnabled = false;
-    
-    toggleEditModeBtn.addEventListener('click', () => {
-      editModeEnabled = !editModeEnabled;
-      editModeCell.setEditMode(editModeEnabled);
-      logEvent(`Edit mode ${editModeEnabled ? 'enabled' : 'disabled'} for parent cell`);
+    setStylesBtn.addEventListener('click', () => {
+      // Test setStyles method
+      styleCell1.setStyles({
+        backgroundColor: 'rgba(66, 133, 244, 0.1)',
+        padding: '15px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+      });
+      
+      logEvent('Set custom styles on Cell 1');
     });
     
-    toggleAllEditModeBtn.addEventListener('click', () => {
-      editModeEnabled = !editModeEnabled;
-      editModeCell.setEditMode(editModeEnabled);
-      editChild1.setEditMode(editModeEnabled);
-      editChild2.setEditMode(editModeEnabled);
-      logEvent(`Edit mode ${editModeEnabled ? 'enabled' : 'disabled'} for all cells`);
+    resetStylesBtn.addEventListener('click', () => {
+      // Reset styles
+      styleCell1.setStyles(originalStyles);
+      logEvent('Reset styles on Cell 1');
     });
     
-    // Generic Component Demo
+    setGridAreaBtn.addEventListener('click', () => {
+      // Test grid-area attribute
+      gridAreaCell.setAttribute('grid-area', '2 / 1 / 3 / 3');
+      logEvent('Set grid-area on Cell 4 to span two columns');
+    });
+    
+    // 6. Generic Component Integration
     const genericContainer = document.getElementById('generic-container');
     let genericGrid = document.getElementById('generic-grid');
     const addGenericBtn = document.getElementById('add-generic');
@@ -399,6 +516,7 @@
       // Create a new cell with a generic component
       const newCell = document.createElement('lahat-cell');
       newCell.id = `generic-cell-${genericCount}`;
+      newCell.style.border = '1px solid #e0e0e0';
       
       // Create and configure the generic component
       const component = document.createElement('generic-component');
@@ -427,7 +545,6 @@
       components.forEach((component, index) => {
         component.setTitle(`Customized Component ${index + 1}`);
         component.setContent(`This component was customized at ${new Date().toLocaleTimeString()}`);
-        component.setBorderColor(getRandomColor());
       });
       
       logEvent('Customized all generic components');
@@ -477,11 +594,13 @@
           const rowContainer = document.createElement('lahat-cell');
           rowContainer.setAttribute('layout', 'flex-row');
           rowContainer.style.height = '50%';
+          rowContainer.style.border = '1px solid #e0e0e0';
           
           const gridContainer = document.createElement('lahat-cell');
           gridContainer.id = 'generic-grid';
           gridContainer.setAttribute('layout', 'grid');
           gridContainer.style.height = '50%';
+          gridContainer.style.border = '1px solid #e0e0e0';
           
           genericContainer.appendChild(rowContainer);
           genericContainer.appendChild(gridContainer);
@@ -490,6 +609,7 @@
           for (let i = 1; i <= 2; i++) {
             const cell = document.createElement('lahat-cell');
             cell.id = `generic-cell-${i}`;
+            cell.style.border = '1px solid #e0e0e0';
             
             const component = document.createElement('generic-component');
             component.setAttribute('title', `Glass Component ${i}`);
@@ -502,6 +622,7 @@
           for (let i = 3; i <= 4; i++) {
             const cell = document.createElement('lahat-cell');
             cell.id = `generic-cell-${i}`;
+            cell.style.border = '1px solid #e0e0e0';
             
             const component = document.createElement('generic-component');
             component.setAttribute('title', `Glass Grid Cell ${i-2}`);
@@ -520,6 +641,12 @@
           break;
       }
     });
+    
+    // Initialize with default layouts
+    layoutCell.setLayout('flex-column');
+    
+    // Log initial setup
+    logEvent('LahatCell test page initialized');
     
     // Helper function to generate random colors
     function getRandomColor() {

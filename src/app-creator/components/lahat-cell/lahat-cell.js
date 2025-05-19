@@ -1,504 +1,370 @@
 /**
- * Lahat Cell Component
- * A container component that can hold either a single widget or multiple Lahat cells.
- * Handles event communication between cells and manages layout.
+ * LahatCell Component
+ * 
+ * A self-contained web component for creating recursive cell structures.
+ * Uses slots for declarative nesting and provides flexible layout options.
+ * 
+ * Features:
+ * - Designed to be an "invisible container" only, focusing on layout without visual elements
+ * - No inheritance dependencies (extends HTMLElement directly)
+ * - Uses Shadow DOM with slots for content
+ * - Supports recursive nesting of cells
+ * - Flexible layout options (flex-row, flex-column, grid)
+ * - Event bubbling for communication between cells
  */
 
-import { BaseComponent } from './base-component.js';
-import { globalEventBus, createNamespacedEventBus } from './event-bus.js';
-
-/**
- * Lahat Cell component for organizing widgets and other cells
- * @extends BaseComponent
- */
-export class LahatCell extends BaseComponent {
-  /**
-   * Create a new LahatCell instance
-   */
+// Define the LahatCell component in the global scope
+window.LahatCell = class LahatCell extends HTMLElement {
   constructor() {
     super();
     
-    // Cell properties
-    this._content = null;      // Either a widget or an array of LahatCells
-    this._contentType = null;  // 'widget' or 'cells'
-    this._gridPosition = { x: 0, y: 0 };
-    this._gridSize = { width: 1, height: 1 };
+    // Create a shadow DOM for the component
+    this.attachShadow({ mode: 'open' });
     
-    // Set cell attribute for identification
-    this.setAttribute('data-cell', 'true');
-    
-    // Create base HTML structure
-    this.render(`
+    // Set up internal structure with slots
+    this.shadowRoot.innerHTML = `
+      <style>
+        /* Container styles - no :host selectors */
+        .lahat-cell {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: 100%;
+          min-width: 50px;
+          min-height: 50px;
+          box-sizing: border-box;
+          position: relative;
+          overflow: hidden;
+          /* Removed visible styling to make it an invisible container */
+          /* border: 1px solid #e0e0e0; */
+          /* border-radius: 8px; */
+          /* background-color: #ffffff; */
+          /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); */
+        }
+        
+        /* Content area with layout variations */
+        .content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: 100%;
+          position: relative;
+          overflow: auto;
+        }
+
+        /* Layout variations */
+        .content.flex-row {
+          flex-direction: row;
+        }
+        
+        .content.flex-column {
+          flex-direction: column;
+        }
+        
+        .content.grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          grid-auto-rows: minmax(100px, auto);
+          gap: 10px;
+        }
+      </style>
+      
       <div class="lahat-cell">
-        <div class="cell-header">
-          <div class="drag-handle"></div>
+        <div class="content">
+          <slot></slot>
         </div>
-        <div class="cell-content"></div>
-        <div class="resize-handle"></div>
       </div>
-    `, `
-      :host {
-        display: block;
-        position: relative;
-        box-sizing: border-box;
-        min-width: 100px;
-        min-height: 100px;
-      }
-      
-      .lahat-cell {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        overflow: hidden;
-        background-color: #ffffff;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      }
-      
-      .cell-header {
-        height: 24px;
-        background-color: #f5f5f5;
-        border-bottom: 1px solid #e0e0e0;
-        display: flex;
-        align-items: center;
-        padding: 0 8px;
-        cursor: move;
-      }
-      
-      .drag-handle {
-        width: 20px;
-        height: 10px;
-        background-image: radial-gradient(#ccc 1px, transparent 1px);
-        background-size: 4px 4px;
-      }
-      
-      .cell-content {
-        flex: 1;
-        position: relative;
-        overflow: auto;
-      }
-      
-      .resize-handle {
-        position: absolute;
-        right: 0;
-        bottom: 0;
-        width: 16px;
-        height: 16px;
-        cursor: nwse-resize;
-        background-image: linear-gradient(135deg, transparent 50%, #ccc 50%, #ccc 60%, transparent 60%);
-      }
-    `);
-  }
-  
-  /**
-   * Initialize the cell
-   * Called once when the cell is first created
-   */
-  initialize() {
-    super.initialize();
+    `;
     
-    // Create namespaced event bus for this cell
-    this._eventBus = createNamespacedEventBus(`cell:${this.id}`);
+    // Store references to important elements
+    this._container = this.shadowRoot.querySelector('.lahat-cell');
+    this._content = this.shadowRoot.querySelector('.content');
     
-    this.setupEventHandlers();
-    this.setupDragAndDrop();
+    // Set up event handling for slotted elements
+    this._setupEventHandlers();
   }
   
   /**
    * Set up event handlers for the cell
    * @private
    */
-  setupEventHandlers() {
-    // Listen for widget events and forward them
-    this.addEventListener('widget-event', this.handleWidgetEvent.bind(this));
+  _setupEventHandlers() {
+    const slot = this.shadowRoot.querySelector('slot');
     
-    // Listen for cell events and forward them
-    this.addEventListener('cell-event', this.handleCellEvent.bind(this));
-  }
-  
-  /**
-   * Set up drag and drop functionality
-   * @private
-   */
-  setupDragAndDrop() {
-    const dragHandle = this.$('.drag-handle');
-    const resizeHandle = this.$('.resize-handle');
-    
-    // Drag to move
-    if (dragHandle) {
-      this.addEventListener(dragHandle, 'mousedown', this.handleDragStart.bind(this));
-    }
-    
-    // Drag to resize
-    if (resizeHandle) {
-      this.addEventListener(resizeHandle, 'mousedown', this.handleResizeStart.bind(this));
-    }
-  }
-  
-  /**
-   * Handle the start of a drag operation
-   * @param {MouseEvent} event - Mouse event
-   * @private
-   */
-  handleDragStart(event) {
-    // Implement drag functionality
-    // This is a placeholder for the actual implementation
-    event.preventDefault();
-    
-    // Emit drag start event
-    this.emit('cell-drag-start', {
-      cell: this,
-      position: this._gridPosition,
-      size: this._gridSize
-    });
-  }
-  
-  /**
-   * Handle the start of a resize operation
-   * @param {MouseEvent} event - Mouse event
-   * @private
-   */
-  handleResizeStart(event) {
-    // Implement resize functionality
-    // This is a placeholder for the actual implementation
-    event.preventDefault();
-    
-    // Emit resize start event
-    this.emit('cell-resize-start', {
-      cell: this,
-      position: this._gridPosition,
-      size: this._gridSize
-    });
-  }
-  
-  /**
-   * Handle widget events and forward them as cell events
-   * @param {CustomEvent} event - Widget event
-   * @private
-   */
-  handleWidgetEvent(event) {
-    // Forward the widget event as a cell event
-    const eventData = {
-      sourceCell: this,
-      sourceWidget: event.detail.sourceWidget,
-      originalData: event.detail.data
-    };
-    
-    // Publish to namespaced event bus
-    if (this._eventBus) {
-      this._eventBus.publish(event.detail.eventName, eventData);
-    }
-    
-    // Forward the widget event as a cell event
-    this.publishCellEvent(event.detail.eventName, eventData);
-  }
-  
-  /**
-   * Handle cell events from child cells
-   * @param {CustomEvent} event - Cell event
-   * @private
-   */
-  handleCellEvent(event) {
-    // Forward the cell event to parent cells
-    if (event.target !== this) {
-      // Publish to namespaced event bus
-      if (this._eventBus) {
-        this._eventBus.publish(event.detail.eventName, event.detail);
-      }
-      
-      // Forward the cell event to parent cells
-      this.publishCellEvent(event.detail.eventName, event.detail);
-    }
-  }
-  
-  /**
-   * Set the content of this cell to a single widget
-   * @param {WidgetComponent} widget - Widget to set as content
-   */
-  setWidget(widget) {
-    // Clear existing content
-    this.clearContent();
-    
-    // Set new content
-    this._content = widget;
-    this._contentType = 'widget';
-    
-    // Add widget to the cell content
-    const contentContainer = this.$('.cell-content');
-    contentContainer.appendChild(widget);
-    
-    // Set parent cell reference on the widget
-    if (typeof widget.setParentCell === 'function') {
-      widget.setParentCell(this);
-    }
-    
-    // Apply CSP hash if available
-    const cspHash = widget.getAttribute('data-csp-hash');
-    if (cspHash) {
-      this.setAttribute('data-csp-hash', cspHash);
-    }
-    
-    // Emit content change event
-    this.emit('cell-content-changed', {
-      cell: this,
-      contentType: 'widget',
-      content: widget,
-      cspHash
-    });
-  }
-  
-  /**
-   * Set the content of this cell to multiple cells
-   * @param {LahatCell[]} cells - Array of cells to set as content
-   */
-  setCells(cells) {
-    // Clear existing content
-    this.clearContent();
-    
-    // Set new content
-    this._content = cells;
-    this._contentType = 'cells';
-    
-    // Add cells to the cell content
-    const contentContainer = this.$('.cell-content');
-    cells.forEach(cell => {
-      contentContainer.appendChild(cell);
+    // Listen for slotchange events to detect when children are added/removed
+    slot.addEventListener('slotchange', () => {
+      this._handleSlotChange();
     });
     
-    // Emit content change event
-    this.emit('cell-content-changed', {
-      cell: this,
-      contentType: 'cells',
-      content: cells
-    });
-  }
-  
-  /**
-   * Clear the current content of this cell
-   */
-  clearContent() {
-    if (this._content) {
-      const contentContainer = this.$('.cell-content');
-      
-      if (this._contentType === 'widget') {
-        // Remove widget
-        contentContainer.removeChild(this._content);
+    // Listen for events from slotted elements
+    this.addEventListener('cell-event', (event) => {
+      // Only handle events from direct children, not from this element
+      if (event.target !== this) {
+        // Bubble the event up
+        this._bubbleEvent(event);
         
-        // Clear parent cell reference
-        if (typeof this._content.setParentCell === 'function') {
-          this._content.setParentCell(null);
-        }
-      } else if (this._contentType === 'cells') {
-        // Remove cells
-        this._content.forEach(cell => {
-          contentContainer.removeChild(cell);
-        });
+        // Stop propagation of the original event
+        event.stopPropagation();
       }
-      
-      // Clear content reference
-      this._content = null;
-      this._contentType = null;
-      
-      // Emit content change event
-      this.emit('cell-content-changed', {
-        cell: this,
-        contentType: null,
-        content: null
-      });
-    }
-  }
-  
-  /**
-   * Get the current content of this cell
-   * @returns {Object} - Content object with type and content
-   */
-  getContent() {
-    return {
-      type: this._contentType,
-      content: this._content
-    };
-  }
-  
-  /**
-   * Set the grid position of this cell
-   * @param {number} x - X position in grid
-   * @param {number} y - Y position in grid
-   */
-  setGridPosition(x, y) {
-    this._gridPosition = { x, y };
-    
-    // Update position styles
-    this.style.gridColumn = `${x + 1} / span ${this._gridSize.width}`;
-    this.style.gridRow = `${y + 1} / span ${this._gridSize.height}`;
-    
-    // Emit position change event
-    this.emit('cell-position-changed', {
-      cell: this,
-      position: this._gridPosition,
-      size: this._gridSize
     });
   }
   
   /**
-   * Get the grid position of this cell
-   * @returns {Object} - Grid position with x and y coordinates
-   */
-  getGridPosition() {
-    return { ...this._gridPosition };
-  }
-  
-  /**
-   * Set the grid size of this cell
-   * @param {number} width - Width in grid cells
-   * @param {number} height - Height in grid cells
-   */
-  setGridSize(width, height) {
-    this._gridSize = { width, height };
-    
-    // Update size styles
-    this.style.gridColumn = `${this._gridPosition.x + 1} / span ${width}`;
-    this.style.gridRow = `${this._gridPosition.y + 1} / span ${height}`;
-    
-    // Emit size change event
-    this.emit('cell-size-changed', {
-      cell: this,
-      position: this._gridPosition,
-      size: this._gridSize
-    });
-    
-    // Notify content of resize
-    this.notifyContentResize();
-  }
-  
-  /**
-   * Get the grid size of this cell
-   * @returns {Object} - Grid size with width and height
-   */
-  getGridSize() {
-    return { ...this._gridSize };
-  }
-  
-  /**
-   * Notify content of resize
+   * Handle slot change events
    * @private
    */
-  notifyContentResize() {
-    if (this._content && this._contentType === 'widget') {
-      // Get actual pixel dimensions
-      const contentContainer = this.$('.cell-content');
-      const width = contentContainer.clientWidth;
-      const height = contentContainer.clientHeight;
-      
-      // Notify widget of resize
-      if (typeof this._content.onResize === 'function') {
-        this._content.onResize(width, height);
-      }
-    }
+  _handleSlotChange() {
+    // Get all assigned elements
+    const slot = this.shadowRoot.querySelector('slot');
+    const assignedElements = slot.assignedElements();
+    
+    // Process only lahat-cell elements
+    const childCells = assignedElements.filter(el => el.tagName.toLowerCase() === 'lahat-cell');
+    
+    // Emit event with the new children
+    this._emitEvent('children-changed', { 
+      cells: childCells,
+      count: childCells.length
+    });
   }
   
   /**
-   * Publish a cell event
-   * @param {string} eventName - Event name
-   * @param {any} data - Event data
-   * @returns {boolean} - True if event was dispatched
+   * Bubble an event up to parent cells
+   * @param {CustomEvent} originalEvent - Original event to bubble
+   * @private
    */
-  publishCellEvent(eventName, data = {}) {
-    // Prepare event detail
-    const eventDetail = {
-      sourceCell: this,
-      eventName,
-      data
-    };
+  _bubbleEvent(originalEvent) {
+    // Create a new event to bubble up
+    const bubbledEvent = new CustomEvent('cell-event', {
+      bubbles: true,
+      composed: true,
+      detail: {
+        originalSource: originalEvent.detail.originalSource || originalEvent.target,
+        immediateSource: originalEvent.target,
+        bubbledThrough: [...(originalEvent.detail.bubbledThrough || []), this],
+        type: originalEvent.detail.type,
+        data: originalEvent.detail.data
+      }
+    });
     
-    // Publish to global event bus with cell namespace
-    globalEventBus.publish(`cell:${this.id}:${eventName}`, eventDetail);
-    
-    // Create a custom event with the cell event details
+    this.dispatchEvent(bubbledEvent);
+  }
+  
+  /**
+   * Emit a cell event
+   * @param {string} type - Event type
+   * @param {Object} data - Event data
+   * @private
+   */
+  _emitEvent(type, data = {}) {
     const event = new CustomEvent('cell-event', {
       bubbles: true,
       composed: true,
-      detail: eventDetail
+      detail: {
+        originalSource: this,
+        immediateSource: this,
+        bubbledThrough: [],
+        type,
+        data
+      }
     });
     
-    // Dispatch the event
-    return this.dispatchEvent(event);
+    this.dispatchEvent(event);
+    
+    // Also emit a specific named event for easier listening
+    const namedEvent = new CustomEvent(`lahat-cell-${type}`, {
+      bubbles: true,
+      composed: true,
+      detail: {
+        source: this,
+        data
+      }
+    });
+    
+    this.dispatchEvent(namedEvent);
   }
   
+  // Public API
+  
   /**
-   * Subscribe to cell events
-   * @param {string} eventName - Event name to subscribe to
-   * @param {Function} callback - Callback function
-   * @param {Object} [options] - Subscription options
-   * @returns {Function} - Unsubscribe function
+   * Set the layout type for this cell's children
+   * @param {string} type - Layout type (flex-row, flex-column, grid)
+   * @param {Object} options - Layout options
    */
-  subscribeToCellEvent(eventName, callback, options = {}) {
-    if (!this._eventBus) {
-      console.warn('Event bus not initialized');
-      return () => {};
+  setLayout(type, options = {}) {
+    // Remove previous layout classes
+    this._content.classList.remove('flex-row', 'flex-column', 'grid');
+    
+    // Add the new layout class
+    this._content.classList.add(type);
+    
+    // Apply any additional layout options
+    if (type === 'grid') {
+      if (options.columns) {
+        this._content.style.gridTemplateColumns = options.columns;
+      }
+      
+      if (options.rows) {
+        this._content.style.gridTemplateRows = options.rows;
+      }
+      
+      if (options.areas) {
+        this._content.style.gridTemplateAreas = options.areas;
+      }
     }
     
-    return this._eventBus.subscribe(eventName, callback, options);
-  }
-  
-  /**
-   * Subscribe to cell events once
-   * @param {string} eventName - Event name to subscribe to
-   * @param {Function} callback - Callback function
-   * @param {Object} [options] - Subscription options
-   * @returns {Function} - Unsubscribe function
-   */
-  subscribeToCellEventOnce(eventName, callback, options = {}) {
-    if (!this._eventBus) {
-      console.warn('Event bus not initialized');
-      return () => {};
+    if (options.gap) {
+      this._content.style.gap = options.gap;
     }
     
-    return this._eventBus.subscribeOnce(eventName, callback, options);
-  }
-  
-  /**
-   * Get cell metadata
-   * @returns {Object} - Cell metadata
-   */
-  getMetadata() {
-    return {
-      id: this.id,
-      position: this._gridPosition,
-      size: this._gridSize,
-      contentType: this._contentType,
-      contentMetadata: this._getContentMetadata()
-    };
-  }
-  
-  /**
-   * Get metadata for the content of this cell
-   * @returns {Object|Array|null} - Content metadata
-   * @private
-   */
-  _getContentMetadata() {
-    if (!this._content) {
-      return null;
+    if (options.justifyContent) {
+      this._content.style.justifyContent = options.justifyContent;
     }
     
-    if (this._contentType === 'widget') {
-      // Get widget metadata
-      return typeof this._content.getMetadata === 'function'
-        ? this._content.getMetadata()
-        : { type: this._content.tagName };
-    } else if (this._contentType === 'cells') {
-      // Get metadata for all cells
-      return this._content.map(cell => 
-        typeof cell.getMetadata === 'function'
-          ? cell.getMetadata()
-          : { type: cell.tagName }
-      );
+    if (options.alignItems) {
+      this._content.style.alignItems = options.alignItems;
+    }
+    
+    // Update the layout attribute
+    this.setAttribute('layout', type);
+    
+    // Emit layout change event
+    this._emitEvent('layout-changed', { type, options });
+  }
+  
+  /**
+   * Add a child cell
+   * @param {LahatCell} cell - Cell to add
+   * @returns {LahatCell} - The added cell
+   */
+  addCell(cell) {
+    this.appendChild(cell);
+    return cell;
+  }
+  
+  /**
+   * Remove a child cell
+   * @param {LahatCell|string} cellOrId - Cell or cell ID to remove
+   * @returns {LahatCell|null} - The removed cell or null
+   */
+  removeCell(cellOrId) {
+    const cell = typeof cellOrId === 'string' 
+      ? this.querySelector(`lahat-cell[id="${cellOrId}"]`) 
+      : cellOrId;
+    
+    if (cell && this.contains(cell)) {
+      this.removeChild(cell);
+      return cell;
     }
     
     return null;
   }
+  
+  /**
+   * Get a child cell by ID
+   * @param {string} id - Cell ID
+   * @returns {LahatCell|null} - The child cell or null
+   */
+  getCell(id) {
+    return this.querySelector(`lahat-cell[id="${id}"]`);
+  }
+  
+  /**
+   * Get all direct child cells
+   * @returns {LahatCell[]} - Array of child cells
+   */
+  getCells() {
+    return Array.from(this.querySelectorAll(':scope > lahat-cell'));
+  }
+  
+  /**
+   * Clear all child cells
+   */
+  clearCells() {
+    this.getCells().forEach(cell => this.removeChild(cell));
+  }
+  
+  /**
+   * Publish an event to be bubbled up through the cell hierarchy
+   * @param {string} type - Event type
+   * @param {Object} data - Event data
+   */
+  publishEvent(type, data = {}) {
+    this._emitEvent(type, data);
+  }
+  
+  /**
+   * Subscribe to events of a specific type
+   * @param {string} type - Event type to listen for
+   * @param {Function} callback - Callback function
+   * @returns {Function} - Unsubscribe function
+   */
+  subscribe(type, callback) {
+    const handler = (event) => {
+      if (event.detail.type === type) {
+        callback(event.detail);
+      }
+    };
+    
+    this.addEventListener('cell-event', handler);
+    
+    // Return unsubscribe function
+    return () => this.removeEventListener('cell-event', handler);
+  }
+  
+  /**
+   * Set custom styles for this cell
+   * @param {Object} styles - Style object with CSS properties
+   */
+  setStyles(styles) {
+    Object.entries(styles).forEach(([property, value]) => {
+      this._container.style[property] = value;
+    });
+  }
+  
+  // Lifecycle callbacks
+  
+  connectedCallback() {
+    if (!this.id) {
+      this.id = 'cell-' + Math.random().toString(36).substring(2, 11);
+    }
+    
+    // Set default layout if none specified
+    if (this.hasAttribute('layout')) {
+      this.setLayout(this.getAttribute('layout'));
+    } else {
+      this.setLayout('flex-column');
+    }
+    
+    // Apply any grid-area attribute
+    if (this.hasAttribute('grid-area')) {
+      this.style.gridArea = this.getAttribute('grid-area');
+    }
+    
+    this._emitEvent('connected');
+  }
+  
+  disconnectedCallback() {
+    this._emitEvent('disconnected');
+  }
+  
+  // Attribute handling
+  
+  static get observedAttributes() {
+    return ['layout', 'grid-area'];
+  }
+  
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue) return;
+    
+    if (name === 'layout' && this._content) {
+      this.setLayout(newValue);
+    } else if (name === 'grid-area') {
+      this.style.gridArea = newValue;
+    }
+  }
 }
 
 // Register the component
-customElements.define('lahat-cell', LahatCell);
+customElements.define('lahat-cell', window.LahatCell);

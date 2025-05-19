@@ -1,15 +1,15 @@
 # LahatCell Component
 
-A self-contained web component for creating recursive cell structures. The LahatCell component is designed to be a fundamental building block for creating flexible, modular UIs with nested layouts. LahatCells are specifically designed to be "invisible containers" only, focusing purely on layout and structure without adding any visible aspects to the page apart from layout.
+A self-contained web component for creating recursive cell structures. The LahatCell component is designed to be a fundamental building block for creating flexible, modular UIs with nested layouts.
 
-## Features
+## Core Design Principles
 
-- **Invisible container**: LahatCells serve purely as layout containers with no visible UI elements of their own
-- **Self-contained**: Single file with no inheritance dependencies
-- **Recursive nesting**: Cells can contain any number of other cells to any depth
-- **Slot-based structure**: Uses slots for declarative and intuitive composition
-- **Flexible layouts**: Support for different layout patterns (flex row, flex column, grid)
-- **Event bubbling**: Hierarchical event system for component communication
+1. **Pure Container**: LahatCells are purely layout containers with no visual elements or UI controls
+2. **Self-Contained**: Single file with no inheritance dependencies
+3. **Recursive Nesting**: Cells can contain any number of other cells to any depth
+4. **Slot-Based Structure**: Uses slots for declarative and intuitive composition
+5. **Flexible Layouts**: Support for different layout patterns (flex row, flex column, grid)
+6. **Event Bubbling**: Hierarchical event system for component communication
 
 ## Usage
 
@@ -166,16 +166,15 @@ unsubscribe();
 - **layout**: Sets the layout mode (`flex-row`, `flex-column`, `grid`)
 - **grid-area**: For use within grid layouts to specify the grid area
 - **id**: Standard HTML id attribute (auto-generated if not provided)
-- **edit-mode**: Enables edit mode with visible controls (`true`, `false`)
 
-## Styling and Edit Mode
+## Styling
 
 While LahatCells are designed to be "invisible containers" focusing purely on layout without visual elements, they can be styled when needed:
 
 ```css
 /* Style all cells */
 lahat-cell {
-  /* Minimal styling recommended to maintain "invisible container" concept */
+  /* Minimal styling recommended to maintain "pure container" concept */
   padding: 5px;
 }
 
@@ -198,29 +197,6 @@ cell.setStyles({
 });
 ```
 
-### Edit Mode
-
-LahatCells have an edit mode that can be enabled to show UI controls for dragging and resizing:
-
-```javascript
-// Enable edit mode to show header and resize handle
-cell.setEditMode(true);
-
-// Disable edit mode to hide UI controls
-cell.setEditMode(false);
-```
-
-You can also set edit mode using an attribute:
-
-```html
-<!-- Enable edit mode -->
-<lahat-cell edit-mode="true">
-  <!-- Content -->
-</lahat-cell>
-```
-
-Edit mode should typically only be used during development or when editing layouts.
-
 ## Event System
 
 The LahatCell component uses a hierarchical event system where events bubble up from child cells to parent cells. This allows for communication between cells at different levels of the hierarchy.
@@ -231,8 +207,6 @@ The LahatCell component uses a hierarchical event system where events bubble up 
 - **disconnected**: Cell was disconnected from DOM
 - **children-changed**: Child cells were added/removed
 - **layout-changed**: Cell layout was changed
-- **drag-start**, **drag-move**, **drag-end**: Drag events
-- **resize-start**, **resize-move**, **resize-end**: Resize events
 - **Custom events**: Any custom event published with `publishEvent()`
 
 ### Event Detail Structure
@@ -254,6 +228,21 @@ The LahatCell component uses a hierarchical event system where events bubble up 
   // Event-specific data
   data: Object
 }
+```
+
+## Implementation Architecture
+
+The LahatCell component is implemented as a self-contained web component that extends HTMLElement directly. It uses Shadow DOM for encapsulation and slots for content projection.
+
+```
+LahatCell
+├── Shadow DOM
+│   ├── <style> (internal styles)
+│   ├── .lahat-cell (container)
+│   │   └── .content (layout container with slot)
+│   └── <slot> (for child cells and content)
+└── Light DOM
+    └── Child LahatCells (slotted content)
 ```
 
 ## Browser Compatibility
