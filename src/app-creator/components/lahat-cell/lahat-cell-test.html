@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LahatCell Test</title>
+  <script src="generic-component.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    h2 {
+      margin-top: 0;
+      color: #444;
+    }
+    
+    .controls {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+    }
+    
+    button {
+      padding: 8px 12px;
+      margin-right: 8px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .cell-content {
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      margin: 5px;
+    }
+    
+    .demo-cell {
+      min-height: 100px;
+      margin-bottom: 10px;
+    }
+    
+    #event-log {
+      height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>LahatCell Component Test</h1>
+    
+    <div class="test-section">
+      <h2>Basic Cell Structure</h2>
+      <div class="controls">
+        <button id="add-cell">Add Cell</button>
+        <button id="remove-cell">Remove Last Cell</button>
+        <button id="clear-cells">Clear All Cells</button>
+      </div>
+      
+      <lahat-cell id="root-cell" style="height: 400px;">
+        <div class="cell-content">Root Cell Content</div>
+      </lahat-cell>
+    </div>
+    
+    <div class="test-section">
+      <h2>Layout Types</h2>
+      
+      <div class="controls">
+        <button id="set-row">Row Layout</button>
+        <button id="set-column">Column Layout</button>
+        <button id="set-grid">Grid Layout</button>
+      </div>
+      
+      <lahat-cell id="layout-cell" style="height: 400px;">
+        <lahat-cell class="demo-cell">
+          <div class="cell-content">Cell 1</div>
+        </lahat-cell>
+        <lahat-cell class="demo-cell">
+          <div class="cell-content">Cell 2</div>
+        </lahat-cell>
+        <lahat-cell class="demo-cell">
+          <div class="cell-content">Cell 3</div>
+        </lahat-cell>
+        <lahat-cell class="demo-cell">
+          <div class="cell-content">Cell 4</div>
+        </lahat-cell>
+      </lahat-cell>
+    </div>
+    
+    <div class="test-section">
+      <h2>Nested Cells</h2>
+      
+      <lahat-cell id="nested-cell" style="height: 400px;">
+        <lahat-cell layout="flex-row" style="height: 150px;">
+          <lahat-cell>
+            <div class="cell-content">Header Left</div>
+          </lahat-cell>
+          <lahat-cell>
+            <div class="cell-content">Header Right</div>
+          </lahat-cell>
+        </lahat-cell>
+        
+        <lahat-cell layout="flex-row" style="flex: 1;">
+          <lahat-cell style="width: 200px;">
+            <div class="cell-content">Sidebar</div>
+          </lahat-cell>
+          
+          <lahat-cell layout="grid" style="flex: 1;">
+            <lahat-cell>
+              <div class="cell-content">Main Content 1</div>
+            </lahat-cell>
+            <lahat-cell>
+              <div class="cell-content">Main Content 2</div>
+            </lahat-cell>
+            <lahat-cell>
+              <div class="cell-content">Main Content 3</div>
+            </lahat-cell>
+            <lahat-cell>
+              <div class="cell-content">Main Content 4</div>
+            </lahat-cell>
+          </lahat-cell>
+        </lahat-cell>
+      </lahat-cell>
+    </div>
+    
+    <div class="test-section">
+      <h2>Event Handling</h2>
+      
+      <div class="controls">
+        <button id="publish-event">Publish Event</button>
+        <button id="clear-log">Clear Log</button>
+      </div>
+      
+      <lahat-cell id="event-cell" style="height: 200px;">
+        <lahat-cell id="event-child-1">
+          <div class="cell-content">Child Cell 1</div>
+          <lahat-cell id="event-grandchild">
+            <div class="cell-content">Grandchild Cell</div>
+          </lahat-cell>
+        </lahat-cell>
+        <lahat-cell id="event-child-2">
+          <div class="cell-content">Child Cell 2</div>
+        </lahat-cell>
+      </lahat-cell>
+      
+      <h3>Event Log</h3>
+      <div id="event-log"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Edit Mode Demo</h2>
+      
+      <div class="controls">
+        <button id="toggle-edit-mode">Toggle Edit Mode</button>
+        <button id="toggle-all-edit-mode">Toggle All Edit Mode</button>
+      </div>
+      
+      <lahat-cell id="edit-mode-cell" style="height: 300px;">
+        <lahat-cell id="edit-child-1" style="height: 50%;">
+          <div class="cell-content">This cell can be edited when edit mode is enabled</div>
+        </lahat-cell>
+        <lahat-cell id="edit-child-2" style="height: 50%;">
+          <div class="cell-content">Edit mode shows drag handles and resize controls</div>
+        </lahat-cell>
+      </lahat-cell>
+    </div>
+    
+    <div class="test-section">
+      <h2>Generic Component Demo</h2>
+      
+      <div class="controls">
+        <button id="add-generic">Add Generic Component</button>
+        <button id="customize-generic">Customize Components</button>
+        <button id="change-layout">Change Layout</button>
+      </div>
+      
+      <lahat-cell id="generic-container" style="height: 500px; background-color: #f5f5f5;">
+        <lahat-cell layout="flex-row" style="height: 50%;">
+          <lahat-cell id="generic-cell-1">
+            <generic-component 
+              title="Glass Component 1" 
+              content="This is a glass-like component inside a LahatCell. It demonstrates how web components can be used within the LahatCell container.">
+            </generic-component>
+          </lahat-cell>
+          <lahat-cell id="generic-cell-2">
+            <generic-component 
+              title="Glass Component 2" 
+              content="Click the Interact button to see events bubble up through the cell hierarchy.">
+            </generic-component>
+          </lahat-cell>
+        </lahat-cell>
+        
+        <lahat-cell layout="grid" style="height: 50%;" id="generic-grid">
+          <lahat-cell id="generic-cell-3">
+            <generic-component 
+              title="Glass Grid Cell 1" 
+              content="This component is in a grid layout. The glass-like appearance makes it easy to see the structure.">
+            </generic-component>
+          </lahat-cell>
+          <lahat-cell id="generic-cell-4">
+            <generic-component 
+              title="Glass Grid Cell 2" 
+              content="The dimensions shown in the corner update automatically when the cell is resized.">
+            </generic-component>
+          </lahat-cell>
+        </lahat-cell>
+      </lahat-cell>
+    </div>
+  </div>
+  
+  <script src="lahat-cell-v2.js"></script>
+  <script>
+    // No need to import, LahatCell is now available globally
+    
+    // Basic Cell Structure Demo
+    const rootCell = document.getElementById('root-cell');
+    const addCellBtn = document.getElementById('add-cell');
+    const removeCellBtn = document.getElementById('remove-cell');
+    const clearCellsBtn = document.getElementById('clear-cells');
+    
+    let cellCount = 0;
+    
+    addCellBtn.addEventListener('click', () => {
+      cellCount++;
+      const newCell = document.createElement('lahat-cell');
+      newCell.innerHTML = `<div class="cell-content">Dynamically Added Cell ${cellCount}</div>`;
+      rootCell.addCell(newCell);
+    });
+    
+    removeCellBtn.addEventListener('click', () => {
+      const cells = rootCell.getCells();
+      if (cells.length > 0) {
+        rootCell.removeCell(cells[cells.length - 1]);
+      }
+    });
+    
+    clearCellsBtn.addEventListener('click', () => {
+      rootCell.clearCells();
+      cellCount = 0;
+    });
+    
+    // Layout Types Demo
+    const layoutCell = document.getElementById('layout-cell');
+    const setRowBtn = document.getElementById('set-row');
+    const setColumnBtn = document.getElementById('set-column');
+    const setGridBtn = document.getElementById('set-grid');
+    
+    setRowBtn.addEventListener('click', () => {
+      layoutCell.setLayout('flex-row');
+    });
+    
+    setColumnBtn.addEventListener('click', () => {
+      layoutCell.setLayout('flex-column');
+    });
+    
+    setGridBtn.addEventListener('click', () => {
+      layoutCell.setLayout('grid', {
+        columns: 'repeat(2, 1fr)',
+        gap: '10px'
+      });
+    });
+    
+    // Event Handling Demo
+    const eventCell = document.getElementById('event-cell');
+    const eventChild1 = document.getElementById('event-child-1');
+    const eventChild2 = document.getElementById('event-child-2');
+    const eventGrandchild = document.getElementById('event-grandchild');
+    const publishEventBtn = document.getElementById('publish-event');
+    const clearLogBtn = document.getElementById('clear-log');
+    const eventLog = document.getElementById('event-log');
+    
+    function logEvent(message) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      eventLog.appendChild(entry);
+      eventLog.scrollTop = eventLog.scrollHeight;
+    }
+    
+    // Listen for events at different levels
+    eventCell.addEventListener('cell-event', (e) => {
+      logEvent(`Root received: ${e.detail.type} from ${e.detail.originalSource.id}`);
+    });
+    
+    eventChild1.addEventListener('cell-event', (e) => {
+      logEvent(`Child1 received: ${e.detail.type} from ${e.detail.originalSource.id}`);
+    });
+    
+    eventChild2.addEventListener('cell-event', (e) => {
+      logEvent(`Child2 received: ${e.detail.type} from ${e.detail.originalSource.id}`);
+    });
+    
+    publishEventBtn.addEventListener('click', () => {
+      eventGrandchild.publishEvent('user-action', {
+        action: 'click',
+        timestamp: Date.now()
+      });
+      logEvent('Published "user-action" event from grandchild');
+    });
+    
+    clearLogBtn.addEventListener('click', () => {
+      eventLog.innerHTML = '';
+    });
+    
+    // Initialize with default layouts
+    layoutCell.setLayout('flex-column');
+    
+    // Log initial setup
+    logEvent('Test page initialized');
+    
+    // Edit Mode Demo
+    const editModeCell = document.getElementById('edit-mode-cell');
+    const editChild1 = document.getElementById('edit-child-1');
+    const editChild2 = document.getElementById('edit-child-2');
+    const toggleEditModeBtn = document.getElementById('toggle-edit-mode');
+    const toggleAllEditModeBtn = document.getElementById('toggle-all-edit-mode');
+    
+    let editModeEnabled = false;
+    
+    toggleEditModeBtn.addEventListener('click', () => {
+      editModeEnabled = !editModeEnabled;
+      editModeCell.setEditMode(editModeEnabled);
+      logEvent(`Edit mode ${editModeEnabled ? 'enabled' : 'disabled'} for parent cell`);
+    });
+    
+    toggleAllEditModeBtn.addEventListener('click', () => {
+      editModeEnabled = !editModeEnabled;
+      editModeCell.setEditMode(editModeEnabled);
+      editChild1.setEditMode(editModeEnabled);
+      editChild2.setEditMode(editModeEnabled);
+      logEvent(`Edit mode ${editModeEnabled ? 'enabled' : 'disabled'} for all cells`);
+    });
+    
+    // Generic Component Demo
+    const genericContainer = document.getElementById('generic-container');
+    let genericGrid = document.getElementById('generic-grid');
+    const addGenericBtn = document.getElementById('add-generic');
+    const customizeGenericBtn = document.getElementById('customize-generic');
+    const changeLayoutBtn = document.getElementById('change-layout');
+    
+    let genericCount = 4; // We already have 4 components
+    let currentLayout = 'mixed'; // Start with mixed layout (row + grid)
+    
+    // Listen for generic component events
+    genericContainer.addEventListener('generic-component-action', (e) => {
+      logEvent(`Generic component action: ${e.detail.action} from ${e.detail.source.getAttribute('title')}`);
+    });
+    
+    // Add a new generic component
+    addGenericBtn.addEventListener('click', () => {
+      genericCount++;
+      
+      // Create a new cell with a generic component
+      const newCell = document.createElement('lahat-cell');
+      newCell.id = `generic-cell-${genericCount}`;
+      
+      // Create and configure the generic component
+      const component = document.createElement('generic-component');
+      component.setAttribute('title', `Glass Component ${genericCount}`);
+      component.setAttribute('content', `This is a dynamically added glass component #${genericCount}`);
+      
+      // Add the component to the cell
+      newCell.appendChild(component);
+      
+      // Add the cell to the appropriate container based on current layout
+      if (currentLayout === 'grid' || currentLayout === 'mixed') {
+        genericGrid.addCell(newCell);
+      } else {
+        genericContainer.addCell(newCell);
+      }
+      
+      logEvent(`Added new generic component #${genericCount}`);
+    });
+    
+    // Customize all generic components
+    customizeGenericBtn.addEventListener('click', () => {
+      // Get all generic components
+      const components = document.querySelectorAll('generic-component');
+      
+      // Customize each component
+      components.forEach((component, index) => {
+        component.setTitle(`Customized Component ${index + 1}`);
+        component.setContent(`This component was customized at ${new Date().toLocaleTimeString()}`);
+        component.setBorderColor(getRandomColor());
+      });
+      
+      logEvent('Customized all generic components');
+    });
+    
+    // Change layout
+    changeLayoutBtn.addEventListener('click', () => {
+      // Cycle through layouts: mixed -> row -> column -> grid -> mixed
+      switch (currentLayout) {
+        case 'mixed':
+          // Change to all row layout
+          genericContainer.setLayout('flex-row');
+          
+          // Move all cells from grid to main container
+          const gridCells = genericGrid.getCells();
+          gridCells.forEach(cell => {
+            genericGrid.removeCell(cell);
+            genericContainer.addCell(cell);
+          });
+          
+          currentLayout = 'row';
+          logEvent('Changed to row layout');
+          break;
+          
+        case 'row':
+          // Change to column layout
+          genericContainer.setLayout('flex-column');
+          currentLayout = 'column';
+          logEvent('Changed to column layout');
+          break;
+          
+        case 'column':
+          // Change to grid layout
+          genericContainer.setLayout('grid', {
+            columns: 'repeat(3, 1fr)',
+            gap: '10px'
+          });
+          currentLayout = 'grid';
+          logEvent('Changed to grid layout');
+          break;
+          
+        case 'grid':
+          // Reset to mixed layout (row + grid)
+          // First, create the structure again
+          genericContainer.innerHTML = '';
+          
+          const rowContainer = document.createElement('lahat-cell');
+          rowContainer.setAttribute('layout', 'flex-row');
+          rowContainer.style.height = '50%';
+          
+          const gridContainer = document.createElement('lahat-cell');
+          gridContainer.id = 'generic-grid';
+          gridContainer.setAttribute('layout', 'grid');
+          gridContainer.style.height = '50%';
+          
+          genericContainer.appendChild(rowContainer);
+          genericContainer.appendChild(gridContainer);
+          
+          // Create new components
+          for (let i = 1; i <= 2; i++) {
+            const cell = document.createElement('lahat-cell');
+            cell.id = `generic-cell-${i}`;
+            
+            const component = document.createElement('generic-component');
+            component.setAttribute('title', `Glass Component ${i}`);
+            component.setAttribute('content', `This is component ${i} in the row layout.`);
+            
+            cell.appendChild(component);
+            rowContainer.appendChild(cell);
+          }
+          
+          for (let i = 3; i <= 4; i++) {
+            const cell = document.createElement('lahat-cell');
+            cell.id = `generic-cell-${i}`;
+            
+            const component = document.createElement('generic-component');
+            component.setAttribute('title', `Glass Grid Cell ${i-2}`);
+            component.setAttribute('content', `This is component ${i} in the grid layout.`);
+            
+            cell.appendChild(component);
+            gridContainer.appendChild(cell);
+          }
+          
+          // Update references
+          genericGrid = document.getElementById('generic-grid');
+          genericCount = 4;
+          
+          currentLayout = 'mixed';
+          logEvent('Reset to mixed layout');
+          break;
+      }
+    });
+    
+    // Helper function to generate random colors
+    function getRandomColor() {
+      const hue = Math.floor(Math.random() * 360);
+      return `hsl(${hue}, 70%, 80%)`;
+    }
+  </script>
+</body>
+</html>
