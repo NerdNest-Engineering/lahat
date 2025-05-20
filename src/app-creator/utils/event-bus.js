@@ -1,88 +1,50 @@
-/**
- * Event Bus
- * A simple event bus for communication between components within the app creator module
- * 
- * This is a module-specific event bus that is completely independent from other modules.
- * It implements a publish-subscribe pattern for event-based communication.
- */
-
+// event-bus.js
 export class EventBus {
-  constructor() {
-    this.subscribers = {};
-  }
-  
-  /**
-   * Subscribe to an event
-   * @param {string} event - The event name
-   * @param {Function} callback - The callback function
-   * @returns {Function} - Unsubscribe function
-   */
-  subscribe(event, callback) {
-    if (!this.subscribers[event]) {
-      this.subscribers[event] = [];
-    }
-    
-    this.subscribers[event].push(callback);
-    
-    // Return unsubscribe function
-    return () => {
-      this.subscribers[event] = this.subscribers[event].filter(cb => cb !== callback);
-    };
-  }
-  
-  /**
-   * Publish an event
-   * @param {string} event - The event name
-   * @param {any} data - The event data
-   */
-  publish(event, data) {
-    if (!this.subscribers[event]) {
-      return;
-    }
-    
-    this.subscribers[event].forEach(callback => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error(`Error in event handler for ${event}:`, error);
-      }
+  constructor(channel = 'lahat-bus') {
+    this.subscribers = new Map();
+    // Use BroadcastChannel if we can; otherwise, stay local
+    this.bc = (typeof BroadcastChannel !== 'undefined')
+      ? new BroadcastChannel(channel)
+      : null;
+
+    // Fan-in from other windows
+    this.bc?.addEventListener('message', ({ data }) => {
+      const { event, payload } = data || {};
+      if (event) this.#dispatch(event, payload, /*fromRemote*/ true);
     });
   }
-  
-  /**
-   * Subscribe to an event once
-   * @param {string} event - The event name
-   * @param {Function} callback - The callback function
-   */
-  once(event, callback) {
-    const unsubscribe = this.subscribe(event, data => {
-      unsubscribe();
-      callback(data);
-    });
+
+  subscribe(event, fn) {
+    if (!this.subscribers.has(event)) this.subscribers.set(event, new Set());
+    this.subscribers.get(event).add(fn);
+    return () => this.subscribers.get(event)?.delete(fn);
   }
-  
-  /**
-   * Clear all subscribers for an event
-   * @param {string} event - The event name
-   */
+
+  publish(event, payload) {
+    this.#dispatch(event, payload, /*fromRemote*/ false);
+  }
+
+  once(event, fn) {
+    const off = this.subscribe(event, (d) => { off(); fn(d); });
+  }
+
   clear(event) {
-    if (event) {
-      this.subscribers[event] = [];
-    } else {
-      this.subscribers = {};
-    }
+    event ? this.subscribers.delete(event) : this.subscribers.clear();
   }
-  
-  /**
-   * Get the number of subscribers for an event
-   * @param {string} event - The event name
-   * @returns {number} - The number of subscribers
-   */
+
   getSubscriberCount(event) {
-    if (!this.subscribers[event]) {
-      return 0;
-    }
-    
-    return this.subscribers[event].length;
+    return this.subscribers.get(event)?.size ?? 0;
+  }
+
+  close() { this.bc?.close(); }
+
+  /* ––– private ––– */
+  #dispatch(event, payload, fromRemote) {
+    // 1) local listeners
+    this.subscribers.get(event)?.forEach(cb => {
+      try { cb(payload); } catch (e) { console.error(e); }
+    });
+    // 2) cross-window broadcast (only if we originated it)
+    if (!fromRemote) this.bc?.postMessage({ event, payload });
   }
 }
