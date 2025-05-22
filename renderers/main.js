@@ -259,6 +259,11 @@ window.electronAPI.onAppUpdated(() => {
   loadMiniApps();
 });
 
+// Listen for app list refresh requests
+window.electronAPI.onRefreshAppList(() => {
+  loadMiniApps();
+});
+
 // Command Palette Setup
 function setupCommandPalette() {
   // Register commands
