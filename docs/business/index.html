@@ -650,6 +650,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         const button1 = document.getElementById("create-app-btn");
         const button2 = document.getElementById("break-free-btn");
+
         if (button1) {
             button1.addEventListener("click", function () {
                 posthog.capture("user_downloaded", {
@@ -668,6 +669,24 @@
                 });
             });
         }
+
+        // Get the URL of the asset
+        async function getLatestRelease() {
+          const response = await fetch('https://api.github.com/repos/NerdNest-Engineering/lahat/releases/latest');
+          const data = await response.json();
+
+          const downloadButtons = document.querySelectorAll('.cta-button');
+          downloadButtons.forEach((button, index) => {
+            if (data.assets[index]) {
+              const assetUrl = data.assets[index].browser_download_url; 
+              button.setAttribute('href', assetUrl);
+              button.setAttribute('download', '');
+            }
+          });
+        }
+
+        // Fetch the latest release when the page loads
+        window.onload = getLatestRelease;
 
         // Create floating particles
         createParticles();
@@ -799,7 +818,7 @@
   <div class="hero-content">
     <h1>Cut the costs. Keep the power.</h1>
     <p>Build apps you control. One click. Yours forever.</p>
-    <a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" id="create-app-btn" class="cta-button">Create your first app</a>
+    <a href="#" id="create-app-btn" class="cta-button">Create your first app</a>
   </div>
 </section>
 
@@ -828,7 +847,7 @@
     Lahat lets you create and own your own tooling.<br>
     For once, the software works for you — not the other way around.
   </p>
-  <a href="https://github.com/NerdNest-Engineering/lahat/releases/download/v1.0.12/Lahat-1.0.12.dmg" class="cta-button">Get Started Now</a>
+  <a href="#" class="cta-button">Get Started Now</a>
 </section>
 
 <section class="use-cases">
