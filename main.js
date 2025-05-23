@@ -93,6 +93,9 @@ function initializeApp() {
   }
 }
 
+// Track if an update is available using a simple variable
+let isUpdateAvailable = false;
+
 /**
  * Setup auto-update functionality
  */
@@ -135,9 +138,6 @@ function setupAutoUpdater() {
   if (autoUpdater.logger.transports && autoUpdater.logger.transports.file) {
     autoUpdater.logger.transports.file.level = 'debug';
   }
-  
-  // Track if an update is available
-  autoUpdater.isUpdateAvailable = false;
   
   // Handle update events
   autoUpdater.on('update-downloaded', (info) => {
@@ -279,7 +279,7 @@ sleep 2
     console.log('Update available:', info.version);
     
     // Mark that an update is available
-    autoUpdater.isUpdateAvailable = true;
+    isUpdateAvailable = true;
     
     // Explicitly request download when update is detected
     autoUpdater.downloadUpdate().catch(err => {
@@ -325,7 +325,7 @@ app.on('before-quit', (event) => {
   }
   
   // Only handle update installation in before-quit if we're not already handling it
-  if (autoUpdater.isUpdateAvailable && !forceQuit) {
+  if (isUpdateAvailable && !forceQuit) {
     console.log('Update is available during quit - handling update installation');
     event.preventDefault();
     forceQuit = true;
