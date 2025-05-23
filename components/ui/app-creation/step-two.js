@@ -7,116 +7,149 @@ class AppCreationStepTwo extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --primary-color: #4285f4;
+          --primary-hover: #3367d6;
+          --border-color: #e0e0e0;
+          --text-primary: #202124;
+          --text-secondary: #5f6368;
+          --background-light: #f8f9fa;
+          --border-radius: 8px;
+          --spacing-sm: 10px;
+          --spacing-md: 15px;
+          --spacing-lg: 20px;
+          
           display: none;
-          padding: 20px 0;
+          padding: var(--spacing-lg) 0;
         }
+        
         :host(.active) {
           display: block;
         }
+        
         h2 {
-          font-size: 20px;
-          margin-bottom: 15px;
+          font-size: var(--spacing-lg);
+          margin-bottom: var(--spacing-md);
         }
+        
         .user-input-display {
-          background: #f8f9fa;
-          padding: 10px 15px;
-          border-radius: var(--border-radius, 8px);
-          margin-bottom: 20px;
+          background: var(--background-light);
+          padding: var(--spacing-sm) var(--spacing-md);
+          border-radius: var(--border-radius);
+          margin-bottom: var(--spacing-lg);
           font-style: italic;
         }
+        
         .preview-section {
           background: white;
-          border: 1px solid #e0e0e0;
-          border-radius: var(--border-radius, 8px);
-          padding: 20px;
-          margin-bottom: 20px;
+          border: 1px solid var(--border-color);
+          border-radius: var(--border-radius);
+          padding: var(--spacing-lg);
+          margin-bottom: var(--spacing-lg);
           min-height: 150px;
         }
+        
         .preview-section.hidden {
           display: none;
         }
+        
         .editable-title {
-          margin: 10px 0;
+          margin: var(--spacing-sm) 0;
         }
+        
         .editable-title input {
           font-size: 24px;
           font-weight: bold;
-          color: #4285f4;
+          color: var(--primary-color);
           width: 100%;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-color);
           padding: 5px;
           background: white;
-          border-radius: var(--border-radius, 8px);
+          border-radius: var(--border-radius);
           box-sizing: border-box;
+          transition: border-color 0.2s ease;
         }
+        
         .editable-title input:hover,
         .editable-title input:focus {
-          border-color: #4285f4;
+          border-color: var(--primary-color);
           outline: none;
         }
+        
         .editable-description {
-          margin: 10px 0;
+          margin: var(--spacing-sm) 0;
         }
+        
         .editable-description textarea {
           width: 100%;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-color);
           padding: 5px;
           font-size: 16px;
           line-height: 1.5;
           resize: vertical;
           background: white;
-          color: #5f6368;
-          border-radius: var(--border-radius, 8px);
+          color: var(--text-secondary);
+          border-radius: var(--border-radius);
           font-family: inherit;
           box-sizing: border-box;
+          transition: border-color 0.2s ease;
         }
+        
         .editable-description textarea:hover,
         .editable-description textarea:focus {
-          border-color: #4285f4;
+          border-color: var(--primary-color);
           outline: none;
         }
+        
         .button-container {
           display: flex;
           justify-content: space-between;
-          margin-top: 20px;
+          margin-top: var(--spacing-lg);
         }
+        
         .button-container.hidden {
           display: none;
         }
+        
         button {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
-          padding: 10px 20px;
+          padding: var(--spacing-sm) var(--spacing-lg);
           border: none;
-          border-radius: var(--border-radius, 8px);
+          border-radius: var(--border-radius);
           cursor: pointer;
           font-size: 16px;
           font-weight: 500;
+          transition: background 0.2s ease;
         }
+        
         button:hover {
-          background: #3367d6;
+          background: var(--primary-hover);
         }
+        
         .back-button {
           background: transparent;
-          color: #5f6368;
-          border: 1px solid #e0e0e0;
+          color: var(--text-secondary);
+          border: 1px solid var(--border-color);
         }
+        
         .back-button:hover {
-          background: #f8f9fa;
-          color: #202124;
+          background: var(--background-light);
+          color: var(--text-primary);
         }
+        
         #streaming-container {
-          margin-top: 20px;
+          margin-top: var(--spacing-lg);
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: var(--spacing-sm);
         }
+        
         #streaming-title {
           font-weight: bold;
           font-size: 24px;
-          color: #4285f4;
-          margin-bottom: 10px;
-          padding: 10px;
+          color: var(--primary-color);
+          margin-bottom: var(--spacing-sm);
+          padding: var(--spacing-sm);
           background-color: rgba(240, 240, 240, 0.5);
           border-radius: 4px;
           border: 1px solid rgba(0, 0, 0, 0.1);
@@ -124,10 +157,11 @@ class AppCreationStepTwo extends HTMLElement {
           min-height: 30px;
           display: none;
         }
+        
         #streaming-description {
           font-size: 16px;
           line-height: 1.5;
-          padding: 10px;
+          padding: var(--spacing-sm);
           background-color: rgba(240, 240, 240, 0.5);
           border-radius: 4px;
           border: 1px solid rgba(0, 0, 0, 0.1);
@@ -264,13 +298,6 @@ class AppCreationStepTwo extends HTMLElement {
     this.previewSection.classList.add('hidden');
   }
   
-  setPreviewHeader(text) {
-    // Method kept for compatibility but does nothing since header is removed
-  }
-  
-  setGeneratingState() {
-    // Method kept for compatibility but does nothing since header is removed
-  }
   
   resetButtonContainer() {
     this.shadowRoot.querySelector('.button-container').classList.remove('hidden');
@@ -310,6 +337,9 @@ class AppCreationStepTwo extends HTMLElement {
     // Hide our streaming containers
     this.streamingTitle.style.display = 'none';
     this.streamingDescription.style.display = 'none';
+    
+    // Restore the button container and make fields editable again
+    this.resetButtonContainer();
   }
   
   handleInProgressChunk(chunk) {
@@ -322,6 +352,14 @@ class AppCreationStepTwo extends HTMLElement {
       // Force a document reflow to ensure updates are visible
       document.body.offsetHeight;
     }, 0);
+  }
+  
+  setGeneratingState() {
+    // Hide the button container during generation
+    this.shadowRoot.querySelector('.button-container').classList.add('hidden');
+    // Make the input fields read-only during generation
+    this.generatedTitle.readOnly = true;
+    this.generatedDescription.readOnly = true;
   }
 }
 

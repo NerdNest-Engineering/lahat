@@ -7,32 +7,40 @@ class GenerationStatus extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --primary-color: #4285f4;
+          --text-secondary: #5f6368;
+          --spacing-sm: 10px;
+          
           display: none !important;
         }
+        
         :host(.visible) {
           display: flex !important;
           align-items: center;
           justify-content: flex-start;
-          gap: 10px;
-          margin-bottom: 10px;
-          padding: 10px 0;
+          gap: var(--spacing-sm);
+          margin-bottom: var(--spacing-sm);
+          padding: var(--spacing-sm) 0;
         }
+        
         .spinner {
           width: 20px;
           height: 20px;
           border: 3px solid rgba(66, 133, 244, 0.3);
           border-radius: 50%;
-          border-top-color: #4285f4;
+          border-top-color: var(--primary-color);
           animation: spin 1s linear infinite;
         }
+        
         @keyframes spin {
           to {
             transform: rotate(360deg);
           }
         }
+        
         .status-text {
           font-size: 14px;
-          color: #5f6368;
+          color: var(--text-secondary);
         }
       </style>
       <div class="spinner"></div>

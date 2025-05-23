@@ -7,46 +7,71 @@ class AppCreationStepThree extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --primary-color: #4285f4;
+          --primary-hover: #3367d6;
+          --success-color: #34a853;
+          --error-color: #ea4335;
+          --warning-color: #ffc107;
+          --warning-bg: #fff8e1;
+          --warning-text: #856404;
+          --border-color: #e0e0e0;
+          --text-secondary: #5f6368;
+          --text-muted: #999;
+          --background-light: #f8f9fa;
+          --background-preview: #f0f0f0;
+          --border-radius: 8px;
+          --spacing-xs: 5px;
+          --spacing-sm: 10px;
+          --spacing-md: 15px;
+          --spacing-lg: 20px;
+          
           display: none;
-          padding: 20px 0;
+          padding: var(--spacing-lg) 0;
         }
+        
         :host(.active) {
           display: block;
         }
+        
         h2 {
-          font-size: 20px;
-          margin-bottom: 15px;
+          font-size: var(--spacing-lg);
+          margin-bottom: var(--spacing-md);
         }
+        
         .app-summary {
-          background: #f8f9fa;
-          padding: 15px;
-          border-radius: var(--border-radius, 8px);
-          margin-bottom: 20px;
+          background: var(--background-light);
+          padding: var(--spacing-md);
+          border-radius: var(--border-radius);
+          margin-bottom: var(--spacing-lg);
         }
+        
         .app-title {
           font-size: 18px;
           font-weight: bold;
-          color: #4285f4;
-          margin-bottom: 5px;
+          color: var(--primary-color);
+          margin-bottom: var(--spacing-xs);
         }
+        
         .app-description {
-          color: #5f6368;
+          color: var(--text-secondary);
           font-size: 14px;
         }
+        
         .logo-section {
           background: white;
-          border: 1px solid #e0e0e0;
-          border-radius: var(--border-radius, 8px);
-          padding: 20px;
-          margin-bottom: 20px;
+          border: 1px solid var(--border-color);
+          border-radius: var(--border-radius);
+          padding: var(--spacing-lg);
+          margin-bottom: var(--spacing-lg);
           text-align: center;
         }
+        
         .logo-preview {
           width: 120px;
           height: 120px;
           border-radius: 18px;
-          margin: 0 auto 15px;
-          background: #f0f0f0;
+          margin: 0 auto var(--spacing-md);
+          background: var(--background-preview);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -54,117 +79,142 @@ class AppCreationStepThree extends HTMLElement {
           position: relative;
           overflow: hidden;
         }
+        
         .logo-preview img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           border-radius: 16px;
         }
+        
         .logo-placeholder {
-          color: #999;
+          color: var(--text-muted);
           font-size: 14px;
           text-align: center;
         }
+        
         .logo-status {
-          margin: 15px 0;
+          margin: var(--spacing-md) 0;
           font-size: 14px;
         }
+        
         .logo-status.generating {
-          color: #4285f4;
+          color: var(--primary-color);
         }
+        
         .logo-status.success {
-          color: #34a853;
+          color: var(--success-color);
         }
+        
         .logo-status.error {
-          color: #ea4335;
+          color: var(--error-color);
         }
+        
         .logo-actions {
           display: flex;
-          gap: 10px;
+          gap: var(--spacing-sm);
           justify-content: center;
-          margin: 15px 0;
+          margin: var(--spacing-md) 0;
         }
+        
         .logo-actions button {
           padding: 8px 16px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-color);
           background: white;
-          border-radius: var(--border-radius, 8px);
+          border-radius: var(--border-radius);
           cursor: pointer;
           font-size: 14px;
+          transition: all 0.2s ease;
         }
+        
         .logo-actions button:hover {
-          background: #f8f9fa;
+          background: var(--background-light);
         }
+        
         .logo-actions button.primary {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
-          border-color: #4285f4;
+          border-color: var(--primary-color);
         }
+        
         .logo-actions button.primary:hover {
-          background: #3367d6;
+          background: var(--primary-hover);
         }
+        
         .logo-actions button.secondary {
           background: #6c757d;
           color: white;
           border-color: #6c757d;
         }
+        
         .logo-actions button.secondary:hover {
           background: #5a6268;
         }
+        
         .button-container {
           display: flex;
           justify-content: space-between;
-          margin-top: 20px;
+          margin-top: var(--spacing-lg);
         }
+        
         .button-container.hidden {
           display: none;
         }
+        
         button {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
-          padding: 10px 20px;
+          padding: var(--spacing-sm) var(--spacing-lg);
           border: none;
-          border-radius: var(--border-radius, 8px);
+          border-radius: var(--border-radius);
           cursor: pointer;
           font-size: 16px;
           font-weight: 500;
+          transition: background 0.2s ease;
         }
+        
         button:hover {
-          background: #3367d6;
+          background: var(--primary-hover);
         }
+        
         button.secondary {
-          background: #f8f9fa;
-          color: #5f6368;
-          border: 1px solid #e0e0e0;
+          background: var(--background-light);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-color);
         }
+        
         button.secondary:hover {
           background: #e8eaed;
         }
+        
         .spinner {
           display: inline-block;
           width: 16px;
           height: 16px;
           border: 3px solid rgba(66, 133, 244, 0.3);
           border-radius: 50%;
-          border-top-color: #4285f4;
+          border-top-color: var(--primary-color);
           animation: spin 1s linear infinite;
         }
+        
         @keyframes spin {
           to {
             transform: rotate(360deg);
           }
         }
+        
         .openai-warning {
-          background: #fff8e1;
-          border: 1px solid #ffc107;
-          border-radius: var(--border-radius, 8px);
-          padding: 15px;
-          margin-bottom: 20px;
-          color: #856404;
+          background: var(--warning-bg);
+          border: 1px solid var(--warning-color);
+          border-radius: var(--border-radius);
+          padding: var(--spacing-md);
+          margin-bottom: var(--spacing-lg);
+          color: var(--warning-text);
         }
+        
         .openai-warning h4 {
-          margin: 0 0 10px 0;
-          color: #856404;
+          margin: 0 0 var(--spacing-sm) 0;
+          color: var(--warning-text);
         }
       </style>
       <div>

@@ -7,11 +7,29 @@ class AppCreationStepOne extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --primary-color: #4285f4;
+          --primary-hover: #3367d6;
+          --primary-light: #e8f0fe;
+          --primary-text: #1a73e8;
+          --border-color: #e0e0e0;
+          --text-primary: #333;
+          --text-secondary: #666;
+          --text-muted: #999;
+          --background-light: #f5f5f5;
+          --background-input: #fafafa;
+          --border-radius: 8px;
+          --spacing-xs: 8px;
+          --spacing-sm: 12px;
+          --spacing-md: 16px;
+          --spacing-lg: 24px;
+          --spacing-xl: 32px;
+          
           display: block;
-          padding: 20px;
+          padding: var(--spacing-md);
           max-width: 800px;
           margin: 0 auto;
         }
+        
         :host(.hidden) {
           display: none;
         }
@@ -19,12 +37,12 @@ class AppCreationStepOne extends HTMLElement {
         .step-header {
           display: flex;
           align-items: center;
-          margin-bottom: 30px;
-          gap: 12px;
+          margin-bottom: var(--spacing-xl);
+          gap: var(--spacing-sm);
         }
         
         .step-number {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
           width: 32px;
           height: 32px;
@@ -33,102 +51,103 @@ class AppCreationStepOne extends HTMLElement {
           align-items: center;
           justify-content: center;
           font-weight: 600;
-          font-size: 16px;
+          font-size: var(--spacing-md);
         }
         
         .step-title {
-          font-size: 24px;
+          font-size: var(--spacing-lg);
           font-weight: 600;
-          color: #333;
+          color: var(--text-primary);
           margin: 0;
         }
         
         .main-title {
           font-size: 20px;
           font-weight: 600;
-          color: #333;
-          margin: 0 0 8px 0;
+          color: var(--text-primary);
+          margin: 0 0 var(--spacing-xs) 0;
         }
         
         .description {
-          color: #666;
-          font-size: 16px;
+          color: var(--text-secondary);
+          font-size: var(--spacing-md);
           line-height: 1.5;
-          margin-bottom: 24px;
+          margin-bottom: var(--spacing-lg);
         }
         
         .input-group {
-          margin-bottom: 32px;
+          margin-bottom: var(--spacing-xl);
         }
         
         textarea {
           width: 100%;
           min-height: 120px;
-          padding: 16px;
-          font-size: 16px;
-          border-radius: 8px;
-          border: 1px solid #e0e0e0;
+          padding: var(--spacing-md);
+          font-size: var(--spacing-md);
+          border-radius: var(--border-radius);
+          border: 1px solid var(--border-color);
           box-sizing: border-box;
           font-family: inherit;
           resize: vertical;
-          background: #fafafa;
+          background: var(--background-input);
+          transition: all 0.2s ease;
         }
         
         textarea:focus {
           outline: none;
-          border-color: #4285f4;
+          border-color: var(--primary-color);
           background: white;
         }
         
         textarea::placeholder {
-          color: #999;
+          color: var(--text-muted);
         }
         
         .examples-section {
-          margin-bottom: 32px;
+          margin-bottom: var(--spacing-xl);
         }
         
         .examples-title {
           font-size: 18px;
           font-weight: 600;
-          color: #333;
-          margin: 0 0 8px 0;
+          color: var(--text-primary);
+          margin: 0 0 var(--spacing-xs) 0;
         }
         
         .examples-subtitle {
-          color: #666;
+          color: var(--text-secondary);
           font-size: 14px;
-          margin-bottom: 16px;
+          margin-bottom: var(--spacing-md);
         }
         
         .examples-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 12px;
+          gap: var(--spacing-sm);
         }
         
         .example-button {
-          background: #f5f5f5;
-          border: 1px solid #e0e0e0;
-          border-radius: 8px;
-          padding: 12px 16px;
+          background: var(--background-light);
+          border: 1px solid var(--border-color);
+          border-radius: var(--border-radius);
+          padding: var(--spacing-sm) var(--spacing-md);
           text-align: left;
           cursor: pointer;
           font-size: 14px;
-          color: #333;
+          color: var(--text-primary);
           transition: all 0.2s ease;
         }
         
         .example-button:hover {
-          background: #e8f0fe;
-          border-color: #4285f4;
-          color: #1a73e8;
+          background: var(--primary-light);
+          border-color: var(--primary-color);
+          color: var(--primary-text);
         }
         
         .button-container {
           display: flex;
           justify-content: flex-start;
-          margin-top: 32px;
+          margin-top: var(--spacing-xl);
         }
         
         .button-container.hidden {
@@ -136,25 +155,25 @@ class AppCreationStepOne extends HTMLElement {
         }
         
         .next-button {
-          background: #e0e0e0;
-          color: #999;
-          padding: 12px 24px;
+          background: var(--border-color);
+          color: var(--text-muted);
+          padding: var(--spacing-sm) var(--spacing-lg);
           border: none;
-          border-radius: 8px;
+          border-radius: var(--border-radius);
           cursor: not-allowed;
-          font-size: 16px;
+          font-size: var(--spacing-md);
           font-weight: 500;
           transition: all 0.2s ease;
         }
         
         .next-button.enabled {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
           cursor: pointer;
         }
         
         .next-button.enabled:hover {
-          background: #3367d6;
+          background: var(--primary-hover);
         }
       </style>
       <div>

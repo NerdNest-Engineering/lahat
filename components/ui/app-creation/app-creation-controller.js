@@ -7,10 +7,22 @@ class AppCreationController extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --primary-color: #4285f4;
+          --primary-hover: #3367d6;
+          --success-color: #34a853;
+          --border-color: #e0e0e0;
+          --text-secondary: #5f6368;
+          --text-muted: #999;
+          --background-light: #f8f9fa;
+          --border-radius: 8px;
+          --spacing-sm: 10px;
+          --spacing-md: 20px;
+          --spacing-lg: 30px;
+          
           display: block;
           max-width: 800px;
           margin: 0 auto;
-          padding: 20px;
+          padding: var(--spacing-md);
         }
         .step-container {
           min-height: 400px;
@@ -18,44 +30,52 @@ class AppCreationController extends HTMLElement {
         .progress-indicator {
           display: flex;
           justify-content: center;
-          margin-bottom: 30px;
-          gap: 20px;
+          margin-bottom: var(--spacing-lg);
+          gap: var(--spacing-md);
         }
+        
         .progress-step {
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background: #e0e0e0;
+          background: var(--border-color);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: bold;
-          color: #999;
+          font-weight: 600;
+          color: var(--text-muted);
           position: relative;
+          transition: all 0.2s ease;
         }
+        
         .progress-step.active {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
         }
+        
         .progress-step.completed {
-          background: #34a853;
+          background: var(--success-color);
           color: white;
         }
+        
         .progress-step::after {
           content: '';
           position: absolute;
           top: 50%;
           left: 100%;
-          width: 20px;
+          width: var(--spacing-md);
           height: 2px;
-          background: #e0e0e0;
+          background: var(--border-color);
           transform: translateY(-50%);
+          transition: background 0.2s ease;
         }
+        
         .progress-step:last-child::after {
           display: none;
         }
+        
         .progress-step.completed::after {
-          background: #34a853;
+          background: var(--success-color);
         }
       </style>
       <div class="progress-indicator">
@@ -137,43 +157,48 @@ class AppCreationController extends HTMLElement {
   }
   
   moveToStep(stepNumber) {
+    // Cache step elements for better performance
+    const stepElements = {
+      1: this.shadowRoot.querySelector('#step-one'),
+      2: this.shadowRoot.querySelector('#step-two'),
+      3: this.shadowRoot.querySelector('#step-three'),
+      4: this.shadowRoot.querySelector('#step-four')
+    };
+    
     // Update progress indicator
     for (let i = 1; i <= 4; i++) {
-      const stepElement = this.shadowRoot.querySelector(`#step-${i}`);
-      stepElement.classList.remove('active', 'completed');
+      const progressElement = this.shadowRoot.querySelector(`#step-${i}`);
+      progressElement.classList.remove('active', 'completed');
       
       if (i < stepNumber) {
-        stepElement.classList.add('completed');
+        progressElement.classList.add('completed');
       } else if (i === stepNumber) {
-        stepElement.classList.add('active');
+        progressElement.classList.add('active');
       }
     }
     
     // Hide all steps
-    this.shadowRoot.querySelector('#step-one').setActive(false);
-    this.shadowRoot.querySelector('#step-two').setActive(false);
-    this.shadowRoot.querySelector('#step-three').setActive(false);
-    this.shadowRoot.querySelector('#step-four').setActive(false);
+    Object.values(stepElements).forEach(element => element.setActive(false));
     
-    // Show current step
-    if (stepNumber === 1) {
-      this.shadowRoot.querySelector('#step-one').setActive(true);
-      this.shadowRoot.querySelector('#step-one').resetButtonContainer();
-    } else if (stepNumber === 2) {
-      this.shadowRoot.querySelector('#step-two').setActive(true);
-      this.shadowRoot.querySelector('#step-two').setUserInput(this.appData.userInput);
-      this.shadowRoot.querySelector('#step-two').resetButtonContainer();
-    } else if (stepNumber === 3) {
-      this.shadowRoot.querySelector('#step-three').setActive(true);
-      this.shadowRoot.querySelector('#step-three').setAppInfo(this.appData.title, this.appData.description, this.appData.folderPath);
-      this.shadowRoot.querySelector('#step-three').checkOpenAIAvailability();
-      this.shadowRoot.querySelector('#step-three').resetButtonContainer();
-    } else if (stepNumber === 4) {
-      this.shadowRoot.querySelector('#step-four').setActive(true);
-      this.shadowRoot.querySelector('#step-four').setAppInfo(this.appData.title, this.appData.description, this.appData.logoGenerated, this.appData.logoPath);
-      this.shadowRoot.querySelector('#step-four').resetButtonContainer();
+    // Show and configure current step
+    const currentStepElement = stepElements[stepNumber];
+    currentStepElement.setActive(true);
+    
+    // Step-specific configuration
+    switch (stepNumber) {
+      case 2:
+        currentStepElement.setUserInput(this.appData.userInput);
+        break;
+      case 3:
+        currentStepElement.setAppInfo(this.appData.title, this.appData.description, this.appData.folderPath);
+        currentStepElement.checkOpenAIAvailability();
+        break;
+      case 4:
+        currentStepElement.setAppInfo(this.appData.title, this.appData.description, this.appData.logoGenerated, this.appData.logoPath);
+        break;
     }
     
+    currentStepElement.resetButtonContainer();
     this.currentStep = stepNumber;
   }
   

@@ -29,10 +29,12 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
     }
     
     // Start streaming response
-    event.sender.send('generation-status', {
-      status: 'generating',
-      message: 'Generating your mini app...'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'generating',
+        message: 'Generating your mini app...'
+      });
+    }
     
     const response = await claudeClient.generateApp(prompt, conversationId);
     let htmlContent = '';
@@ -41,17 +43,21 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
     for await (const streamEvent of response) {
       if (streamEvent.type === 'content_block_delta' && streamEvent.delta.type === 'text_delta') {
         htmlContent += streamEvent.delta.text || '';
-        event.sender.send('generation-chunk', {
-          content: streamEvent.delta.text || '',
-          done: false
-        });
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('generation-chunk', {
+            content: streamEvent.delta.text || '',
+            done: false
+          });
+        }
       }
     }
     
     // Signal completion
-    event.sender.send('generation-chunk', {
-      done: true
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-chunk', {
+        done: true
+      });
+    }
     
     // Save the generated app to the pre-created folder
     let savedApp;
@@ -130,10 +136,12 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
       name: savedApp.metadata.name
     };
   } catch (error) {
-    event.sender.send('generation-status', {
-      status: 'error',
-      message: `Error: ${error.message}`
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'error',
+        message: `Error: ${error.message}`
+      });
+    }
     
     return {
       success: false,
@@ -203,10 +211,12 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
     }
     
     // Start streaming response
-    event.sender.send('generation-status', {
-      status: 'updating',
-      message: 'Updating your mini app...'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'updating',
+        message: 'Updating your mini app...'
+      });
+    }
     
     const response = await claudeClient.generateApp(prompt, appId);
     let htmlContent = '';
@@ -215,17 +225,21 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
     for await (const streamEvent of response) {
       if (streamEvent.type === 'content_block_delta' && streamEvent.delta.type === 'text_delta') {
         htmlContent += streamEvent.delta.text || '';
-        event.sender.send('generation-chunk', {
-          content: streamEvent.delta.text || '',
-          done: false
-        });
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('generation-chunk', {
+            content: streamEvent.delta.text || '',
+            done: false
+          });
+        }
       }
     }
     
     // Signal completion
-    event.sender.send('generation-chunk', {
-      done: true
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-chunk', {
+        done: true
+      });
+    }
     
     // Update the app
     const updatedApp = await claudeClient.updateGeneratedApp(
@@ -254,10 +268,12 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
       filePath: updatedApp.filePath
     };
   } catch (error) {
-    event.sender.send('generation-status', {
-      status: 'error',
-      message: `Error: ${error.message}`
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'error',
+        message: `Error: ${error.message}`
+      });
+    }
     
     return {
       success: false,
@@ -438,7 +454,7 @@ async function handleImportMiniApp(event) {
       // Notify main window to refresh app list
       const mainWindow = BrowserWindow.getAllWindows().find(win => 
         win.webContents.getTitle().includes('Lahat'));
-      if (mainWindow) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('refresh-app-list');
       }
       
@@ -516,10 +532,12 @@ async function handleGenerateTitleAndDescription(event, { input }) {
     }
     
     // Start streaming status
-    event.sender.send('generation-status', {
-      status: 'generating',
-      message: 'Generating title and description...'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'generating',
+        message: 'Generating title and description...'
+      });
+    }
     
     // Generate title and description with streaming
     const result = await titleDescriptionGenerator.generateTitleAndDescription(
@@ -527,15 +545,19 @@ async function handleGenerateTitleAndDescription(event, { input }) {
       claudeClient.apiKey,
       (chunk) => {
         // Send each chunk to the renderer
-        event.sender.send('title-description-chunk', chunk);
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('title-description-chunk', chunk);
+        }
       }
     );
     
     // Signal completion
-    event.sender.send('generation-status', {
-      status: 'complete',
-      message: 'Title and description generated'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'complete',
+        message: 'Title and description generated'
+      });
+    }
     
     return { 
       success: true,
@@ -543,10 +565,12 @@ async function handleGenerateTitleAndDescription(event, { input }) {
       description: result.description
     };
   } catch (error) {
-    event.sender.send('generation-status', {
-      status: 'error',
-      message: `Error: ${error.message}`
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'error',
+        message: `Error: ${error.message}`
+      });
+    }
     
     return {
       success: false,

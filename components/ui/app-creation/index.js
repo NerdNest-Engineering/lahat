@@ -1,6 +1,14 @@
-// App Creation Components Index
-// This file exports all app creation components for easy importing
+/**
+ * App Creation Components Index
+ * 
+ * This module provides a centralized export point for all app creation components.
+ * It handles both named exports for selective importing and automatic registration
+ * of all web components when the module is imported.
+ * 
+ * @module AppCreationComponents
+ */
 
+// Named exports for selective importing
 export { AppCreationStepOne } from './step-one.js';
 export { AppCreationStepTwo } from './step-two.js';
 export { AppCreationStepThree } from './step-three.js';
@@ -8,7 +16,7 @@ export { AppCreationStepFour } from './step-four.js';
 export { GenerationStatus } from './generation-status.js';
 export { AppCreationController } from './app-creation-controller.js';
 
-// Import all components to register them
+// Auto-register all components when this module is imported
 import './step-one.js';
 import './step-two.js';
 import './step-three.js';

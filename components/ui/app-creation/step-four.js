@@ -7,9 +7,35 @@ class AppCreationStepFour extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --primary-color: #4285f4;
+          --primary-hover: #3367d6;
+          --success-color: #34a853;
+          --success-hover: #2d7d32;
+          --error-color: #ea4335;
+          --border-color: #e0e0e0;
+          --text-primary: #333;
+          --text-secondary: #5f6368;
+          --text-muted: #999;
+          --text-code: #d4d4d4;
+          --text-code-muted: #888;
+          --background-light: #f8f9fa;
+          --background-code: #1e1e1e;
+          --background-scrollbar: #2d2d2d;
+          --background-scrollbar-thumb: #555;
+          --background-scrollbar-thumb-hover: #777;
+          --border-radius: 8px;
+          --spacing-xs: 5px;
+          --spacing-sm: 10px;
+          --spacing-md: 12px;
+          --spacing-lg: 15px;
+          --spacing-xl: 20px;
+          --spacing-xxl: 24px;
+          --spacing-xxxl: 30px;
+          
           display: none;
-          padding: 20px 0;
+          padding: var(--spacing-xl) 0;
         }
+        
         :host(.active) {
           display: block;
         }
@@ -17,12 +43,12 @@ class AppCreationStepFour extends HTMLElement {
         .step-header {
           display: flex;
           align-items: center;
-          margin-bottom: 30px;
-          gap: 12px;
+          margin-bottom: var(--spacing-xxxl);
+          gap: var(--spacing-md);
         }
         
         .step-number {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
           width: 32px;
           height: 32px;
@@ -35,63 +61,63 @@ class AppCreationStepFour extends HTMLElement {
         }
         
         .step-title {
-          font-size: 24px;
+          font-size: var(--spacing-xxl);
           font-weight: 600;
-          color: #333;
+          color: var(--text-primary);
           margin: 0;
         }
         
         .app-summary {
-          background: #f8f9fa;
-          padding: 15px;
-          border-radius: var(--border-radius, 8px);
-          margin-bottom: 20px;
+          background: var(--background-light);
+          padding: var(--spacing-lg);
+          border-radius: var(--border-radius);
+          margin-bottom: var(--spacing-xl);
         }
         
         .app-title {
           font-size: 18px;
           font-weight: bold;
-          color: #4285f4;
-          margin-bottom: 5px;
+          color: var(--primary-color);
+          margin-bottom: var(--spacing-xs);
         }
         
         .app-description {
-          color: #5f6368;
+          color: var(--text-secondary);
           font-size: 14px;
         }
         
         .generation-section {
           background: white;
-          border: 1px solid #e0e0e0;
-          border-radius: var(--border-radius, 8px);
-          margin-bottom: 20px;
+          border: 1px solid var(--border-color);
+          border-radius: var(--border-radius);
+          margin-bottom: var(--spacing-xl);
           overflow: hidden;
         }
         
         .generation-header {
-          background: #f8f9fa;
-          padding: 15px 20px;
-          border-bottom: 1px solid #e0e0e0;
+          background: var(--background-light);
+          padding: var(--spacing-lg) var(--spacing-xl);
+          border-bottom: 1px solid var(--border-color);
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: var(--spacing-sm);
         }
         
         .generation-status {
           font-weight: 600;
-          color: #333;
+          color: var(--text-primary);
         }
         
         .generation-status.generating {
-          color: #4285f4;
+          color: var(--primary-color);
         }
         
         .generation-status.complete {
-          color: #34a853;
+          color: var(--success-color);
         }
         
         .generation-status.error {
-          color: #ea4335;
+          color: var(--error-color);
         }
         
         .spinner {
@@ -100,7 +126,7 @@ class AppCreationStepFour extends HTMLElement {
           height: 16px;
           border: 3px solid rgba(66, 133, 244, 0.3);
           border-radius: 50%;
-          border-top-color: #4285f4;
+          border-top-color: var(--primary-color);
           animation: spin 1s linear infinite;
         }
         
@@ -117,12 +143,12 @@ class AppCreationStepFour extends HTMLElement {
         .code-viewer {
           height: 400px;
           overflow-y: auto;
-          background: #1e1e1e;
-          color: #d4d4d4;
+          background: var(--background-code);
+          color: var(--text-code);
           font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
           font-size: 14px;
           line-height: 1.5;
-          padding: 20px;
+          padding: var(--spacing-xl);
           white-space: pre-wrap;
           word-wrap: break-word;
         }
@@ -132,31 +158,31 @@ class AppCreationStepFour extends HTMLElement {
         }
         
         .code-viewer::-webkit-scrollbar-track {
-          background: #2d2d2d;
+          background: var(--background-scrollbar);
         }
         
         .code-viewer::-webkit-scrollbar-thumb {
-          background: #555;
+          background: var(--background-scrollbar-thumb);
           border-radius: 4px;
         }
         
         .code-viewer::-webkit-scrollbar-thumb:hover {
-          background: #777;
+          background: var(--background-scrollbar-thumb-hover);
         }
         
         .code-placeholder {
-          color: #888;
+          color: var(--text-code-muted);
           font-style: italic;
           text-align: center;
-          padding: 50px 20px;
+          padding: 50px var(--spacing-xl);
         }
         
         .generation-stats {
-          padding: 15px 20px;
-          background: #f8f9fa;
-          border-top: 1px solid #e0e0e0;
+          padding: var(--spacing-lg) var(--spacing-xl);
+          background: var(--background-light);
+          border-top: 1px solid var(--border-color);
           font-size: 14px;
-          color: #5f6368;
+          color: var(--text-secondary);
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -165,13 +191,13 @@ class AppCreationStepFour extends HTMLElement {
         .stats-item {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: var(--spacing-xs);
         }
         
         .button-container {
           display: flex;
           justify-content: center;
-          margin-top: 20px;
+          margin-top: var(--spacing-xl);
         }
         
         .button-container.hidden {
@@ -179,11 +205,11 @@ class AppCreationStepFour extends HTMLElement {
         }
         
         button {
-          background: #4285f4;
+          background: var(--primary-color);
           color: white;
-          padding: 12px 24px;
+          padding: var(--spacing-md) var(--spacing-xxl);
           border: none;
-          border-radius: var(--border-radius, 8px);
+          border-radius: var(--border-radius);
           cursor: pointer;
           font-size: 16px;
           font-weight: 500;
@@ -191,19 +217,19 @@ class AppCreationStepFour extends HTMLElement {
         }
         
         button:hover {
-          background: #3367d6;
+          background: var(--primary-hover);
         }
         
         button:disabled {
-          background: #e0e0e0;
-          color: #999;
+          background: var(--border-color);
+          color: var(--text-muted);
           cursor: not-allowed;
         }
         
         button.secondary {
-          background: #f8f9fa;
-          color: #5f6368;
-          border: 1px solid #e0e0e0;
+          background: var(--background-light);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-color);
         }
         
         button.secondary:hover {
@@ -211,11 +237,11 @@ class AppCreationStepFour extends HTMLElement {
         }
         
         .complete-button {
-          background: #34a853;
+          background: var(--success-color);
         }
         
         .complete-button:hover {
-          background: #2d7d32;
+          background: var(--success-hover);
         }
       </style>
       <div>
