@@ -509,7 +509,8 @@ EXAMPLE OUTPUT:
       
       // Create a safe filename for the zip
       const safeAppName = metadata.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const zipFilename = outputPath || path.join(app.getPath('downloads'), `${safeAppName}_package.zip`);
+      // If outputPath is provided, use it directly, otherwise create a default path with the app name
+      const zipFilename = outputPath || path.join(app.getPath('downloads'), `${safeAppName}.zip`);
       
       // Create a zip file
       const output = createWriteStream(zipFilename);

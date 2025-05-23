@@ -351,8 +351,102 @@ app.on('before-quit', (event) => {
   }
 });
 
+/**
+ * Handle importing a .lahat file
+ * @param {string} filePath - Path to the .lahat file
+ */
+async function handleLahatFileOpen(filePath) {
+  console.log('Handling .lahat file open:', filePath);
+  
+  if (!filePath || !filePath.endsWith('.lahat')) {
+    console.error('Invalid .lahat file path:', filePath);
+    return;
+  }
+  
+  try {
+    // Get the Claude client
+    const claudeClient = apiHandlers.getClaudeClient();
+    if (!claudeClient) {
+      console.error('Claude client not initialized');
+      return;
+    }
+    
+    // Import the app package
+    const result = await claudeClient.importMiniAppPackage(filePath);
+    
+    if (result.success) {
+      // Update recent apps list
+      const recentApps = store.get('recentApps') || [];
+      recentApps.unshift({
+        id: result.appId,
+        name: result.name,
+        created: new Date().toISOString(),
+        filePath: result.filePath
+      });
+      
+      // Keep only the 10 most recent apps
+      if (recentApps.length > 10) {
+        recentApps.length = 10;
+      }
+      
+      store.set('recentApps', recentApps);
+      
+      // Open the imported app
+      // Ensure main window is open first
+      const mainWindow = windowManager.getWindow(windowManager.WindowType.MAIN);
+      if (!mainWindow) {
+        windowManager.showWindow(windowManager.WindowType.MAIN);
+      } else {
+        // Notify the main window to refresh the app list
+        mainWindow.webContents.send('refresh-app-list');
+      }
+      
+      // Then open the mini app
+      setTimeout(() => {
+        import('./modules/miniAppManager.js').then(miniAppManager => {
+          miniAppManager.openMiniApp(result.appId, result.filePath, result.name);
+        });
+      }, 1000);
+    } else {
+      console.error('Failed to import .lahat file:', result.error);
+      
+      // Show error dialog
+      dialog.showErrorBox(
+        'Import Failed',
+        `Failed to import the Lahat app: ${result.error}`
+      );
+    }
+  } catch (error) {
+    console.error('Error handling .lahat file open:', error);
+    
+    // Show error dialog
+    dialog.showErrorBox(
+      'Import Error',
+      `An error occurred while importing the Lahat app: ${error.message}`
+    );
+  }
+}
+
 app.whenReady().then(() => {
   initializeApp();
+  
+  // Set up file association handling for .lahat files
+  // This handles files opened from Finder/Explorer after the app is already running
+  app.on('open-file', (event, path) => {
+    event.preventDefault();
+    console.log('open-file event triggered with path:', path);
+    
+    if (path.endsWith('.lahat')) {
+      handleLahatFileOpen(path);
+    }
+  });
+  
+  // Handle files passed as command line arguments (e.g., when double-clicking a .lahat file)
+  const filePathArg = process.argv.find(arg => arg.endsWith('.lahat'));
+  if (filePathArg) {
+    console.log('Found .lahat file in command line arguments:', filePathArg);
+    handleLahatFileOpen(filePathArg);
+  }
 
   // Handle macOS dock click or Windows taskbar click
   app.on('activate', () => {

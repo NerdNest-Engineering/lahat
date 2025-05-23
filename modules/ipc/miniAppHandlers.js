@@ -1,4 +1,4 @@
-import { ipcMain, dialog, app } from 'electron';
+import { ipcMain, dialog, app, BrowserWindow } from 'electron';
 import path from 'path';
 import * as fileOperations from '../utils/fileOperations.js';
 import * as apiHandlers from './apiHandlers.js';
@@ -271,7 +271,7 @@ async function handleDeleteMiniApp(event, { appId }) {
 }
 
 /**
- * Handle exporting a mini app as a package (zip file)
+ * Handle exporting a mini app as a package (.lahat file)
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for exporting the mini app
  * @returns {Promise<Object>} - Result object with success flag
@@ -286,12 +286,54 @@ async function handleExportMiniApp(event, { appId, filePath }) {
       };
     }
     
-    // Show save dialog for zip file
+    // Get the app name - first check if it's open in a window
+    let appName = null;
+    const miniApp = miniAppManager.getMiniApp(appId);
+    if (miniApp && miniApp.name) {
+      appName = miniApp.name;
+    } else {
+      // If not open, we need to find the app in the storage directory
+      try {
+        // Get all folders in the app storage directory
+        const appStoragePath = path.join(app.getPath('userData'), 'generated-apps');
+        const items = await fs.readdir(appStoragePath, { withFileTypes: true });
+        const folders = items.filter(item => item.isDirectory()).map(item => item.name);
+        
+        // Search for the app with matching conversationId
+        for (const folder of folders) {
+          const metadataPath = path.join(appStoragePath, folder, 'metadata.json');
+          
+          try {
+            const metaContent = await fs.readFile(metadataPath, 'utf-8');
+            const metadata = JSON.parse(metaContent);
+            
+            if (metadata.conversationId === appId) {
+              appName = metadata.name;
+              break;
+            }
+          } catch (error) {
+            continue; // Skip invalid metadata files
+          }
+        }
+      } catch (error) {
+        console.warn('Could not retrieve app name from storage:', error);
+      }
+    }
+    
+    // If we couldn't find the name, use a default
+    if (!appName) {
+      appName = 'mini-app';
+    }
+    
+    // Format app name to be filename-friendly
+    const safeAppName = appName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase();
+    
+    // Show save dialog for .lahat file with app name
     const { canceled, filePath: savePath } = await dialog.showSaveDialog({
       title: 'Export Mini App Package',
-      defaultPath: path.join(app.getPath('documents'), 'mini-app-package.zip'),
+      defaultPath: path.join(app.getPath('documents'), `${safeAppName}.lahat`),
       filters: [
-        { name: 'Zip Files', extensions: ['zip'] }
+        { name: 'Lahat Apps', extensions: ['lahat'] }
       ]
     });
     
@@ -331,6 +373,7 @@ async function handleImportMiniApp(event) {
       title: 'Import Mini App Package',
       properties: ['openFile'],
       filters: [
+        { name: 'Lahat Apps', extensions: ['lahat'] },
         { name: 'Zip Files', extensions: ['zip'] }
       ]
     });
@@ -358,6 +401,13 @@ async function handleImportMiniApp(event) {
       }
       
       store.set('recentApps', recentApps);
+      
+      // Notify main window to refresh app list
+      const mainWindow = BrowserWindow.getAllWindows().find(win => 
+        win.webContents.getTitle().includes('Lahat'));
+      if (mainWindow) {
+        mainWindow.webContents.send('refresh-app-list');
+      }
       
       // Open the imported app
       await miniAppManager.openMiniApp(result.appId, result.filePath, result.name);

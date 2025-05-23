@@ -54,6 +54,9 @@ contextBridge.exposeInMainWorld(
     onApiKeyUpdated: (callback) => {
       ipcRenderer.on('api-key-updated', () => callback());
     },
+    onRefreshAppList: (callback) => {
+      ipcRenderer.on('refresh-app-list', () => callback());
+    },
     
     // Claude API key management
     setApiKey: async (apiKey) => {

@@ -55,6 +55,15 @@
   "build": {
     "appId": "com.nerdnest.lahat",
     "productName": "Lahat",
+    "fileAssociations": [
+      {
+        "ext": "lahat",
+        "name": "Lahat App",
+        "description": "Lahat Mini Application",
+        "role": "Editor",
+        "icon": "assets/icons/lahat.png"
+      }
+    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "assets/icons/lahat.png",
