@@ -95,6 +95,143 @@ function initializeApp() {
 
 // Track if an update is available using a simple variable
 let isUpdateAvailable = false;
+let progressWindow = null;
+
+/**
+ * Create and show update progress window
+ */
+function createProgressWindow() {
+  if (progressWindow) {
+    return progressWindow;
+  }
+
+  progressWindow = new BrowserWindow({
+    width: 400,
+    height: 200,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    closable: false,
+    alwaysOnTop: true,
+    center: true,
+    title: 'Downloading Update',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  // Create HTML content for the progress window
+  const progressHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          margin: 0;
+          padding: 20px;
+          background: #f5f5f5;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 160px;
+        }
+        .container {
+          text-align: center;
+          width: 100%;
+        }
+        .title {
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 20px;
+          color: #333;
+        }
+        .progress-container {
+          width: 100%;
+          background-color: #e0e0e0;
+          border-radius: 10px;
+          overflow: hidden;
+          margin-bottom: 15px;
+        }
+        .progress-bar {
+          height: 20px;
+          background: linear-gradient(90deg, #007AFF, #5AC8FA);
+          width: 0%;
+          transition: width 0.3s ease;
+          border-radius: 10px;
+        }
+        .progress-text {
+          font-size: 14px;
+          color: #666;
+          margin-top: 10px;
+        }
+        .status-text {
+          font-size: 12px;
+          color: #888;
+          margin-top: 5px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="title">Downloading Update</div>
+        <div class="progress-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+        <div class="status-text" id="statusText">Preparing download...</div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  progressWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(progressHTML)}`);
+
+  progressWindow.on('closed', () => {
+    progressWindow = null;
+  });
+
+  return progressWindow;
+}
+
+/**
+ * Update progress window with current download progress
+ */
+function updateProgress(percent, bytesPerSecond, total, transferred) {
+  if (!progressWindow) return;
+
+  const progressBar = `document.getElementById('progressBar').style.width = '${percent}%'`;
+  const progressText = `document.getElementById('progressText').textContent = '${percent.toFixed(1)}%'`;
+  
+  let statusText = `Downloading...`;
+  if (bytesPerSecond && total) {
+    const speedMB = (bytesPerSecond / 1024 / 1024).toFixed(1);
+    const totalMB = (total / 1024 / 1024).toFixed(1);
+    const transferredMB = (transferred / 1024 / 1024).toFixed(1);
+    statusText = `${transferredMB}MB / ${totalMB}MB (${speedMB} MB/s)`;
+  }
+  const statusUpdate = `document.getElementById('statusText').textContent = '${statusText}'`;
+
+  progressWindow.webContents.executeJavaScript(`
+    ${progressBar};
+    ${progressText};
+    ${statusUpdate};
+  `).catch(err => {
+    console.error('Error updating progress window:', err);
+  });
+}
+
+/**
+ * Close progress window
+ */
+function closeProgressWindow() {
+  if (progressWindow && !progressWindow.isDestroyed()) {
+    progressWindow.close();
+    progressWindow = null;
+  }
+}
 
 /**
  * Setup auto-update functionality
@@ -141,6 +278,9 @@ function setupAutoUpdater() {
   
   // Handle update events
   autoUpdater.on('update-downloaded', (info) => {
+    // Close progress window when download is complete
+    closeProgressWindow();
+    
     const mainWindow = windowManager.getWindow(windowManager.WindowType.MAIN);
     if (mainWindow) {
       const message = `A new version (${info.version}) has been downloaded. Would you like to install it now?`;
@@ -260,6 +400,9 @@ sleep 2
   });
   
   autoUpdater.on('error', (err) => {
+    // Close progress window on error
+    closeProgressWindow();
+    
     ErrorHandler.logError('autoUpdater', err, ErrorHandler.ERROR_LEVELS.ERROR);
     console.error('Auto-updater error:', err);
   });
@@ -281,9 +424,25 @@ sleep 2
     // Mark that an update is available
     isUpdateAvailable = true;
     
+    // Show progress window when update starts downloading
+    createProgressWindow();
+    
+    // Show initial notification to user
+    const mainWindow = windowManager.getWindow(windowManager.WindowType.MAIN);
+    if (mainWindow) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        buttons: ['OK'],
+        title: 'Update Available',
+        message: `A new version (${info.version}) is available and will be downloaded in the background.`,
+        detail: 'You will be notified when the download is complete.'
+      });
+    }
+    
     // Explicitly request download when update is detected
     autoUpdater.downloadUpdate().catch(err => {
       console.error('Error downloading update:', err);
+      closeProgressWindow();
     });
   });
   
@@ -293,6 +452,14 @@ sleep 2
   
   autoUpdater.on('download-progress', (progressObj) => {
     console.log(`Download progress: ${progressObj.percent.toFixed(2)}%`);
+    
+    // Update the progress window
+    updateProgress(
+      progressObj.percent,
+      progressObj.bytesPerSecond,
+      progressObj.total,
+      progressObj.transferred
+    );
   });
   
   // Register the before-quit event to properly handle application quit
@@ -317,6 +484,9 @@ let forceQuit = false;
 // Application lifecycle events
 app.on('before-quit', (event) => {
   console.log('Application before-quit event');
+  
+  // Close progress window if it's open
+  closeProgressWindow();
   
   // If we're forcing quit for updates, don't prevent it
   if (forceQuit) {
