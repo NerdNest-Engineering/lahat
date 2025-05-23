@@ -117,10 +117,10 @@ textarea {
   display: none !important;
 }
 
-/* Window styling */
+/* Window styling - UPDATED: Full width for responsive layout */
 .window {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   background: white;
   height: 100vh;
   display: flex;
@@ -229,11 +229,7 @@ textarea {
   margin-bottom: 15px;
 }
 
-#app-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
-}
+/* REMOVED: Old CSS Grid rules for #app-list - now handled by flexbox component */
 
 .app-card {
   background: var(--light-gray);

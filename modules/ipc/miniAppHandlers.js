@@ -13,12 +13,12 @@ import fs from 'fs/promises';
  */
 
 /**
- * Handle generating a mini app
+ * Handle generating a mini app with pre-created folder
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for generating the mini app
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleGenerateMiniApp(event, { prompt, appName }) {
+async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conversationId, logoPath }) {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -34,7 +34,7 @@ async function handleGenerateMiniApp(event, { prompt, appName }) {
       message: 'Generating your mini app...'
     });
     
-    const response = await claudeClient.generateApp(prompt);
+    const response = await claudeClient.generateApp(prompt, conversationId);
     let htmlContent = '';
     
     // Stream the response
@@ -53,12 +53,45 @@ async function handleGenerateMiniApp(event, { prompt, appName }) {
       done: true
     });
     
-    // Save the generated app
-    const savedApp = await claudeClient.saveGeneratedApp(
-      appName || 'Mini App',
-      htmlContent,
-      prompt
-    );
+    // Save the generated app to the pre-created folder
+    let savedApp;
+    if (folderPath && conversationId) {
+      // Use the pre-created folder structure
+      const htmlFilePath = path.join(folderPath, 'index.html');
+      await fs.writeFile(htmlFilePath, htmlContent);
+      
+      // Create metadata
+      const metadata = {
+        name: appName || 'Mini App',
+        created: new Date().toISOString(),
+        prompt,
+        conversationId,
+        logo: logoPath ? { filePath: logoPath } : null,
+        versions: [
+          {
+            timestamp: Date.now(),
+            filePath: 'index.html'
+          }
+        ]
+      };
+      
+      // Save metadata
+      const metadataPath = path.join(folderPath, 'metadata.json');
+      await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+      
+      savedApp = {
+        folderPath,
+        filePath: htmlFilePath,
+        metadata
+      };
+    } else {
+      // Fallback to original method
+      savedApp = await claudeClient.saveGeneratedApp(
+        appName || 'Mini App',
+        htmlContent,
+        prompt
+      );
+    }
     
     // Create a window for the app
     const windowResult = await miniAppManager.createMiniAppWindow(
@@ -424,6 +457,49 @@ async function handleImportMiniApp(event) {
 }
 
 /**
+ * Handle creating app folder structure early for logo generation
+ * @param {Object} event - IPC event
+ * @param {Object} params - Parameters for creating app folder
+ * @returns {Promise<Object>} - Result object with folder path
+ */
+async function handleCreateAppFolder(event, { appName }) {
+  try {
+    const claudeClient = apiHandlers.getClaudeClient();
+    if (!claudeClient) {
+      return {
+        success: false,
+        error: 'Claude API key not set. Please set your API key in settings.'
+      };
+    }
+    
+    // Create a safe folder name from the app name
+    const safeAppName = appName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const timestamp = Date.now();
+    const folderName = `${safeAppName}_${timestamp}`;
+    const folderPath = path.join(claudeClient.appStoragePath, folderName);
+    
+    // Create the app folder
+    await fs.mkdir(folderPath, { recursive: true });
+    
+    // Create assets folder
+    await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
+    
+    return {
+      success: true,
+      folderPath,
+      folderName,
+      conversationId: `conv_${timestamp}`
+    };
+  } catch (error) {
+    console.error('Error creating app folder:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
  * Handle generating title and description for a mini app
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for generating title and description
@@ -483,6 +559,9 @@ async function handleGenerateTitleAndDescription(event, { input }) {
  * Register mini app-related IPC handlers
  */
 export function registerHandlers() {
+  // Create app folder
+  ipcMain.handle('create-app-folder', handleCreateAppFolder);
+  
   // Generate mini app
   ipcMain.handle('generate-mini-app', handleGenerateMiniApp);
   

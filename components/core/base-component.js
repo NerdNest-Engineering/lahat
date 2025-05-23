@@ -38,16 +38,11 @@ export class BaseComponent extends HTMLElement {
     // Create performance tracker for this component in development mode
     this._performance = new PerformanceTracker(
       this.constructor.name,
-      process.env.NODE_ENV === 'development'
+      true // Always enable in browser context
     );
     
-    // Set DEBUG attribute for easier identification in DevTools
-    if (process.env.NODE_ENV === 'development') {
-      this.setAttribute('data-component', this.constructor.name);
-    }
-    
-    // Mark this element for better event listener tracking
-    this.setAttribute('data-event-tracked', 'true');
+    // Store component name for later attribute setting
+    this._componentName = this.constructor.name;
   }
   
   /**
@@ -83,7 +78,9 @@ export class BaseComponent extends HTMLElement {
       // Call connect hook
       this.onConnected();
       
-      // Set attribute for tracking
+      // Set debug and tracking attributes (safe to do after connection)
+      this.setAttribute('data-component', this._componentName);
+      this.setAttribute('data-event-tracked', 'true');
       this.setAttribute('data-connected', 'true');
     } catch (error) {
       console.error(`Error connecting component ${this.constructor.name}:`, error);
@@ -112,9 +109,7 @@ export class BaseComponent extends HTMLElement {
       });
       
       // Log performance metrics in development mode
-      if (process.env.NODE_ENV === 'development') {
-        this._performance.logMeasurements(true);
-      }
+      this._performance.logMeasurements(true);
       
       // Remove tracking attributes
       this.removeAttribute('data-connected');

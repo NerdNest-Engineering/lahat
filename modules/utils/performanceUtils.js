@@ -189,7 +189,7 @@ export class PerformanceTracker {
  */
 export const appPerformance = new PerformanceTracker(
   'ApplicationPerformance', 
-  process.env.NODE_ENV === 'development'
+  true // Always enable in browser context
 );
 
 /**
@@ -276,65 +276,80 @@ export function memoize(fn, keyFn = null, { maxSize = 100, ttl = null } = {}) {
 }
 
 /**
- * Measure memory usage for a function
+ * Measure memory usage for a function (browser version)
  * @param {Function} fn - Function to measure
  * @param {string} name - Optional name for the measurement
  * @returns {Function} - Wrapped function that logs memory usage
  */
 export function measureMemoryUsage(fn, name = fn.name || 'anonymous') {
   return async function(...args) {
-    const memoryBefore = process.memoryUsage();
+    const memoryBefore = window.performance?.memory ? {
+      usedJSHeapSize: window.performance.memory.usedJSHeapSize,
+      totalJSHeapSize: window.performance.memory.totalJSHeapSize,
+      jsHeapSizeLimit: window.performance.memory.jsHeapSizeLimit
+    } : null;
     
     try {
       return await fn(...args);
     } finally {
-      const memoryAfter = process.memoryUsage();
-      const diff = {
-        rss: memoryAfter.rss - memoryBefore.rss,
-        heapTotal: memoryAfter.heapTotal - memoryBefore.heapTotal,
-        heapUsed: memoryAfter.heapUsed - memoryBefore.heapUsed,
-        external: memoryAfter.external - memoryBefore.external
-      };
-      
-      logger.debug(`Memory usage for ${name}`, {
-        diff,
-        before: memoryBefore,
-        after: memoryAfter,
-        function: name
-      }, 'Performance');
+      if (memoryBefore && window.performance?.memory) {
+        const memoryAfter = {
+          usedJSHeapSize: window.performance.memory.usedJSHeapSize,
+          totalJSHeapSize: window.performance.memory.totalJSHeapSize,
+          jsHeapSizeLimit: window.performance.memory.jsHeapSizeLimit
+        };
+        
+        const diff = {
+          usedJSHeapSize: memoryAfter.usedJSHeapSize - memoryBefore.usedJSHeapSize,
+          totalJSHeapSize: memoryAfter.totalJSHeapSize - memoryBefore.totalJSHeapSize
+        };
+        
+        logger.debug(`Memory usage for ${name}`, {
+          diff,
+          before: memoryBefore,
+          after: memoryAfter,
+          function: name
+        }, 'Performance');
+      }
     }
   };
 }
 
 /**
- * Run garbage collection if available
- * Note: Requires --expose-gc flag to be set when starting Node.js
+ * Run garbage collection if available (browser version)
+ * Note: Only available in Chrome with --enable-precise-memory-info flag
  * @returns {boolean} - Whether garbage collection was run
  */
 export function runGarbageCollection() {
-  if (global.gc) {
-    global.gc();
+  if (window.gc) {
+    window.gc();
     logger.debug('Garbage collection run', {}, 'Performance');
     return true;
   }
   
-  logger.debug('Garbage collection not available (run with --expose-gc)', {}, 'Performance');
+  logger.debug('Garbage collection not available in browser', {}, 'Performance');
   return false;
 }
 
 /**
- * Get current memory usage statistics
+ * Get current memory usage statistics (browser version)
  * @returns {Object} - Memory usage information
  */
 export function getMemoryUsage() {
-  const memory = process.memoryUsage();
+  if (!window.performance?.memory) {
+    return {
+      error: 'Memory API not available',
+      timestamp: Date.now()
+    };
+  }
+  
+  const memory = window.performance.memory;
   
   // Convert to MB for readability
   const memoryInMb = {
-    rss: (memory.rss / 1024 / 1024).toFixed(2) + ' MB',
-    heapTotal: (memory.heapTotal / 1024 / 1024).toFixed(2) + ' MB',
-    heapUsed: (memory.heapUsed / 1024 / 1024).toFixed(2) + ' MB',
-    external: (memory.external / 1024 / 1024).toFixed(2) + ' MB'
+    usedJSHeapSize: (memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + ' MB',
+    totalJSHeapSize: (memory.totalJSHeapSize / 1024 / 1024).toFixed(2) + ' MB',
+    jsHeapSizeLimit: (memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2) + ' MB'
   };
   
   return {

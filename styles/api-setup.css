@@ -1,21 +1,36 @@
 /* API Setup Window Specific Styles */
 
-/* Center content vertically */
+/* Adjust content layout for dual API setup */
 .window .content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   height: 100%;
+  padding: 20px;
+  overflow-y: auto;
 }
 
-/* API Key Section */
-#api-key-section {
+/* API Section Styling */
+.section {
   width: 100%;
   max-width: 500px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: var(--border-radius, 8px);
+  border: 1px solid #e0e0e0;
+}
+
+.section h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--primary-color, #4285f4);
+  font-size: 18px;
   text-align: center;
 }
 
+/* API Key Container */
 .api-key-container {
   display: flex;
   gap: 10px;
@@ -24,18 +39,37 @@
 
 .api-key-container input {
   flex: 1;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: var(--border-radius, 8px);
+  border: 1px solid #e0e0e0;
+  box-sizing: border-box;
 }
 
+.api-key-container button {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-radius: var(--border-radius, 8px);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* API Key Status */
 .api-key-status {
   margin: 10px 0 0 0;
   font-size: 14px;
-  color: var(--dark-gray);
+  color: var(--text-color, #5f6368);
+  text-align: center;
+  font-weight: 500;
 }
 
+/* API Key Help */
 .api-key-help {
-  margin-top: 20px;
-  font-size: 14px;
-  color: var(--dark-gray);
+  margin-top: 15px;
+  font-size: 13px;
+  color: var(--text-color, #5f6368);
   text-align: center;
 }
 
@@ -43,12 +77,145 @@
   margin: 5px 0;
 }
 
-/* Save button */
-#save-api-key-button {
-  background: var(--primary-color);
+.api-key-help a {
+  color: var(--primary-color, #4285f4);
+  text-decoration: none;
+}
+
+.api-key-help a:hover {
+  text-decoration: underline;
+}
+
+/* Button Styling */
+#save-claude-api-key-button {
+  background: var(--primary-color, #4285f4);
   color: white;
 }
 
-#save-api-key-button:hover {
-  background: var(--primary-dark);
+#save-claude-api-key-button:hover {
+  background: var(--primary-dark, #3367d6);
+}
+
+#save-claude-api-key-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+#save-openai-api-key-button {
+  background: #10a37f;
+  color: white;
+}
+
+#save-openai-api-key-button:hover {
+  background: #0d8a6b;
+}
+
+#save-openai-api-key-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Clear Button Styling */
+.clear-button {
+  background: #dc3545;
+  color: white;
+  padding: 8px 12px;
+  font-size: 12px;
+  min-width: 60px;
+}
+
+.clear-button:hover {
+  background: #c82333;
+}
+
+.clear-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Security Notice */
+.security-notice {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #e8f5e8;
+  border-radius: var(--border-radius, 8px);
+  border: 1px solid #c8e6c9;
+  text-align: center;
+}
+
+.security-notice h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #2e7d32;
+  font-size: 16px;
+}
+
+.security-notice p {
+  margin: 0;
+  font-size: 13px;
+  color: #2e7d32;
+}
+
+/* Action Buttons */
+.action-buttons {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.action-buttons button {
+  padding: 12px 20px;
+  font-size: 14px;
+  border-radius: var(--border-radius, 8px);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.primary-button {
+  background: var(--primary-color, #4285f4);
+  color: white;
+}
+
+.primary-button:hover {
+  background: var(--primary-dark, #3367d6);
+}
+
+.secondary-button {
+  background: #f8f9fa;
+  color: var(--text-color, #5f6368);
+  border: 1px solid #e0e0e0;
+}
+
+.secondary-button:hover {
+  background: #e8eaed;
+}
+
+.secondary-button:disabled {
+  background: #f5f5f5;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .window .content {
+    padding: 15px;
+  }
+  
+  .section {
+    padding: 15px;
+  }
+  
+  .api-key-container {
+    flex-direction: column;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
 }
