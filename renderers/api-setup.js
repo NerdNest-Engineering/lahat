@@ -15,25 +15,15 @@ const closeButton = document.getElementById('close-button');
 // Initialize the app
 async function initializeApp() {
   try {
-    console.log('Initializing API setup...');
-    
     // Check Claude API key status
-    console.log('Checking Claude API key...');
     const claudeResult = await window.electronAPI.checkApiKey();
-    console.log('Claude API result:', claudeResult);
-    const hasClaudeKey = claudeResult.hasApiKey;
-    console.log('Has Claude key:', hasClaudeKey);
+    const hasClaudeKey = claudeResult && claudeResult.hasApiKey;
     updateClaudeStatus(hasClaudeKey);
     
     // Check OpenAI API key status
-    console.log('Checking OpenAI API key...');
     const openaiResult = await window.electronAPI.checkOpenAIApiKey();
-    console.log('OpenAI API result:', openaiResult);
-    const hasOpenAIKey = openaiResult.hasOpenAIKey;
-    console.log('Has OpenAI key:', hasOpenAIKey);
+    const hasOpenAIKey = openaiResult && openaiResult.hasOpenAIKey;
     updateOpenAIStatus(hasOpenAIKey);
-    
-    console.log('API setup initialization complete');
   } catch (error) {
     console.error('Error initializing API setup:', error);
   }
@@ -41,7 +31,6 @@ async function initializeApp() {
 
 // Update Claude API key status
 function updateClaudeStatus(hasKey, message = null) {
-  console.log('Updating Claude status:', { hasKey, message });
   if (message) {
     claudeApiKeyStatus.textContent = message;
   } else if (hasKey) {
@@ -61,7 +50,6 @@ function updateClaudeStatus(hasKey, message = null) {
 
 // Update OpenAI API key status
 function updateOpenAIStatus(hasKey, message = null) {
-  console.log('Updating OpenAI status:', { hasKey, message });
   if (message) {
     openaiApiKeyStatus.textContent = message;
   } else if (hasKey) {
@@ -112,7 +100,9 @@ saveClaudeApiKeyButton.addEventListener('click', async () => {
       claudeApiKeyInput.value = ''; // Clear input for security
       
       // Notify other windows that API key has been updated
-      window.electronAPI.notifyApiKeyUpdated();
+      if (window.electronAPI.notifyApiKeyUpdated) {
+        window.electronAPI.notifyApiKeyUpdated();
+      }
       
       // Refresh status after a short delay
       setTimeout(async () => {
@@ -286,14 +276,6 @@ openaiApiKeyInput.addEventListener('keypress', (event) => {
     saveOpenaiApiKeyButton.click();
   }
 });
-
-// Add external link handler to window.electronAPI if it doesn't exist
-if (!window.electronAPI.openExternal) {
-  window.electronAPI.openExternal = (url) => {
-    // Fallback - this should be implemented in the preload script
-    console.log('Would open external URL:', url);
-  };
-}
 
 // Wait for DOM to be fully loaded before initializing
 if (document.readyState === 'loading') {
