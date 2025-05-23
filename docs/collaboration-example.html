@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Kanban Board</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      padding-top: 38px; /* Add padding for the drag region */
+    }
+    
+    /* Drag region for Electron window */
+    .drag-region {
+      height: 38px;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      -webkit-app-region: drag;
+      z-index: 1000;
+      background-color: #2c3e50;
+    }
+    
+    .app-title {
+      color: white;
+      margin: 0;
+      padding: 8px 15px;
+      font-size: 16px;
+      line-height: 22px;
+      -webkit-app-region: drag;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+    
+    .board {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+    
+    .column {
+      background-color: #e2e4e6;
+      border-radius: 3px;
+      width: 300px;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 120px);
+    }
+    
+    .column-header {
+      padding: 10px 15px;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .column-content {
+      padding: 10px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 3px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      cursor: grab;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .card.locked {
+      opacity: 0.7;
+      cursor: not-allowed;
+      border: 2px dashed #e74c3c;
+    }
+    
+    .card-locked-by {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: #e74c3c;
+      color: white;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 0 3px 0 3px;
+    }
+    
+    .add-card {
+      margin-top: 10px;
+      display: flex;
+    }
+    
+    .add-card input {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      margin-right: 5px;
+    }
+    
+    .add-card button {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    
+    .add-card button:hover {
+      background-color: #2ecc71;
+    }
+    
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #2c3e50;
+      color: white;
+      padding: 5px 15px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    
+    .user-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    
+    .users-online {
+      display: flex;
+      align-items: center;
+    }
+    
+    .connection-status {
+      display: flex;
+      align-items: center;
+    }
+    
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    
+    .status-online {
+      background-color: #2ecc71;
+    }
+    
+    .status-offline {
+      background-color: #e74c3c;
+    }
+    
+    .room-id {
+      margin-left: 15px;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Drag region for Electron window -->
+  <div class="drag-region">
+    <h1 class="app-title">Collaborative Kanban Board</h1>
+  </div>
+  
+  <div class="container">
+    <div class="board" id="board">
+      <!-- Columns will be generated here -->
+    </div>
+  </div>
+  
+  <div class="status-bar">
+    <div class="users-online" id="users-online">
+      <span class="user-indicator" style="background-color: #3498db;"></span>
+      <span>You</span>
+    </div>
+    <div class="connection-status">
+      <span class="status-indicator status-offline" id="status-indicator"></span>
+      <span id="connection-status">Connecting...</span>
+      <span class="room-id" id="room-id"></span>
+    </div>
+  </div>
+
+  <script>
+    // This is where the LahatCollab library would be injected
+    // For this example, we'll simulate its behavior
+    
+    // Generate a random ID
+    function generateId() {
+      return Math.random().toString(36).substring(2, 15);
+    }
+    
+    // Generate a random color for the user
+    const userColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+    
+    // Initialize the board
+    const columns = [
+      { id: 'todo', title: 'To Do', cards: [] },
+      { id: 'doing', title: 'In Progress', cards: [] },
+      { id: 'done', title: 'Done', cards: [] }
+    ];
+    
+    // Render the board
+    function renderBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+      
+      columns.forEach(column => {
+        const columnEl = document.createElement('div');
+        columnEl.className = 'column';
+        columnEl.dataset.id = column.id;
+        
+        const columnHeader = document.createElement('div');
+        columnHeader.className = 'column-header';
+        columnHeader.textContent = column.title;
+        
+        const columnContent = document.createElement('div');
+        columnContent.className = 'column-content';
+        columnContent.dataset.id = column.id;
+        
+        // Add cards to the column
+        column.cards.forEach(card => {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'card';
+          cardEl.dataset.id = card.id;
+          cardEl.textContent = card.text;
+          
+          // Add draggable behavior
+          cardEl.draggable = true;
+          cardEl.addEventListener('dragstart', handleDragStart);
+          
+          // If the card is locked, add the locked class
+          if (card.locked) {
+            cardEl.classList.add('locked');
+            
+            // Add locked by indicator
+            if (card.lockedBy) {
+              const lockedByEl = document.createElement('div');
+              lockedByEl.className = 'card-locked-by';
+              lockedByEl.textContent = `Locked by User ${card.lockedBy.substring(0, 6)}`;
+              cardEl.appendChild(lockedByEl);
+            }
+          }
+          
+          columnContent.appendChild(cardEl);
+        });
+        
+        // Add form to add new cards
+        const addCardForm = document.createElement('div');
+        addCardForm.className = 'add-card';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Add a card...';
+        
+        const button = document.createElement('button');
+        button.textContent = 'Add';
+        button.addEventListener('click', () => {
+          if (input.value.trim()) {
+            addCard(column.id, input.value.trim());
+            input.value = '';
+          }
+        });
+        
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && input.value.trim()) {
+            addCard(column.id, input.value.trim());
+            input.value = '';
+          }
+        });
+        
+        addCardForm.appendChild(input);
+        addCardForm.appendChild(button);
+        
+        columnEl.appendChild(columnHeader);
+        columnEl.appendChild(columnContent);
+        columnEl.appendChild(addCardForm);
+        
+        // Add drop zone behavior
+        columnContent.addEventListener('dragover', handleDragOver);
+        columnContent.addEventListener('drop', handleDrop);
+        
+        boardEl.appendChild(columnEl);
+      });
+    }
+    
+    // Handle drag start
+    function handleDragStart(e) {
+      const cardId = e.target.dataset.id;
+      e.dataTransfer.setData('text/plain', cardId);
+      
+      // Lock the card
+      lockCard(cardId);
+    }
+    
+    // Handle drag over
+    function handleDragOver(e) {
+      e.preventDefault();
+    }
+    
+    // Handle drop
+    function handleDrop(e) {
+      e.preventDefault();
+      const cardId = e.dataTransfer.getData('text/plain');
+      const toColumnId = e.target.closest('.column-content').dataset.id;
+      
+      // Find the card and its column
+      let fromColumnId;
+      let card;
+      
+      for (const column of columns) {
+        const cardIndex = column.cards.findIndex(c => c.id === cardId);
+        if (cardIndex !== -1) {
+          fromColumnId = column.id;
+          card = column.cards[cardIndex];
+          break;
+        }
+      }
+      
+      if (fromColumnId && card) {
+        // Move the card
+        moveCard(cardId, fromColumnId, toColumnId);
+      }
+      
+      // Unlock the card
+      unlockCard(cardId);
+    }
+    
+    // Add a new card
+    function addCard(columnId, text) {
+      const cardId = generateId();
+      const card = {
+        id: cardId,
+        text,
+        createdBy: clientId,
+        createdAt: Date.now()
+      };
+      
+      // Find the column
+      const column = columns.find(c => c.id === columnId);
+      if (column) {
+        column.cards.push(card);
+        
+        // In a real implementation, this would sync via LahatCollab
+        // collab.getShared('board').get('columns').get(columnId).cards.push(card);
+        
+        // Re-render the board
+        renderBoard();
+      }
+    }
+    
+    // Move a card between columns
+    function moveCard(cardId, fromColumnId, toColumnId) {
+      // Find the columns
+      const fromColumn = columns.find(c => c.id === fromColumnId);
+      const toColumn = columns.find(c => c.id === toColumnId);
+      
+      if (fromColumn && toColumn) {
+        // Find the card
+        const cardIndex = fromColumn.cards.findIndex(c => c.id === cardId);
+        if (cardIndex !== -1) {
+          // Get the card
+          const card = fromColumn.cards[cardIndex];
+          
+          // Remove from the old column
+          fromColumn.cards.splice(cardIndex, 1);
+          
+          // Add to the new column
+          toColumn.cards.push(card);
+          
+          // In a real implementation, this would sync via LahatCollab
+          // const board = collab.getShared('board');
+          // const fromCol = board.get('columns').get(fromColumnId);
+          // const toCol = board.get('columns').get(toColumnId);
+          // const cardIdx = fromCol.cards.findIndex(c => c.id === cardId);
+          // const card = fromCol.cards[cardIdx];
+          // fromCol.cards.splice(cardIdx, 1);
+          // toCol.cards.push(card);
+          // board.get('columns').set(fromColumnId, fromCol);
+          // board.get('columns').set(toColumnId, toCol);
+          
+          // Re-render the board
+          renderBoard();
+        }
+      }
+    }
+    
+    // Lock a card
+    function lockCard(cardId) {
+      // Find the card
+      for (const column of columns) {
+        const card = column.cards.find(c => c.id === cardId);
+        if (card) {
+          card.locked = true;
+          card.lockedBy = clientId;
+          
+          // In a real implementation, this would use LahatCollab presence
+          // collab.presence.setLocalState({ 
+          //   drag: { cardId, timestamp: Date.now() } 
+          // });
+          
+          break;
+        }
+      }
+      
+      // Re-render the board
+      renderBoard();
+    }
+    
+    // Unlock a card
+    function unlockCard(cardId) {
+      // Find the card
+      for (const column of columns) {
+        const card = column.cards.find(c => c.id === cardId);
+        if (card) {
+          card.locked = false;
+          card.lockedBy = null;
+          
+          // In a real implementation, this would use LahatCollab presence
+          // const state = collab.presence.getLocalState();
+          // if (state && state.drag) {
+          //   delete state.drag;
+          //   collab.presence.setLocalState(state);
+          // }
+          
+          break;
+        }
+      }
+      
+      // Re-render the board
+      renderBoard();
+    }
+    
+    // Simulate LahatCollab initialization
+    const clientId = generateId();
+    const roomId = `lahat-kanban-${generateId()}`;
+    
+    // Update room ID display
+    document.getElementById('room-id').textContent = `Room: ${roomId}`;
+    
+    // Simulate connection status changes
+    let isOnline = false;
+    const statusIndicator = document.getElementById('status-indicator');
+    const connectionStatus = document.getElementById('connection-status');
+    
+    function updateConnectionStatus(online) {
+      isOnline = online;
+      statusIndicator.className = `status-indicator ${online ? 'status-online' : 'status-offline'}`;
+      connectionStatus.textContent = online ? 'Connected' : 'Offline';
+    }
+    
+    // Simulate connecting
+    setTimeout(() => {
+      updateConnectionStatus(true);
+      
+      // In a real implementation, this would be handled by LahatCollab
+      // collab.connection.onStatusChange((online) => {
+      //   updateConnectionStatus(online);
+      // });
+    }, 2000);
+    
+    // Add some sample cards
+    addCard('todo', 'Research WebRTC implementation');
+    addCard('todo', 'Design collaboration UI');
+    addCard('doing', 'Implement CRDT data structures');
+    addCard('done', 'Create project plan');
+    
+    // In a real implementation with LahatCollab, we would do:
+    /*
+    // Initialize collaboration
+    const collab = LahatCollab.init(roomId);
+    
+    // Create shared data
+    const board = collab.createShared('board');
+    
+    // Initialize columns if empty
+    if (!board.has('columns')) {
+      board.set('columns', {
+        todo: { id: 'todo', title: 'To Do', cards: [] },
+        doing: { id: 'doing', title: 'In Progress', cards: [] },
+        done: { id: 'done', title: 'Done', cards: [] }
+      });
+    }
+    
+    // Listen for changes to the board
+    collab.onUpdate('board', () => {
+      // Update our local columns from the shared data
+      const sharedColumns = board.get('columns');
+      columns = [
+        sharedColumns.get('todo'),
+        sharedColumns.get('doing'),
+        sharedColumns.get('done')
+      ];
+      
+      // Re-render the board
+      renderBoard();
+    });
+    
+    // Set up presence for user awareness
+    collab.presence.setLocalState({
+      color: userColor,
+      name: `User ${clientId.substring(0, 6)}`
+    });
+    
+    // Listen for presence updates
+    collab.presence.onUpdate((states) => {
+      // Update users online display
+      const usersOnlineEl = document.getElementById('users-online');
+      usersOnlineEl.innerHTML = '';
+      
+      // Add current user
+      const currentUserEl = document.createElement('span');
+      currentUserEl.innerHTML = `<span class="user-indicator" style="background-color: ${userColor};"></span> You`;
+      usersOnlineEl.appendChild(currentUserEl);
+      
+      // Add other users
+      states.forEach((state, clientId) => {
+        if (clientId !== collab.getClientId() && state.color) {
+          const userEl = document.createElement('span');
+          userEl.innerHTML = `<span class="user-indicator" style="background-color: ${state.color};"></span> ${state.name || `User ${clientId.substring(0, 6)}`}`;
+          userEl.style.marginLeft = '10px';
+          usersOnlineEl.appendChild(userEl);
+        }
+      });
+      
+      // Find all locked cards
+      const lockedCards = new Set();
+      states.forEach((state, clientId) => {
+        if (state.drag && state.drag.cardId) {
+          lockedCards.add({
+            id: state.drag.cardId,
+            lockedBy: clientId
+          });
+        }
+      });
+      
+      // Update UI to show locked cards
+      for (const column of columns) {
+        for (const card of column.cards) {
+          const lockedCard = Array.from(lockedCards).find(lc => lc.id === card.id);
+          if (lockedCard) {
+            card.locked = true;
+            card.lockedBy = lockedCard.lockedBy;
+          } else {
+            card.locked = false;
+            card.lockedBy = null;
+          }
+        }
+      }
+      
+      // Re-render the board
+      renderBoard();
+    });
+    */
+  </script>
+</body>
+</html>
