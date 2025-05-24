@@ -56,18 +56,19 @@
   "build": {
     "appId": "com.nerdnest.lahat",
     "productName": "Lahat",
+    "icon": "assets/icons/lahat.icns",
     "fileAssociations": [
       {
         "ext": "lahat",
         "name": "Lahat App",
         "description": "Lahat Mini Application",
         "role": "Editor",
-        "icon": "assets/icons/lahat.png"
+        "icon": "assets/icons/file.icns"
       }
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
-      "icon": "assets/icons/lahat.png",
+      "icon": "assets/icons/lahat.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "target": [
@@ -75,11 +76,39 @@
         "zip"
       ],
       "darkModeSupport": true,
-      "artifactName": "${productName}-${version}.${ext}"
+      "artifactName": "${productName}-${version}.${ext}",
+      "extendInfo": {
+        "CFBundleIconFile": "lahat",
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Lahat Mini App",
+            "CFBundleTypeRole": "Editor",
+            "LSHandlerRank": "Default",
+            "CFBundleTypeIconFile": "icon",
+            "LSItemContentTypes": [
+              "com.nerdnest.lahat.file"
+            ]
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "com.nerdnest.lahat.file",
+            "UTTypeDescription": "Lahat Mini App",
+            "UTTypeConformsTo": [
+              "public.data"
+            ],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": [
+                "lahat"
+              ]
+            }
+          }
+        ]
+      }
     },
     "afterSign": "scripts/notarize.js",
     "win": {
-      "icon": "assets/icons/lahat.png",
+      "icon": "assets/icons/lahat.ico",
       "target": [
         "nsis",
         "portable"
@@ -118,6 +147,16 @@
       "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
       "!**/{appveyor.yml,.travis.yml,circle.yml}",
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/icons/lahat.icns",
+        "to": "lahat.icns"
+      },
+      {
+        "from": "assets/icons/file.icns",
+        "to": "icon.icns"
+      }
     ]
   }
 }
