@@ -21,7 +21,7 @@ class AppCreationController extends HTMLElement {
           
           display: block;
           max-width: 800px;
-          margin: 0 auto;
+          margin: 0 20%;
           padding: var(--spacing-md);
         }
         .step-container {
@@ -211,8 +211,17 @@ class AppCreationController extends HTMLElement {
       stepTwo.setGeneratingState();
       generationStatus.show('Generating app concept...');
       
+      // Set up streaming listener BEFORE making the API call
+      const chunkHandler = (chunk) => {
+        if (!chunk.done) {
+          stepTwo.handleInProgressChunk(chunk);
+        }
+      };
+      
+      window.electronAPI.onTitleDescriptionChunk(chunkHandler);
+      
       // Call the title/description generation API
-      const result = await window.electronAPI.generateTitleAndDescription(this.appData.userInput);
+      const result = await window.electronAPI.generateTitleAndDescription({ input: this.appData.userInput });
       
       if (result.success) {
         stepTwo.updateTitleIfPresent(result.title);
