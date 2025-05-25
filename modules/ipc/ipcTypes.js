@@ -8,10 +8,22 @@
  * Used for communication between main and renderer processes
  */
 export const IpcChannels = {
-  // API related
+  // Claude API related
   SET_API_KEY: 'set-api-key',
   CHECK_API_KEY: 'check-api-key',
+  
+  // OpenAI API related
+  SET_OPENAI_API_KEY: 'set-openai-api-key',
+  CHECK_OPENAI_API_KEY: 'check-openai-api-key',
+  DELETE_OPENAI_API_KEY: 'delete-openai-api-key',
+  
+  // General API
   OPEN_APP_DIRECTORY: 'open-app-directory',
+  
+  // Logo generation
+  GENERATE_LOGO: 'generate-logo',
+  REGENERATE_LOGO: 'regenerate-logo',
+  TEST_LOGO_GENERATION: 'test-logo-generation',
   
   // Mini app related
   GENERATE_MINI_APP: 'generate-mini-app',
@@ -31,7 +43,8 @@ export const IpcChannels = {
   // Events
   GENERATION_STATUS: 'generation-status',
   GENERATION_CHUNK: 'generation-chunk',
-  TITLE_DESCRIPTION_CHUNK: 'title-description-chunk'
+  TITLE_DESCRIPTION_CHUNK: 'title-description-chunk',
+  LOGO_GENERATION_PROGRESS: 'logo-generation-progress'
 };
 
 /**

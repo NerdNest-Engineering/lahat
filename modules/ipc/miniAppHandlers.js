@@ -13,12 +13,12 @@ import fs from 'fs/promises';
  */
 
 /**
- * Handle generating a mini app
+ * Handle generating a mini app with pre-created folder
  * @param {Object} event - IPC event
  * @param {Object} params - Parameters for generating the mini app
  * @returns {Promise<Object>} - Result object with success flag
  */
-async function handleGenerateMiniApp(event, { prompt, appName }) {
+async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conversationId, logoPath }) {
   try {
     const claudeClient = apiHandlers.getClaudeClient();
     if (!claudeClient) {
@@ -29,36 +29,75 @@ async function handleGenerateMiniApp(event, { prompt, appName }) {
     }
     
     // Start streaming response
-    event.sender.send('generation-status', {
-      status: 'generating',
-      message: 'Generating your mini app...'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'generating',
+        message: 'Generating your mini app...'
+      });
+    }
     
-    const response = await claudeClient.generateApp(prompt);
+    const response = await claudeClient.generateApp(prompt, conversationId);
     let htmlContent = '';
     
     // Stream the response
     for await (const streamEvent of response) {
       if (streamEvent.type === 'content_block_delta' && streamEvent.delta.type === 'text_delta') {
         htmlContent += streamEvent.delta.text || '';
-        event.sender.send('generation-chunk', {
-          content: streamEvent.delta.text || '',
-          done: false
-        });
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('generation-chunk', {
+            content: streamEvent.delta.text || '',
+            done: false
+          });
+        }
       }
     }
     
     // Signal completion
-    event.sender.send('generation-chunk', {
-      done: true
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-chunk', {
+        done: true
+      });
+    }
     
-    // Save the generated app
-    const savedApp = await claudeClient.saveGeneratedApp(
-      appName || 'Mini App',
-      htmlContent,
-      prompt
-    );
+    // Save the generated app to the pre-created folder
+    let savedApp;
+    if (folderPath && conversationId) {
+      // Use the pre-created folder structure
+      const htmlFilePath = path.join(folderPath, 'index.html');
+      await fs.writeFile(htmlFilePath, htmlContent);
+      
+      // Create metadata
+      const metadata = {
+        name: appName || 'Mini App',
+        created: new Date().toISOString(),
+        prompt,
+        conversationId,
+        logo: logoPath ? { filePath: logoPath } : null,
+        versions: [
+          {
+            timestamp: Date.now(),
+            filePath: 'index.html'
+          }
+        ]
+      };
+      
+      // Save metadata
+      const metadataPath = path.join(folderPath, 'metadata.json');
+      await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+      
+      savedApp = {
+        folderPath,
+        filePath: htmlFilePath,
+        metadata
+      };
+    } else {
+      // Fallback to original method
+      savedApp = await claudeClient.saveGeneratedApp(
+        appName || 'Mini App',
+        htmlContent,
+        prompt
+      );
+    }
     
     // Create a window for the app
     const windowResult = await miniAppManager.createMiniAppWindow(
@@ -97,10 +136,12 @@ async function handleGenerateMiniApp(event, { prompt, appName }) {
       name: savedApp.metadata.name
     };
   } catch (error) {
-    event.sender.send('generation-status', {
-      status: 'error',
-      message: `Error: ${error.message}`
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'error',
+        message: `Error: ${error.message}`
+      });
+    }
     
     return {
       success: false,
@@ -170,10 +211,12 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
     }
     
     // Start streaming response
-    event.sender.send('generation-status', {
-      status: 'updating',
-      message: 'Updating your mini app...'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'updating',
+        message: 'Updating your mini app...'
+      });
+    }
     
     const response = await claudeClient.generateApp(prompt, appId);
     let htmlContent = '';
@@ -182,17 +225,21 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
     for await (const streamEvent of response) {
       if (streamEvent.type === 'content_block_delta' && streamEvent.delta.type === 'text_delta') {
         htmlContent += streamEvent.delta.text || '';
-        event.sender.send('generation-chunk', {
-          content: streamEvent.delta.text || '',
-          done: false
-        });
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('generation-chunk', {
+            content: streamEvent.delta.text || '',
+            done: false
+          });
+        }
       }
     }
     
     // Signal completion
-    event.sender.send('generation-chunk', {
-      done: true
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-chunk', {
+        done: true
+      });
+    }
     
     // Update the app
     const updatedApp = await claudeClient.updateGeneratedApp(
@@ -221,10 +268,12 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
       filePath: updatedApp.filePath
     };
   } catch (error) {
-    event.sender.send('generation-status', {
-      status: 'error',
-      message: `Error: ${error.message}`
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'error',
+        message: `Error: ${error.message}`
+      });
+    }
     
     return {
       success: false,
@@ -405,7 +454,7 @@ async function handleImportMiniApp(event) {
       // Notify main window to refresh app list
       const mainWindow = BrowserWindow.getAllWindows().find(win => 
         win.webContents.getTitle().includes('Lahat'));
-      if (mainWindow) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('refresh-app-list');
       }
       
@@ -416,6 +465,49 @@ async function handleImportMiniApp(event) {
     return result;
   } catch (error) {
     console.error('Error importing mini app:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Handle creating app folder structure early for logo generation
+ * @param {Object} event - IPC event
+ * @param {Object} params - Parameters for creating app folder
+ * @returns {Promise<Object>} - Result object with folder path
+ */
+async function handleCreateAppFolder(event, { appName }) {
+  try {
+    const claudeClient = apiHandlers.getClaudeClient();
+    if (!claudeClient) {
+      return {
+        success: false,
+        error: 'Claude API key not set. Please set your API key in settings.'
+      };
+    }
+    
+    // Create a safe folder name from the app name
+    const safeAppName = appName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const timestamp = Date.now();
+    const folderName = `${safeAppName}_${timestamp}`;
+    const folderPath = path.join(claudeClient.appStoragePath, folderName);
+    
+    // Create the app folder
+    await fs.mkdir(folderPath, { recursive: true });
+    
+    // Create assets folder
+    await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
+    
+    return {
+      success: true,
+      folderPath,
+      folderName,
+      conversationId: `conv_${timestamp}`
+    };
+  } catch (error) {
+    console.error('Error creating app folder:', error);
     return {
       success: false,
       error: error.message
@@ -440,10 +532,12 @@ async function handleGenerateTitleAndDescription(event, { input }) {
     }
     
     // Start streaming status
-    event.sender.send('generation-status', {
-      status: 'generating',
-      message: 'Generating title and description...'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'generating',
+        message: 'Generating title and description...'
+      });
+    }
     
     // Generate title and description with streaming
     const result = await titleDescriptionGenerator.generateTitleAndDescription(
@@ -451,15 +545,19 @@ async function handleGenerateTitleAndDescription(event, { input }) {
       claudeClient.apiKey,
       (chunk) => {
         // Send each chunk to the renderer
-        event.sender.send('title-description-chunk', chunk);
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('title-description-chunk', chunk);
+        }
       }
     );
     
     // Signal completion
-    event.sender.send('generation-status', {
-      status: 'complete',
-      message: 'Title and description generated'
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'complete',
+        message: 'Title and description generated'
+      });
+    }
     
     return { 
       success: true,
@@ -467,10 +565,12 @@ async function handleGenerateTitleAndDescription(event, { input }) {
       description: result.description
     };
   } catch (error) {
-    event.sender.send('generation-status', {
-      status: 'error',
-      message: `Error: ${error.message}`
-    });
+    if (!event.sender.isDestroyed()) {
+      event.sender.send('generation-status', {
+        status: 'error',
+        message: `Error: ${error.message}`
+      });
+    }
     
     return {
       success: false,
@@ -483,6 +583,9 @@ async function handleGenerateTitleAndDescription(event, { input }) {
  * Register mini app-related IPC handlers
  */
 export function registerHandlers() {
+  // Create app folder
+  ipcMain.handle('create-app-folder', handleCreateAppFolder);
+  
   // Generate mini app
   ipcMain.handle('generate-mini-app', handleGenerateMiniApp);
   

@@ -8,6 +8,7 @@ import { createReadStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import archiver from 'archiver';
 import extract from 'extract-zip';
+import logoGenerator from './modules/utils/logoGenerator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -194,7 +195,7 @@ EXAMPLE OUTPUT:
     }
   }
 
-  async saveGeneratedApp(appName, htmlContent, prompt, conversationId = null) {
+  async saveGeneratedApp(appName, htmlContent, prompt, conversationId = null, logoData = null) {
     // Create a safe folder name from the app name
     const safeAppName = appName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const timestamp = Date.now();
@@ -214,12 +215,32 @@ EXAMPLE OUTPUT:
       const htmlFilePath = path.join(folderPath, 'index.html');
       await fs.writeFile(htmlFilePath, htmlContent);
       
+      // Generate logo if OpenAI is available and no logo data provided
+      let logoInfo = null;
+      if (!logoData && logoGenerator.isAvailable()) {
+        try {
+          console.log('Generating logo for app:', appName);
+          const logoResult = await logoGenerator.generateAppLogo(appName, prompt, folderPath);
+          if (logoResult.success) {
+            logoInfo = logoResult.logo;
+            console.log('Logo generated successfully:', logoInfo.filePath);
+          } else {
+            console.warn('Logo generation failed:', logoResult.error);
+          }
+        } catch (error) {
+          console.warn('Logo generation error:', error.message);
+        }
+      } else if (logoData) {
+        logoInfo = logoData;
+      }
+      
       // Create metadata
       const metadata = {
         name: appName,
         created: new Date().toISOString(),
         prompt,
         conversationId: conversationId || `conv_${timestamp}`,
+        logo: logoInfo,
         versions: [
           {
             timestamp,
@@ -236,7 +257,8 @@ EXAMPLE OUTPUT:
         folderName,
         filePath: htmlFilePath,
         folderPath,
-        metadata
+        metadata,
+        logoGenerated: logoInfo !== null
       };
     } catch (error) {
       throw new Error(`Failed to save generated app: ${error.message}`);
@@ -324,13 +346,21 @@ EXAMPLE OUTPUT:
           const latestVersion = metadata.versions[metadata.versions.length - 1];
           const latestFilePath = path.join(this.appStoragePath, folder, latestVersion.filePath);
           
+          // Get logo path if available
+          let logoPath = null;
+          if (metadata.logo && metadata.logo.filePath) {
+            logoPath = path.join(this.appStoragePath, folder, metadata.logo.filePath);
+          }
+          
           apps.push({
             id: metadata.conversationId,
             name: metadata.name,
             created: metadata.created,
             filePath: latestFilePath,
             folderPath: path.join(this.appStoragePath, folder),
-            versions: metadata.versions.length
+            versions: metadata.versions.length,
+            logo: metadata.logo,
+            logoPath
           });
         } catch (error) {
           // Skip folders without valid metadata

@@ -1,37 +1,21 @@
-// Import command palette
+// Import components
+import '../components/ui/containers/app-list.js';
 import commandPalette from '../components/ui/modals/command-palette.js';
 import { hasActiveMiniApp, getActiveMiniApp } from '../modules/utils/activeAppState.js';
 
 // DOM Elements
-// App Management Section
-const appManagementSection = document.getElementById('app-management-section');
 const createAppButton = document.getElementById('create-app-button');
-const createFirstAppButton = document.getElementById('create-first-app-button');
 const importAppButton = document.getElementById('import-app-button');
 const apiSettingsButton = document.getElementById('api-settings-button');
 const refreshAppsButton = document.getElementById('refresh-apps-button');
 const openAppDirectoryButton = document.getElementById('open-app-directory-button');
 const appList = document.getElementById('app-list');
-const noAppsMessage = document.getElementById('no-apps-message');
-
-// Modal Elements
-const appDetailsModal = document.getElementById('app-details-modal');
-const modalAppName = document.getElementById('modal-app-name');
-const modalAppCreated = document.getElementById('modal-app-created');
-const modalAppVersions = document.getElementById('modal-app-versions');
-const closeModalButton = document.getElementById('close-modal-button');
-const openAppButton = document.getElementById('open-app-button');
-const updateAppButton = document.getElementById('update-app-button');
-const exportAppButton = document.getElementById('export-app-button');
-const deleteAppButton = document.getElementById('delete-app-button');
-
-// State
-let currentAppId = null;
-let currentAppFilePath = null;
-let currentAppName = null;
 
 // Initialize the app
 async function initializeApp() {
+  console.log('Initializing app...');
+  console.log('App list element:', appList);
+  
   // Check if API key is set
   const { hasApiKey } = await window.electronAPI.checkApiKey();
   
@@ -40,8 +24,25 @@ async function initializeApp() {
     window.electronAPI.openWindow('api-setup');
   }
   
+  // Set up app list event listeners
+  setupAppListEventListeners();
+  
   // Load existing apps
   await loadMiniApps();
+}
+
+// Set up event listeners for the app list component
+function setupAppListEventListeners() {
+  console.log('Setting up app list event listeners...');
+  if (appList) {
+    // Use native addEventListener to avoid BaseComponent conflicts
+    HTMLElement.prototype.addEventListener.call(appList, 'app-open', handleAppOpen);
+    HTMLElement.prototype.addEventListener.call(appList, 'app-delete', handleAppDelete);
+    HTMLElement.prototype.addEventListener.call(appList, 'app-export', handleAppExport);
+    console.log('Event listeners set up successfully');
+  } else {
+    console.error('App list element not found!');
+  }
 }
 
 // App Management
@@ -50,60 +51,125 @@ async function loadMiniApps() {
     console.log('Loading mini apps...');
     const { apps } = await window.electronAPI.listMiniApps();
     console.log('Loaded apps:', apps);
+    console.log('Number of apps:', apps ? apps.length : 0);
     
-    // Clear app list
-    appList.innerHTML = '';
+    if (!appList) {
+      console.error('App list element not found when trying to set apps!');
+      return;
+    }
     
-    if (apps && apps.length > 0) {
-      noAppsMessage.classList.add('hidden');
+    if (!apps || apps.length === 0) {
+      console.log('No apps found, showing empty state');
+      appList.setApps([]);
+      return;
+    }
+    
+    // Transform apps to include logo information
+    const transformedApps = apps.map((app, index) => {
+      console.log(`Processing app ${index + 1}:`, app);
       
-      // Create app cards
-      apps.forEach(app => {
-        console.log('Processing app:', app);
-        
-        // Verify file path
-        if (!app.filePath) {
-          console.error('App missing filePath:', app);
+      // Safely handle logo data
+      let logoPath = null;
+      try {
+        if (app.logo && app.logo.absolutePath) {
+          logoPath = app.logo.absolutePath;
+        } else if (app.logoPath) {
+          logoPath = app.logoPath;
         }
-        
-        const appCard = document.createElement('div');
-        appCard.className = 'app-card';
-        appCard.dataset.appId = app.id;
-        appCard.dataset.filePath = app.filePath;
-        appCard.dataset.name = app.name;
-        
-        const createdDate = new Date(app.created);
-        const formattedDate = createdDate.toLocaleDateString() + ' ' + 
-                             createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        appCard.innerHTML = `
-          <h3>${app.name}</h3>
-          <p>Created: ${formattedDate}</p>
-          <p>Versions: ${app.versions}</p>
-          <p class="file-path" style="font-size: 0.8em; color: #666; word-break: break-all;">Path: ${app.filePath}</p>
-        `;
-        
-        appCard.addEventListener('click', () => {
-          openAppDetails(app.id, app.filePath, app.name, app.created, app.versions);
-        });
-        
-        appList.appendChild(appCard);
-      });
+      } catch (error) {
+        console.warn(`Error processing logo for app ${app.name}:`, error);
+      }
+      
+      return {
+        ...app,
+        logoPath
+      };
+    });
+    
+    console.log('Transformed apps:', transformedApps);
+    
+    // Set apps in the app list component
+    if (typeof appList.setApps === 'function') {
+      await appList.setApps(transformedApps);
+      console.log('Apps set successfully');
     } else {
-      console.log('No apps found');
-      noAppsMessage.classList.remove('hidden');
+      console.error('appList.setApps is not a function!', typeof appList.setApps);
     }
   } catch (error) {
     console.error('Error loading mini apps:', error);
   }
 }
 
-// Event Listeners
-createAppButton.addEventListener('click', () => {
-  window.electronAPI.openWindow('app-creation');
-});
+// Handle app open event from app cards
+async function handleAppOpen(event) {
+  const { id, name, filePath } = event.detail;
+  
+  console.log('Opening app:', { id, name, filePath });
+  
+  try {
+    const result = await window.electronAPI.openMiniApp({
+      appId: id,
+      filePath: filePath,
+      name: name
+    });
+    
+    console.log('openMiniApp result:', result);
+  } catch (error) {
+    console.error('Error opening mini app:', error);
+    alert(`Error opening mini app: ${error.message}`);
+  }
+}
 
-createFirstAppButton.addEventListener('click', () => {
+// Handle app delete event from app cards
+async function handleAppDelete(event) {
+  const { id, name } = event.detail;
+  
+  if (confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+    try {
+      const result = await window.electronAPI.deleteMiniApp({
+        appId: id
+      });
+      
+      if (result.success) {
+        // Remove the app from the list
+        if (appList && typeof appList.removeApp === 'function') {
+          appList.removeApp(id);
+        } else {
+          // Fallback: reload all apps
+          await loadMiniApps();
+        }
+      } else {
+        alert(`Error deleting mini app: ${result.error}`);
+      }
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  }
+}
+
+// Handle app export event from app cards
+async function handleAppExport(event) {
+  const { id, filePath } = event.detail;
+  
+  try {
+    const result = await window.electronAPI.exportMiniApp({
+      appId: id,
+      filePath: filePath,
+      exportType: 'package'
+    });
+    
+    if (result.success) {
+      alert(`Mini app exported successfully to ${result.filePath}`);
+    } else if (!result.canceled) {
+      alert(`Error exporting mini app: ${result.error}`);
+    }
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+  }
+}
+
+// Button Event Listeners
+createAppButton.addEventListener('click', () => {
   window.electronAPI.openWindow('app-creation');
 });
 
@@ -133,124 +199,6 @@ openAppDirectoryButton.addEventListener('click', async () => {
     await window.electronAPI.openAppDirectory();
   } catch (error) {
     console.error('Error opening app directory:', error);
-  }
-});
-
-// App Details Modal
-function openAppDetails(appId, filePath, name, created, versions) {
-  console.log('Opening app details with:', { appId, filePath, name, created, versions });
-  
-  currentAppId = appId;
-  currentAppFilePath = filePath;
-  currentAppName = name;
-  
-  console.log('Setting current app state:', { currentAppId, currentAppFilePath, currentAppName });
-  
-  modalAppName.textContent = name;
-  
-  const createdDate = new Date(created);
-  modalAppCreated.textContent = createdDate.toLocaleDateString() + ' ' + 
-                               createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  modalAppVersions.textContent = versions;
-  
-  // Show modal
-  appDetailsModal.classList.remove('hidden');
-}
-
-closeModalButton.addEventListener('click', () => {
-  appDetailsModal.classList.add('hidden');
-});
-
-// Close modal when clicking outside
-appDetailsModal.addEventListener('click', (event) => {
-  if (event.target === appDetailsModal) {
-    appDetailsModal.classList.add('hidden');
-  }
-});
-
-// Open app
-openAppButton.addEventListener('click', async () => {
-  console.log('Open App button clicked', { currentAppId, currentAppFilePath, currentAppName });
-  
-  try {
-    console.log('Sending openMiniApp IPC message with params:', {
-      appId: currentAppId, 
-      filePath: currentAppFilePath, 
-      name: currentAppName
-    });
-    
-    const result = await window.electronAPI.openMiniApp({
-      appId: currentAppId,
-      filePath: currentAppFilePath,
-      name: currentAppName
-    });
-    
-    console.log('openMiniApp result:', result);
-    
-    // Close modal
-    appDetailsModal.classList.add('hidden');
-  } catch (error) {
-    console.error('Error opening mini app:', error);
-    alert(`Error opening mini app: ${error.message}`);
-  }
-});
-
-// Update app
-updateAppButton.addEventListener('click', () => {
-  // Open app creation window in update mode
-  window.electronAPI.openWindow('app-creation', {
-    updateMode: true,
-    appId: currentAppId,
-    appName: currentAppName
-  });
-  
-  // Close modal
-  appDetailsModal.classList.add('hidden');
-});
-
-// Export app as package (zip)
-exportAppButton.addEventListener('click', async () => {
-  try {
-    const result = await window.electronAPI.exportMiniApp({
-      appId: currentAppId,
-      filePath: currentAppFilePath,
-      exportType: 'package'
-    });
-    
-    if (result.success) {
-      alert(`Mini app exported successfully to ${result.filePath}`);
-      
-      // Close modal
-      appDetailsModal.classList.add('hidden');
-    } else if (!result.canceled) {
-      alert(`Error exporting mini app: ${result.error}`);
-    }
-  } catch (error) {
-    alert(`Error: ${error.message}`);
-  }
-});
-
-// Delete app
-deleteAppButton.addEventListener('click', async () => {
-  if (confirm(`Are you sure you want to delete "${currentAppName}"? This action cannot be undone.`)) {
-    try {
-      const result = await window.electronAPI.deleteMiniApp({
-        appId: currentAppId
-      });
-      
-      if (result.success) {
-        // Close modal
-        appDetailsModal.classList.add('hidden');
-        
-        // Refresh app list
-        await loadMiniApps();
-      } else {
-        alert(`Error deleting mini app: ${result.error}`);
-      }
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    }
   }
 });
 

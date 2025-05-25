@@ -5,6 +5,15 @@ const schema = {
   apiKey: {
     type: 'string'
   },
+  encryptedApiKey: {
+    type: 'string'
+  },
+  openAIKey: {
+    type: 'string'
+  },
+  encryptedOpenAIKey: {
+    type: 'string'
+  },
   recentApps: {
     type: 'array',
     items: {

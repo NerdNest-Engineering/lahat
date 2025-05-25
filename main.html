@@ -36,35 +36,10 @@
           </div>
         </div>
         <div id="app-list-container">
-          <div id="app-list"></div>
-          <div id="no-apps-message" class="hidden">
-            <p>You haven't created any mini apps yet.</p>
-            <button id="create-first-app-button" class="primary">Create Your First App</button>
-          </div>
+          <app-list id="app-list"></app-list>
         </div>
       </div>
 
-      <!-- App Details Modal -->
-      <div id="app-details-modal" class="modal hidden">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="modal-app-name">App Name</h2>
-            <button id="close-modal-button">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="app-details">
-              <p><strong>Created:</strong> <span id="modal-app-created"></span></p>
-              <p><strong>Versions:</strong> <span id="modal-app-versions"></span></p>
-            </div>
-            <div class="app-actions">
-              <button id="open-app-button">Open App</button>
-              <button id="update-app-button">Update App</button>
-              <button id="export-app-button">Export App</button>
-              <button id="delete-app-button" class="danger">Delete App</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
