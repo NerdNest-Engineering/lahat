@@ -14,6 +14,14 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    closeWindow: () => {
+      try {
+        ipcRenderer.invoke('close-current-window');
+      } catch (error) {
+        console.error('Error closing window:', error);
+        throw error;
+      }
+    },
     closeCurrentWindow: () => {
       try {
         ipcRenderer.invoke('close-current-window');
@@ -76,7 +84,78 @@ contextBridge.exposeInMainWorld(
       }
     },
     
-    // Mini app generation and management
+    // OpenAI API key management
+    setOpenAIApiKey: async (apiKey) => {
+      try {
+        return await ipcRenderer.invoke('set-openai-api-key', apiKey);
+      } catch (error) {
+        console.error('Error setting OpenAI API key:', error);
+        throw error;
+      }
+    },
+    checkOpenAIApiKey: async () => {
+      try {
+        return await ipcRenderer.invoke('check-openai-api-key');
+      } catch (error) {
+        console.error('Error checking OpenAI API key:', error);
+        throw error;
+      }
+    },
+    deleteOpenAIApiKey: async () => {
+      try {
+        return await ipcRenderer.invoke('delete-openai-api-key');
+      } catch (error) {
+        console.error('Error deleting OpenAI API key:', error);
+        throw error;
+      }
+    },
+    
+    // Logo generation
+    generateLogo: async (params) => {
+      try {
+        return await ipcRenderer.invoke('generate-logo', params);
+      } catch (error) {
+        console.error('Error generating logo:', error);
+        throw error;
+      }
+    },
+    regenerateLogo: async (params) => {
+      try {
+        return await ipcRenderer.invoke('regenerate-logo', params);
+      } catch (error) {
+        console.error('Error regenerating logo:', error);
+        throw error;
+      }
+    },
+    testLogoGeneration: async () => {
+      try {
+        return await ipcRenderer.invoke('test-logo-generation');
+      } catch (error) {
+        console.error('Error testing logo generation:', error);
+        throw error;
+      }
+    },
+    onLogoGenerationProgress: (callback) => {
+      ipcRenderer.on('logo-generation-progress', (_event, progress) => callback(progress));
+    },
+    
+    // App generation and management
+    createAppFolder: async (params) => {
+      try {
+        return await ipcRenderer.invoke('create-app-folder', params);
+      } catch (error) {
+        console.error('Error creating app folder:', error);
+        throw error;
+      }
+    },
+    generateApp: async (params) => {
+      try {
+        return await ipcRenderer.invoke('generate-mini-app', params);
+      } catch (error) {
+        console.error('Error generating app:', error);
+        throw error;
+      }
+    },
     generateMiniApp: async (params) => {
       try {
         return await ipcRenderer.invoke('generate-mini-app', params);
