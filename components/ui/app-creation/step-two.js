@@ -1,3 +1,5 @@
+import { debugLog } from '../../core/debug.js';
+
 // AppCreationStepTwo Component
 class AppCreationStepTwo extends HTMLElement {
   constructor() {
@@ -306,6 +308,7 @@ class AppCreationStepTwo extends HTMLElement {
   }
   
   updateTitleIfPresent(title) {
+    debugLog('📝 step-two: updateTitleIfPresent called with:', title);
     if (!title) return;
     
     // Update both the input field and streaming container
@@ -315,9 +318,11 @@ class AppCreationStepTwo extends HTMLElement {
     
     // Make sure the streaming container is visible
     this.streamingTitle.style.display = 'block';
+    debugLog('📝 step-two: Title updated and streaming container shown');
   }
   
   updateDescriptionIfPresent(description) {
+    debugLog('📝 step-two: updateDescriptionIfPresent called with:', description);
     if (!description) return;
     
     // Update both the textarea and streaming container
@@ -327,9 +332,11 @@ class AppCreationStepTwo extends HTMLElement {
     
     // Make sure the streaming container is visible
     this.streamingDescription.style.display = 'block';
+    debugLog('📝 step-two: Description updated and streaming container shown');
   }
   
   handleCompletedChunk(chunk) {
+    debugLog('📝 step-two: handleCompletedChunk called with:', chunk);
     // Store the final values
     this._currentTitle = chunk.title || this.generatedTitle.value;
     this._currentDescription = chunk.description || this.generatedDescription.value;
@@ -340,9 +347,11 @@ class AppCreationStepTwo extends HTMLElement {
     
     // Restore the button container and make fields editable again
     this.resetButtonContainer();
+    debugLog('📝 step-two: Completed chunk handled, UI restored');
   }
   
   handleInProgressChunk(chunk) {
+    debugLog('📝 step-two: handleInProgressChunk called with:', chunk);
     // Use setTimeout with zero delay to push DOM updates to the end of the event queue
     setTimeout(() => {
       this.updateTitleIfPresent(chunk.title);
