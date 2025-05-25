@@ -171,6 +171,11 @@ class AppCreationStepTwo extends HTMLElement {
           min-height: 60px;
           display: none;
         }
+        
+        .editable-title.hidden,
+        .editable-description.hidden {
+          display: none;
+        }
       </style>
       <div>
         <h2>What would you like?</h2>
@@ -341,9 +346,17 @@ class AppCreationStepTwo extends HTMLElement {
     this._currentTitle = chunk.title || this.generatedTitle.value;
     this._currentDescription = chunk.description || this.generatedDescription.value;
     
-    // Hide our streaming containers
+    // Update the editable fields with final values
+    this.generatedTitle.value = this._currentTitle;
+    this.generatedDescription.value = this._currentDescription;
+    
+    // Hide streaming containers
     this.streamingTitle.style.display = 'none';
     this.streamingDescription.style.display = 'none';
+    
+    // Show editable fields again
+    this.shadowRoot.querySelector('.editable-title').classList.remove('hidden');
+    this.shadowRoot.querySelector('.editable-description').classList.remove('hidden');
     
     // Restore the button container and make fields editable again
     this.resetButtonContainer();
@@ -354,6 +367,10 @@ class AppCreationStepTwo extends HTMLElement {
     debugLog('📝 step-two: handleInProgressChunk called with:', chunk);
     // Use setTimeout with zero delay to push DOM updates to the end of the event queue
     setTimeout(() => {
+      // Hide editable fields during generation
+      this.shadowRoot.querySelector('.editable-title').classList.add('hidden');
+      this.shadowRoot.querySelector('.editable-description').classList.add('hidden');
+      
       this.updateTitleIfPresent(chunk.title);
       this.updateDescriptionIfPresent(chunk.description);
       this.showPreview();
