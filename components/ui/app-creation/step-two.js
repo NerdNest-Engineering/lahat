@@ -63,10 +63,10 @@ class AppCreationStepTwo extends HTMLElement {
           font-weight: bold;
           color: var(--primary-color);
           width: 100%;
-          border: 1px solid var(--border-color);
-          padding: 5px;
-          background: white;
-          border-radius: var(--border-radius);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          padding: var(--spacing-sm);
+          border-radius: 4px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           box-sizing: border-box;
           transition: border-color 0.2s ease;
         }
@@ -83,14 +83,14 @@ class AppCreationStepTwo extends HTMLElement {
         
         .editable-description textarea {
           width: 100%;
-          border: 1px solid var(--border-color);
-          padding: 5px;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          padding: var(--spacing-sm);
           font-size: 16px;
           line-height: 1.5;
           resize: vertical;
-          background: white;
           color: var(--text-secondary);
-          border-radius: var(--border-radius);
+          border-radius: 4px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           font-family: inherit;
           box-sizing: border-box;
           transition: border-color 0.2s ease;
@@ -139,43 +139,6 @@ class AppCreationStepTwo extends HTMLElement {
           color: var(--text-primary);
         }
         
-        #streaming-container {
-          margin-top: var(--spacing-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--spacing-sm);
-        }
-        
-        #streaming-title {
-          font-weight: bold;
-          font-size: 24px;
-          color: var(--primary-color);
-          margin-bottom: var(--spacing-sm);
-          padding: var(--spacing-sm);
-          background-color: rgba(240, 240, 240, 0.5);
-          border-radius: 4px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          min-height: 30px;
-          display: none;
-        }
-        
-        #streaming-description {
-          font-size: 16px;
-          line-height: 1.5;
-          padding: var(--spacing-sm);
-          background-color: rgba(240, 240, 240, 0.5);
-          border-radius: 4px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          min-height: 60px;
-          display: none;
-        }
-        
-        .editable-title.hidden,
-        .editable-description.hidden {
-          display: none;
-        }
       </style>
       <div>
         <h2>What would you like?</h2>
@@ -188,10 +151,6 @@ class AppCreationStepTwo extends HTMLElement {
           </div>
           <div class="editable-description">
             <textarea id="generated-description" rows="6" placeholder="App Description"></textarea>
-          </div>
-          <div id="streaming-container">
-            <div id="streaming-title"></div>
-            <div id="streaming-description"></div>
           </div>
         </div>
         <div class="button-container">
@@ -234,14 +193,6 @@ class AppCreationStepTwo extends HTMLElement {
   
   get generatedDescription() {
     return this.shadowRoot.querySelector('#generated-description');
-  }
-  
-  get streamingTitle() {
-    return this.shadowRoot.querySelector('#streaming-title');
-  }
-  
-  get streamingDescription() {
-    return this.shadowRoot.querySelector('#streaming-description');
   }
   
   get currentTitle() {
@@ -316,28 +267,20 @@ class AppCreationStepTwo extends HTMLElement {
     debugLog('📝 step-two: updateTitleIfPresent called with:', title);
     if (!title) return;
     
-    // Update both the input field and streaming container
+    // Update only the input field
     this.generatedTitle.value = title;
     this._currentTitle = title;
-    this.streamingTitle.textContent = title;
-    
-    // Make sure the streaming container is visible
-    this.streamingTitle.style.display = 'block';
-    debugLog('📝 step-two: Title updated and streaming container shown');
+    debugLog('📝 step-two: Title updated');
   }
   
   updateDescriptionIfPresent(description) {
     debugLog('📝 step-two: updateDescriptionIfPresent called with:', description);
     if (!description) return;
     
-    // Update both the textarea and streaming container
+    // Update only the textarea
     this.generatedDescription.value = description;
     this._currentDescription = description;
-    this.streamingDescription.textContent = description;
-    
-    // Make sure the streaming container is visible
-    this.streamingDescription.style.display = 'block';
-    debugLog('📝 step-two: Description updated and streaming container shown');
+    debugLog('📝 step-two: Description updated');
   }
   
   handleCompletedChunk(chunk) {
@@ -350,14 +293,6 @@ class AppCreationStepTwo extends HTMLElement {
     this.generatedTitle.value = this._currentTitle;
     this.generatedDescription.value = this._currentDescription;
     
-    // Hide streaming containers
-    this.streamingTitle.style.display = 'none';
-    this.streamingDescription.style.display = 'none';
-    
-    // Show editable fields again
-    this.shadowRoot.querySelector('.editable-title').classList.remove('hidden');
-    this.shadowRoot.querySelector('.editable-description').classList.remove('hidden');
-    
     // Restore the button container and make fields editable again
     this.resetButtonContainer();
     debugLog('📝 step-two: Completed chunk handled, UI restored');
@@ -367,10 +302,6 @@ class AppCreationStepTwo extends HTMLElement {
     debugLog('📝 step-two: handleInProgressChunk called with:', chunk);
     // Use setTimeout with zero delay to push DOM updates to the end of the event queue
     setTimeout(() => {
-      // Hide editable fields during generation
-      this.shadowRoot.querySelector('.editable-title').classList.add('hidden');
-      this.shadowRoot.querySelector('.editable-description').classList.add('hidden');
-      
       this.updateTitleIfPresent(chunk.title);
       this.updateDescriptionIfPresent(chunk.description);
       this.showPreview();

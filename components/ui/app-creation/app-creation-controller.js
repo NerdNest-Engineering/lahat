@@ -21,7 +21,7 @@ class AppCreationController extends HTMLElement {
           
           display: block;
           max-width: 800px;
-          margin: 0 auto;
+          margin: 0 20%;
           padding: var(--spacing-md);
         }
         .step-container {
