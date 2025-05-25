@@ -58,6 +58,17 @@ export function getClaudeClient() {
  */
 async function handleSetApiKey(event, apiKey) {
   try {
+    // Check if we're deleting the key (empty string)
+    if (!apiKey || apiKey.trim() === '') {
+      // Delete the API key
+      const deleted = keyManager.deleteApiKey();
+      
+      // Clear the Claude client
+      claudeClient = null;
+      
+      return createSuccessResponse({ deleted, securelyStored: false });
+    }
+    
     // Store the API key securely
     const securelyStored = await keyManager.securelyStoreApiKey(apiKey);
     
@@ -99,6 +110,17 @@ async function handleCheckApiKey() {
  */
 async function handleSetOpenAIApiKey(event, apiKey) {
   try {
+    // Check if we're deleting the key (empty string)
+    if (!apiKey || apiKey.trim() === '') {
+      // Delete the API key
+      const deleted = keyManager.deleteOpenAIKey();
+      
+      // Refresh the logo generator client
+      logoGenerator.refreshClient();
+      
+      return createSuccessResponse({ deleted, securelyStored: false });
+    }
+    
     // Store the OpenAI API key securely
     const securelyStored = await keyManager.securelyStoreOpenAIKey(apiKey);
     
