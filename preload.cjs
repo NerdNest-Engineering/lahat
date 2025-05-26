@@ -56,6 +56,14 @@ contextBridge.exposeInMainWorld(
         throw error;
       }
     },
+    notifyAppCreated: async (params) => {
+      try {
+        return await ipcRenderer.invoke('notify-app-created', params);
+      } catch (error) {
+        console.error('Error notifying app created:', error);
+        throw error;
+      }
+    },
     onAppUpdated: (callback) => {
       ipcRenderer.on('app-updated', () => callback());
     },
@@ -240,6 +248,14 @@ contextBridge.exposeInMainWorld(
     },
     onTitleDescriptionChunk: (callback) => {
       ipcRenderer.on('title-description-chunk', (_event, chunk) => callback(chunk));
+    },
+    
+    // Event listener cleanup methods
+    removeListener: (channel, callback) => {
+      ipcRenderer.removeListener(channel, callback);
+    },
+    removeAllListeners: (channel) => {
+      ipcRenderer.removeAllListeners(channel);
     }
   }
 );

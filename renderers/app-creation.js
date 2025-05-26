@@ -20,6 +20,23 @@ function showError(title, message, level = 'error') {
 // Make showError available globally
 window.showError = showError;
 
+// Global error handlers to prevent window closure
+window.addEventListener('error', (event) => {
+  if (window.showError) {
+    window.showError('Application Error', `An unexpected error occurred: ${event.error?.message || 'Unknown error'}`);
+  }
+  event.preventDefault();
+  return false;
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (window.showError) {
+    window.showError('Promise Error', `An unexpected promise rejection occurred: ${event.reason?.message || 'Unknown error'}`);
+  }
+  event.preventDefault();
+  return false;
+});
+
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   // Create and append the main controller if it doesn't exist

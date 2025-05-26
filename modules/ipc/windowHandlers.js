@@ -118,6 +118,38 @@ async function handleNotifyApiKeyUpdated(event) {
 }
 
 /**
+ * Handle notifying main window that a new app was created
+ * @param {Object} event - IPC event
+ * @param {Object} params - App creation details
+ * @returns {Promise<Object>} - Result object with success flag
+ */
+async function handleNotifyAppCreated(event, { appId, name }) {
+  try {
+    // Find the main window (not the app creation window)
+    const mainWindow = BrowserWindow.getAllWindows().find(win => 
+      win.webContents.getTitle().includes('Lahat') && 
+      !win.webContents.getURL().includes('app-creation')
+    );
+    
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      // Send refresh signal to main window
+      mainWindow.webContents.send('app-updated');
+      
+      // Don't steal focus from the newly created mini app window
+      // The mini app window will naturally get focus when it opens
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error notifying app created:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
  * Register window-related IPC handlers
  */
 export function registerHandlers() {
@@ -129,6 +161,7 @@ export function registerHandlers() {
   // Inter-window communication IPC handlers
   ipcMain.handle('notify-app-updated', handleNotifyAppUpdated);
   ipcMain.handle('notify-api-key-updated', handleNotifyApiKeyUpdated);
+  ipcMain.handle('notify-app-created', handleNotifyAppCreated);
   
   console.log('Window handlers registered');
 }
