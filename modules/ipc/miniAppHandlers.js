@@ -156,8 +156,10 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
  */
 async function handleListMiniApps() {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    // Allow read-only mode for listing apps
+    const claudeClient = apiHandlers.getClaudeClient(true);
     if (!claudeClient) {
+      console.error('Failed to initialize Claude client in read-only mode');
       return { apps: [] };
     }
     
@@ -183,6 +185,15 @@ async function handleOpenMiniApp(event, { appId, filePath, name }) {
   console.log('handleOpenMiniApp called with:', { appId, filePath, name });
   
   try {
+    // Initialize Claude client in read-only mode if needed
+    if (!apiHandlers.getClaudeClient(true)) {
+      console.error('Failed to initialize Claude client in read-only mode');
+      return {
+        success: false,
+        error: 'Failed to initialize app environment. Please check your settings.'
+      };
+    }
+    
     const result = await miniAppManager.openMiniApp(appId, filePath, name);
     return result;
   } catch (error) {
@@ -327,11 +338,13 @@ async function handleDeleteMiniApp(event, { appId }) {
  */
 async function handleExportMiniApp(event, { appId, filePath }) {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    // Allow read-only mode for exporting apps
+    const claudeClient = apiHandlers.getClaudeClient(true);
     if (!claudeClient) {
+      console.error('Failed to initialize Claude client in read-only mode');
       return {
         success: false,
-        error: 'Claude API key not set. Please set your API key in settings.'
+        error: 'Failed to initialize app environment. Please check your settings.'
       };
     }
     
@@ -409,11 +422,13 @@ async function handleExportMiniApp(event, { appId, filePath }) {
  */
 async function handleImportMiniApp(event) {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    // Allow read-only mode for importing apps
+    const claudeClient = apiHandlers.getClaudeClient(true);
     if (!claudeClient) {
+      console.error('Failed to initialize Claude client in read-only mode');
       return {
         success: false,
-        error: 'Claude API key not set. Please set your API key in settings.'
+        error: 'Failed to initialize app environment. Please check your settings.'
       };
     }
     

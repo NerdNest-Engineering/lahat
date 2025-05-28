@@ -16,9 +16,14 @@ const __dirname = path.dirname(__filename);
 class ClaudeClient {
   constructor(apiKey) {
     this.apiKey = apiKey;
-    this.anthropic = new Anthropic({
-      apiKey: this.apiKey || process.env.ANTHROPIC_API_KEY
-    });
+    this.readOnlyMode = !apiKey;
+    
+    // Only initialize Anthropic client if we have an API key
+    if (apiKey) {
+      this.anthropic = new Anthropic({
+        apiKey: this.apiKey || process.env.ANTHROPIC_API_KEY
+      });
+    }
     
     this.systemPrompt = `You are an expert web developer specializing in creating self-contained mini applications using HTML, CSS, and JavaScript. When given a description of an application, you will generate a complete, functional implementation that can run in an Electron window.
 
@@ -164,6 +169,11 @@ EXAMPLE OUTPUT:
   }
 
   async generateApp(prompt, conversationId = null) {
+    // Check if in read-only mode
+    if (this.readOnlyMode) {
+      throw new Error('Cannot generate app: API key not set. Please set your Claude API key in settings.');
+    }
+    
     try {
       // Initialize messages with just the user prompt
       const messages = [
@@ -196,6 +206,11 @@ EXAMPLE OUTPUT:
   }
 
   async saveGeneratedApp(appName, htmlContent, prompt, conversationId = null, logoData = null) {
+    // Check if in read-only mode
+    if (this.readOnlyMode) {
+      throw new Error('Cannot save generated app: API key not set. Please set your Claude API key in settings.');
+    }
+    
     // Create a safe folder name from the app name
     const safeAppName = appName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const timestamp = Date.now();
@@ -377,6 +392,11 @@ EXAMPLE OUTPUT:
   }
 
   async updateGeneratedApp(conversationId, prompt, htmlContent) {
+    // Check if in read-only mode
+    if (this.readOnlyMode) {
+      throw new Error('Cannot update app: API key not set. Please set your Claude API key in settings.');
+    }
+    
     try {
       // Get all folders in the app storage directory
       const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });
@@ -434,6 +454,11 @@ EXAMPLE OUTPUT:
   }
 
   async deleteGeneratedApp(conversationId) {
+    // Check if in read-only mode
+    if (this.readOnlyMode) {
+      throw new Error('Cannot delete app: API key not set. Please set your Claude API key in settings.');
+    }
+    
     try {
       // Get all folders in the app storage directory
       const items = await fs.readdir(this.appStoragePath, { withFileTypes: true });

@@ -364,10 +364,17 @@ async function handleLahatFileOpen(filePath) {
   }
   
   try {
-    // Get the Claude client
-    const claudeClient = apiHandlers.getClaudeClient();
+    // Get the Claude client in read-only mode
+    const claudeClient = apiHandlers.getClaudeClient(true);
     if (!claudeClient) {
-      console.error('Claude client not initialized');
+      console.error('Failed to initialize Claude client in read-only mode');
+      
+      // Show error dialog to the user
+      dialog.showErrorBox(
+        'API Key Required',
+        'Cannot open .lahat file: Claude API key not set. Please set your API key in settings.'
+      );
+      
       return;
     }
     
