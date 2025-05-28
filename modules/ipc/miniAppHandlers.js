@@ -544,7 +544,6 @@ async function handleGenerateTitleAndDescription(event, { input }) {
       input,
       claudeClient.apiKey,
       (chunk) => {
-        // Send each chunk to the renderer
         if (!event.sender.isDestroyed()) {
           event.sender.send('title-description-chunk', chunk);
         }

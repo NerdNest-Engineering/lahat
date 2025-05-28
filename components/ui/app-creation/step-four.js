@@ -282,7 +282,7 @@ class AppCreationStepFour extends HTMLElement {
         </div>
         
         <div class="button-container hidden">
-          <button id="generate-button" style="display: none;">Start Generation</button>
+          <button id="generate-button" style="display: none;">Retry</button>
         </div>
       </div>
     `;
@@ -300,6 +300,7 @@ class AppCreationStepFour extends HTMLElement {
     this._generationStartTime = null;
     this._characterCount = 0;
     this._autoStarted = false;
+    this._appId = null;
     
     // Set up IPC listeners for streaming
     this.setupStreamingListeners();
@@ -417,11 +418,12 @@ class AppCreationStepFour extends HTMLElement {
     }
   }
   
-  setAppInfo(title, description, logoGenerated = false, logoPath = null) {
+  setAppInfo(title, description, logoGenerated = false, logoPath = null, appId = null) {
     this._appTitle = title;
     this._appDescription = description;
     this._logoGenerated = logoGenerated;
     this._logoPath = logoPath;
+    this._appId = appId;
     
     this.appTitle.textContent = title;
     this.appDescription.textContent = description;
@@ -455,31 +457,27 @@ class AppCreationStepFour extends HTMLElement {
   completeGeneration() {
     this._isGenerating = false;
     
-    // Update UI
-    this.generationStatus.textContent = 'Generation complete!';
+    // Update UI to show completion
+    this.generationStatus.textContent = 'Generation complete! Opening your app...';
     this.generationStatus.className = 'generation-status complete';
     this.spinner.classList.add('hidden');
     
-    // Show and update button
-    this.shadowRoot.querySelector('.button-container').classList.remove('hidden');
-    this.generateButton.style.display = 'block';
-    this.generateButton.textContent = 'Complete';
-    this.generateButton.className = 'complete-button';
-    this.generateButton.disabled = false;
-    this.generateButton.onclick = () => {
+    // Stop stats timer
+    this.stopStatsTimer();
+    
+    // Automatically trigger completion after a brief moment to show the success message
+    setTimeout(() => {
       this.dispatchEvent(new CustomEvent('generation-complete', {
         bubbles: true,
         composed: true,
         detail: { 
           code: this._generatedCode,
           title: this._appTitle,
-          description: this._appDescription
+          description: this._appDescription,
+          appId: this._appId
         }
       }));
-    };
-    
-    // Stop stats timer
-    this.stopStatsTimer();
+    }, 1000); // 1 second delay to show the completion message
   }
   
   setErrorState(message) {
@@ -489,7 +487,7 @@ class AppCreationStepFour extends HTMLElement {
     this.generationStatus.className = 'generation-status error';
     this.spinner.classList.add('hidden');
     
-    // Show retry button
+    // Show retry button for errors
     this.shadowRoot.querySelector('.button-container').classList.remove('hidden');
     this.generateButton.style.display = 'block';
     this.generateButton.disabled = false;

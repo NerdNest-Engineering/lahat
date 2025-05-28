@@ -21,7 +21,7 @@ class AppCreationController extends HTMLElement {
           
           display: block;
           max-width: 800px;
-          margin: 0 20%;
+          margin: 0 auto;
           padding: var(--spacing-md);
         }
         .step-container {
@@ -120,12 +120,18 @@ class AppCreationController extends HTMLElement {
     
     // Step Two events
     this.shadowRoot.querySelector('#step-two').addEventListener('step-two-next', async (e) => {
-      this.appData.title = e.detail.title;
-      this.appData.description = e.detail.description;
-      
-      // Create app folder structure before moving to step 3
-      await this.createAppFolder();
-      this.moveToStep(3);
+      try {
+        this.appData.title = e.detail.title;
+        this.appData.description = e.detail.description;
+        
+        await this.createAppFolder();
+        this.moveToStep(3);
+      } catch (error) {
+        if (window.showError) {
+          window.showError('Step Error', `Failed to proceed to step 3: ${error.message}`);
+        }
+        this.shadowRoot.querySelector('#step-two').resetButtonContainer();
+      }
     });
     
     this.shadowRoot.querySelector('#step-two').addEventListener('step-two-back', () => {
@@ -148,11 +154,17 @@ class AppCreationController extends HTMLElement {
       this.generateApp();
     });
     
-    this.shadowRoot.querySelector('#step-four').addEventListener('generation-complete', () => {
-      // Navigate to success page or close window
-      setTimeout(() => {
-        window.electronAPI.closeWindow();
-      }, 1000);
+    this.shadowRoot.querySelector('#step-four').addEventListener('generation-complete', (e) => {
+      // Notify main window to refresh app list
+      if (window.electronAPI && window.electronAPI.notifyAppCreated) {
+        window.electronAPI.notifyAppCreated({
+          appId: e.detail.appId || this.appData.conversationId,
+          name: e.detail.title || this.appData.title
+        });
+      }
+      
+      // Close window immediately - no delay needed
+      window.electronAPI.closeWindow();
     });
   }
   
@@ -194,7 +206,7 @@ class AppCreationController extends HTMLElement {
         currentStepElement.checkOpenAIAvailability();
         break;
       case 4:
-        currentStepElement.setAppInfo(this.appData.title, this.appData.description, this.appData.logoGenerated, this.appData.logoPath);
+        currentStepElement.setAppInfo(this.appData.title, this.appData.description, this.appData.logoGenerated, this.appData.logoPath, this.appData.conversationId);
         break;
     }
     
@@ -211,14 +223,28 @@ class AppCreationController extends HTMLElement {
       stepTwo.setGeneratingState();
       generationStatus.show('Generating app concept...');
       
-      // Set up streaming listener BEFORE making the API call
       const chunkHandler = (chunk) => {
         if (!chunk.done) {
           stepTwo.handleInProgressChunk(chunk);
+        } else {
+          stepTwo.handleCompletedChunk(chunk);
+        }
+      };
+      
+      const statusHandler = (status) => {
+        if (status.status === 'complete') {
+          generationStatus.hide();
+        } else if (status.status === 'error') {
+          generationStatus.hide();
+          if (window.showError) {
+            window.showError('Generation Failed', status.message || 'Unknown error');
+          }
+          stepTwo.resetButtonContainer();
         }
       };
       
       window.electronAPI.onTitleDescriptionChunk(chunkHandler);
+      window.electronAPI.onGenerationStatus(statusHandler);
       
       // Call the title/description generation API
       const result = await window.electronAPI.generateTitleAndDescription({ input: this.appData.userInput });
@@ -228,6 +254,8 @@ class AppCreationController extends HTMLElement {
         stepTwo.updateDescriptionIfPresent(result.description);
         stepTwo.handleCompletedChunk(result);
         generationStatus.hide();
+        // Clean up listeners on success
+        this.cleanupTitleDescriptionListeners();
       } else {
         throw new Error(result.error || 'Failed to generate app concept');
       }
@@ -237,6 +265,15 @@ class AppCreationController extends HTMLElement {
         window.showError('Generation Failed', error.message);
       }
       stepTwo.resetButtonContainer();
+      // Clean up listeners on error
+      this.cleanupTitleDescriptionListeners();
+    }
+  }
+  
+  cleanupTitleDescriptionListeners() {
+    if (window.electronAPI.removeAllListeners) {
+      window.electronAPI.removeAllListeners('title-description-chunk');
+      window.electronAPI.removeAllListeners('generation-status');
     }
   }
   
@@ -263,7 +300,8 @@ class AppCreationController extends HTMLElement {
       if (window.showError) {
         window.showError('Folder Creation Failed', error.message);
       }
-      // Don't prevent moving to step 3
+      // Re-throw the error so the calling function can handle it
+      throw error;
     }
   }
   

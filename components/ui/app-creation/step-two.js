@@ -19,7 +19,7 @@ class AppCreationStepTwo extends HTMLElement {
           --spacing-sm: 10px;
           --spacing-md: 15px;
           --spacing-lg: 20px;
-          
+          margin: 0 5%;
           display: none;
           padding: var(--spacing-lg) 0;
         }
