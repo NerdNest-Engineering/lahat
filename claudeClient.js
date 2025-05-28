@@ -182,7 +182,7 @@ EXAMPLE OUTPUT:
 
       const response = await this.anthropic.messages.create({
         model: 'claude-opus-4-20250514',
-        max_tokens: 64000,
+        max_tokens: 30000,
         system: this.systemPrompt,
         messages,
         stream: true
@@ -551,9 +551,33 @@ EXAMPLE OUTPUT:
       // Pipe the archive to the output file
       archive.pipe(output);
       
-      // Add the entire app folder to the zip
+      // Add the entire app folder to the zip, excluding hidden files
       const folderPath = path.join(this.appStoragePath, appFolder);
-      archive.directory(folderPath, false);
+      
+      // Manually add files and directories, excluding hidden ones at top level only
+      const addDirectoryContents = async (dirPath, archivePath = '', isTopLevel = true) => {
+        const items = await fs.readdir(dirPath, { withFileTypes: true });
+        
+        for (const item of items) {
+          // Skip hidden files and directories only at the top level
+          if (isTopLevel && item.name.startsWith('.')) {
+            continue;
+          }
+          
+          const itemPath = path.join(dirPath, item.name);
+          const itemArchivePath = archivePath ? path.join(archivePath, item.name) : item.name;
+          
+          if (item.isDirectory()) {
+            // Recursively add directory contents (no longer top level)
+            await addDirectoryContents(itemPath, itemArchivePath, false);
+          } else {
+            // Add file to archive
+            archive.file(itemPath, { name: itemArchivePath });
+          }
+        }
+      };
+      
+      await addDirectoryContents(folderPath);
       
       // Finalize the archive
       await archive.finalize();
@@ -614,41 +638,41 @@ EXAMPLE OUTPUT:
       // Create assets folder
       await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
       
-      // Copy all files from temp directory to the new folder
-      const files = await fs.readdir(tempDir);
-      
-      for (const file of files) {
-        if (file === 'assets') {
-          // Handle assets directory separately
-          const assetFiles = await fs.readdir(path.join(tempDir, 'assets'));
-          for (const assetFile of assetFiles) {
-            const srcPath = path.join(tempDir, 'assets', assetFile);
-            const destPath = path.join(folderPath, 'assets', assetFile);
-            await fs.copyFile(srcPath, destPath);
+      // Copy all files from temp directory to the new folder, excluding hidden files at top level only
+      const copyDirectoryContents = async (srcDir, destDir, relativePath = '', isTopLevel = true) => {
+        const items = await fs.readdir(srcDir, { withFileTypes: true });
+        
+        for (const item of items) {
+          // Skip hidden files and directories only at the top level
+          if (isTopLevel && item.name.startsWith('.')) {
+            console.log(`Skipping hidden file/directory during import: ${path.join(relativePath, item.name)}`);
+            continue;
           }
-        } else {
-          const srcPath = path.join(tempDir, file);
-          const destPath = path.join(folderPath, file);
           
-          // Check if it's a directory
-          const stat = await fs.stat(srcPath);
-          if (stat.isDirectory() && file !== 'assets') {
-            // Create the directory
-            await fs.mkdir(destPath, { recursive: true });
-            
-            // Copy all files in the directory
-            const subFiles = await fs.readdir(srcPath);
-            for (const subFile of subFiles) {
-              const subSrcPath = path.join(srcPath, subFile);
-              const subDestPath = path.join(destPath, subFile);
-              await fs.copyFile(subSrcPath, subDestPath);
+          const srcPath = path.join(srcDir, item.name);
+          const destPath = path.join(destDir, item.name);
+          
+          try {
+            if (item.isDirectory()) {
+              // Create directory and recursively copy contents (no longer top level)
+              await fs.mkdir(destPath, { recursive: true });
+              await copyDirectoryContents(srcPath, destPath, path.join(relativePath, item.name), false);
+            } else {
+              // Copy file
+              await fs.copyFile(srcPath, destPath);
             }
-          } else if (stat.isFile()) {
-            // Copy the file
-            await fs.copyFile(srcPath, destPath);
+          } catch (error) {
+            if (error.code === 'ENOTSUP' || error.code === 'EPERM') {
+              console.warn(`Skipping file that cannot be copied: ${path.join(relativePath, item.name)} (${error.code})`);
+              continue;
+            } else {
+              throw error;
+            }
           }
         }
-      }
+      };
+      
+      await copyDirectoryContents(tempDir, folderPath);
       
       // Update the metadata with a new conversation ID to avoid conflicts
       metadata.conversationId = `conv_imported_${timestamp}`;
