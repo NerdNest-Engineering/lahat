@@ -181,9 +181,9 @@ EXAMPLE OUTPUT:
       }
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-7-sonnet-20250219', // Updated to latest model
-        max_tokens: 64000, // Reduced to maximum allowed for this model
-        system: this.systemPrompt, // System prompt as top-level parameter
+        model: 'claude-opus-4-20250514',
+        max_tokens: 64000,
+        system: this.systemPrompt,
         messages,
         stream: true
       });

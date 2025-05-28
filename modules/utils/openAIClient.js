@@ -69,23 +69,29 @@ class OpenAIClient {
 
   /**
    * Create an Apple-style logo prompt
-   * @param {string} appName - Name of the app
-   * @param {string} appDescription - Description of the app
-   * @returns {string} - Formatted prompt for DALL-E
+   * @param {string} appName        – Name of the app
+   * @param {string} appDescription – Short description of the app
+   * @returns {string}              – Prompt formatted for DALL-E / SDXL
    */
   createLogoPrompt(appName, appDescription) {
-    return `Create a clean, minimalist app icon in Apple's design style for "${appName}". 
-The icon should be:
-- Simple and modern with clean lines
-- Rounded square format (iOS app icon style)
-- Subtle gradients and soft shadows
-- Professional and polished appearance
-- Appropriate for: ${appDescription}
-- Use vibrant but tasteful colors
-- No text or letters in the icon
-- Style: iOS app icon, clean vector art, professional
-- Format: Square icon with rounded corners
-- High quality and crisp details`;
+  const positive = `
+Design a vibrant macOS/iOS app icon for “${appName}”.
+
+• Shape  : Rounded-square (Sonoma style)
+• Symbol : ONE centered metaphor of ${appDescription}
+• Palette: Saturated, smooth gradient
+• Finish : Flat/matte, crisp edges
+• Inspiration: Pixelmator Pro brush, Warp gradient, Slack logo
+• Output : 1024×1024 PNG, transparent background
+`.trim();
+
+  const negative = `
+### Negative prompt
+3d, bevel, extrude, drop shadow, lens flare, dull colors, washed-out,
+busy layout, text, watermark, realistic photo
+`.trim();
+
+  return `${positive}\n\n${negative}`;
   }
 
   /**
