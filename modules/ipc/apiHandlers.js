@@ -17,36 +17,54 @@ let claudeClient = null;
 
 /**
  * Initialize Claude client
+ * @param {boolean} readOnlyMode - Whether to initialize in read-only mode
  * @returns {boolean} - True if initialized successfully
  */
-export function initializeClaudeClient() {
+export function initializeClaudeClient(readOnlyMode = false) {
   const apiKey = keyManager.getApiKey();
-  if (apiKey) {
-    try {
+  
+  try {
+    // Initialize with API key if available, otherwise in read-only mode
+    if (apiKey) {
       claudeClient = new ClaudeClient(apiKey);
-      // Log the app storage path for troubleshooting
-      logger.info('App storage directory initialized', { path: claudeClient.appStoragePath }, 'ClaudeClient');
+      logger.info('App storage directory initialized with API key', { path: claudeClient.appStoragePath }, 'ClaudeClient');
       return true;
-    } catch (error) {
-      logger.error('Failed to initialize Claude client', error, 'initializeClaudeClient');
-      ErrorHandler.logError('initializeClaudeClient', error);
-      return false;
+    } else if (readOnlyMode) {
+      // Initialize in read-only mode (null API key)
+      claudeClient = new ClaudeClient(null);
+      logger.info('App storage directory initialized in read-only mode', { path: claudeClient.appStoragePath }, 'ClaudeClient');
+      return true;
     }
+  } catch (error) {
+    logger.error('Failed to initialize Claude client', error, 'initializeClaudeClient');
+    ErrorHandler.logError('initializeClaudeClient', error);
+    return false;
   }
+  
   return false;
 }
 
 /**
  * Get the Claude client instance
+ * @param {boolean} allowReadOnly - Whether to allow read-only mode if no API key is available
  * @returns {ClaudeClient|null} - Claude client instance or null if not initialized
  */
-export function getClaudeClient() {
+export function getClaudeClient(allowReadOnly = false) {
   if (!claudeClient) {
+    // Try to initialize with API key first
     const initialized = initializeClaudeClient();
-    if (!initialized) {
+    
+    // If initialization failed and read-only mode is allowed, try again in read-only mode
+    if (!initialized && allowReadOnly) {
+      const readOnlyInitialized = initializeClaudeClient(true);
+      if (!readOnlyInitialized) {
+        return null;
+      }
+    } else if (!initialized) {
       return null;
     }
   }
+  
   return claudeClient;
 }
 
@@ -267,10 +285,11 @@ async function handleTestLogoGeneration() {
 async function handleOpenAppDirectory() {
   try {
     if (!claudeClient) {
-      const initialized = initializeClaudeClient();
+      // Allow read-only mode for opening app directory
+      const initialized = initializeClaudeClient(true);
       if (!initialized) {
         return createErrorResponse(
-          'Claude API key not set. Please set your API key in settings.',
+          'Failed to initialize app directory access.',
           'open-app-directory'
         );
       }
