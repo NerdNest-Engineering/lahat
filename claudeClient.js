@@ -554,30 +554,21 @@ EXAMPLE OUTPUT:
       // Add the entire app folder to the zip, excluding hidden files
       const folderPath = path.join(this.appStoragePath, appFolder);
       
-      // Manually add files and directories, excluding hidden ones at top level only
-      const addDirectoryContents = async (dirPath, archivePath = '', isTopLevel = true) => {
-        const items = await fs.readdir(dirPath, { withFileTypes: true });
+      // Use archiver's built-in directory method with filtering
+      archive.directory(folderPath, false, (entry) => {
+        // Check if this is a top-level entry (no path separators)
+        const isTopLevel = !entry.name.includes('/') && !entry.name.includes('\\');
+        const isHidden = entry.name.startsWith('.');
+        const isGit = entry.name === '.git' || entry.name.startsWith('.git/');
         
-        for (const item of items) {
-          // Skip hidden files and directories only at the top level
-          if (isTopLevel && item.name.startsWith('.')) {
-            continue;
-          }
-          
-          const itemPath = path.join(dirPath, item.name);
-          const itemArchivePath = archivePath ? path.join(archivePath, item.name) : item.name;
-          
-          if (item.isDirectory()) {
-            // Recursively add directory contents (no longer top level)
-            await addDirectoryContents(itemPath, itemArchivePath, false);
-          } else {
-            // Add file to archive
-            archive.file(itemPath, { name: itemArchivePath });
-          }
+        // Exclude hidden files at top level EXCEPT .git
+        if (isTopLevel && isHidden && !isGit) {
+          console.log(`Skipping hidden file/directory during export: ${entry.name}`);
+          return false;
         }
-      };
-      
-      await addDirectoryContents(folderPath);
+        
+        return entry;
+      });
       
       // Finalize the archive
       await archive.finalize();
@@ -643,8 +634,8 @@ EXAMPLE OUTPUT:
         const items = await fs.readdir(srcDir, { withFileTypes: true });
         
         for (const item of items) {
-          // Skip hidden files and directories only at the top level
-          if (isTopLevel && item.name.startsWith('.')) {
+          // Skip hidden files and directories only at the top level EXCEPT .git
+          if (isTopLevel && item.name.startsWith('.') && item.name !== '.git') {
             console.log(`Skipping hidden file/directory during import: ${path.join(relativePath, item.name)}`);
             continue;
           }
@@ -673,6 +664,9 @@ EXAMPLE OUTPUT:
       };
       
       await copyDirectoryContents(tempDir, folderPath);
+      
+      // Handle git hooks permissions if .git directory was imported
+      await this.handleGitHooksPermissions(folderPath);
       
       // Update the metadata with a new conversation ID to avoid conflicts
       metadata.conversationId = `conv_imported_${timestamp}`;
@@ -723,6 +717,56 @@ EXAMPLE OUTPUT:
       await fs.rmdir(dirPath).catch(() => {});
     } catch (error) {
       console.error(`Error deleting directory ${dirPath}:`, error);
+    }
+  }
+  
+  /**
+   * Handle git hooks permissions after import
+   * @param {string} folderPath - Path to the imported app folder
+   */
+  async handleGitHooksPermissions(folderPath) {
+    try {
+      const gitHooksPath = path.join(folderPath, '.git', 'hooks');
+      
+      // Check if .git/hooks directory exists
+      try {
+        await fs.access(gitHooksPath);
+      } catch (error) {
+        // No .git/hooks directory, nothing to do
+        return;
+      }
+      
+      console.log('Processing git hooks permissions...');
+      
+      // Read all files in the hooks directory
+      const hookFiles = await fs.readdir(gitHooksPath, { withFileTypes: true });
+      
+      for (const file of hookFiles) {
+        if (file.isFile()) {
+          const hookFilePath = path.join(gitHooksPath, file.name);
+          
+          try {
+            // Check if it's a hook file (no extension or common hook names)
+            const isHookFile = !file.name.includes('.') || 
+                              file.name.endsWith('.sample') ||
+                              ['pre-commit', 'post-commit', 'pre-push', 'post-receive', 
+                               'pre-receive', 'update', 'post-update', 'pre-rebase',
+                               'post-checkout', 'post-merge', 'pre-auto-gc'].includes(file.name);
+            
+            if (isHookFile && !file.name.endsWith('.sample')) {
+              // Make executable (755 permissions: rwxr-xr-x)
+              await fs.chmod(hookFilePath, 0o755);
+              console.log(`Set executable permissions for git hook: ${file.name}`);
+            }
+          } catch (error) {
+            console.warn(`Failed to set permissions for git hook ${file.name}:`, error.message);
+          }
+        }
+      }
+      
+      console.log('Git hooks permissions processing complete.');
+    } catch (error) {
+      console.warn('Error handling git hooks permissions:', error.message);
     }
   }
 }
