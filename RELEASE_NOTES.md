@@ -1,3 +1,10 @@
+# Lahat v1.0.15 Release Notes
+- Update claude client to use Claude Opus 4
+- Add OpenAI to the list of AI providers to image generation
+- Support .lahat file extension
+- Add icon generation to mini app generation
+- App list automatically refreshes on new app generation
+
 # Lahat v1.0.11 Release Notes
 
 ## New Features and Improvements
