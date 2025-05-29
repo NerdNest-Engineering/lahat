@@ -152,10 +152,6 @@
       {
         "from": "assets/icons/lahat.icns",
         "to": "lahat.icns"
-      },
-      {
-        "from": "assets/icons/file.icns",
-        "to": "file.icns"
       }
     ]
   }
