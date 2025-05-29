@@ -1,11 +1,11 @@
-version: 1.0.15
+version: 0.0.0-test1
 files:
-  - url: Lahat-1.0.15.zip
-    sha512: bu/bBvB86wADPsCFuEVifS8aeCZybGkUQS3Sb00/Rufa6wLjWthfperP5BrR8WTTSif80ItBlMgWvqQWYJIhHg==
-    size: 107664677
-  - url: Lahat-1.0.15.dmg
-    sha512: 0rvxI6oBuhYephOVVU9kktQVY1IIVzI5sbVsvBc/s5nc8azAUFLQ+rA3h7t+5AIyfsf1bDun2ThDPX2TGXssmA==
-    size: 112183854
-path: Lahat-1.0.15.zip
-sha512: bu/bBvB86wADPsCFuEVifS8aeCZybGkUQS3Sb00/Rufa6wLjWthfperP5BrR8WTTSif80ItBlMgWvqQWYJIhHg==
-releaseDate: '2025-05-29T02:42:34.093Z'
+  - url: Lahat-0.0.0-test1.zip
+    sha512: 89QwLm0kHmOBIJU8/pLbmtuacGajwFyCuyx9hC2ImoMDcqxVsxx3eOCL+hkj8U1tYkALBwp5ueB41bLTrRWMHA==
+    size: 107664757
+  - url: Lahat-0.0.0-test1.dmg
+    sha512: Do+bb5FdOYiN8+WvGQMs+5N7JxRFQEsamhiwppSNy++CONH2vaG78BSKSQMvagTmh9gp1S6nh1Uo7jgAEhHDuw==
+    size: 112181576
+path: Lahat-0.0.0-test1.zip
+sha512: 89QwLm0kHmOBIJU8/pLbmtuacGajwFyCuyx9hC2ImoMDcqxVsxx3eOCL+hkj8U1tYkALBwp5ueB41bLTrRWMHA==
+releaseDate: '2025-05-29T04:13:08.895Z'
