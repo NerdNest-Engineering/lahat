@@ -155,7 +155,7 @@
       },
       {
         "from": "assets/icons/file.icns",
-        "to": "icon.icns"
+        "to": "file.icns"
       }
     ]
   }
