@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
         
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -164,14 +167,26 @@ jobs:
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
+          # Get the branch that contains this tag
+          SOURCE_BRANCH=$(git branch -r --contains ${GITHUB_SHA} | grep -v HEAD | head -1 | sed 's|.*origin/||' | xargs)
+          if [ -z "$SOURCE_BRANCH" ]; then
+            echo "Could not determine source branch, defaulting to main"
+            SOURCE_BRANCH="main"
+          fi
+          echo "Source branch detected: $SOURCE_BRANCH"
+          
+          # Switch to the source branch to commit changes
+          git fetch origin $SOURCE_BRANCH
+          git checkout $SOURCE_BRANCH
+          
           # Check if there are any changes to commit
           if git diff --quiet package.json latest-mac.yml; then
             echo "No changes to package.json or latest-mac.yml"
           else
             git add package.json latest-mac.yml
             git commit -m "Auto-update package.json and latest-mac.yml for release v${VERSION}"
-            git push
-            echo "✅ Committed updated package.json and latest-mac.yml"
+            git push origin $SOURCE_BRANCH
+            echo "✅ Committed updated package.json and latest-mac.yml to $SOURCE_BRANCH"
           fi
              
       - name: Remove temporary keychain
