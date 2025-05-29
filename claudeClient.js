@@ -192,7 +192,7 @@ EXAMPLE OUTPUT:
 
       const response = await this.anthropic.messages.create({
         model: 'claude-opus-4-20250514',
-        max_tokens: 64000,
+        max_tokens: 30000,
         system: this.systemPrompt,
         messages,
         stream: true
@@ -576,9 +576,24 @@ EXAMPLE OUTPUT:
       // Pipe the archive to the output file
       archive.pipe(output);
       
-      // Add the entire app folder to the zip
+      // Add the entire app folder to the zip, excluding hidden files
       const folderPath = path.join(this.appStoragePath, appFolder);
-      archive.directory(folderPath, false);
+      
+      // Use archiver's built-in directory method with filtering
+      archive.directory(folderPath, false, (entry) => {
+        // Check if this is a top-level entry (no path separators)
+        const isTopLevel = !entry.name.includes('/') && !entry.name.includes('\\');
+        const isHidden = entry.name.startsWith('.');
+        const isGit = entry.name === '.git' || entry.name.startsWith('.git/');
+        
+        // Exclude hidden files at top level EXCEPT .git
+        if (isTopLevel && isHidden && !isGit) {
+          console.log(`Skipping hidden file/directory during export: ${entry.name}`);
+          return false;
+        }
+        
+        return entry;
+      });
       
       // Finalize the archive
       await archive.finalize();
@@ -639,41 +654,44 @@ EXAMPLE OUTPUT:
       // Create assets folder
       await fs.mkdir(path.join(folderPath, 'assets'), { recursive: true });
       
-      // Copy all files from temp directory to the new folder
-      const files = await fs.readdir(tempDir);
-      
-      for (const file of files) {
-        if (file === 'assets') {
-          // Handle assets directory separately
-          const assetFiles = await fs.readdir(path.join(tempDir, 'assets'));
-          for (const assetFile of assetFiles) {
-            const srcPath = path.join(tempDir, 'assets', assetFile);
-            const destPath = path.join(folderPath, 'assets', assetFile);
-            await fs.copyFile(srcPath, destPath);
+      // Copy all files from temp directory to the new folder, excluding hidden files at top level only
+      const copyDirectoryContents = async (srcDir, destDir, relativePath = '', isTopLevel = true) => {
+        const items = await fs.readdir(srcDir, { withFileTypes: true });
+        
+        for (const item of items) {
+          // Skip hidden files and directories only at the top level EXCEPT .git
+          if (isTopLevel && item.name.startsWith('.') && item.name !== '.git') {
+            console.log(`Skipping hidden file/directory during import: ${path.join(relativePath, item.name)}`);
+            continue;
           }
-        } else {
-          const srcPath = path.join(tempDir, file);
-          const destPath = path.join(folderPath, file);
           
-          // Check if it's a directory
-          const stat = await fs.stat(srcPath);
-          if (stat.isDirectory() && file !== 'assets') {
-            // Create the directory
-            await fs.mkdir(destPath, { recursive: true });
-            
-            // Copy all files in the directory
-            const subFiles = await fs.readdir(srcPath);
-            for (const subFile of subFiles) {
-              const subSrcPath = path.join(srcPath, subFile);
-              const subDestPath = path.join(destPath, subFile);
-              await fs.copyFile(subSrcPath, subDestPath);
+          const srcPath = path.join(srcDir, item.name);
+          const destPath = path.join(destDir, item.name);
+          
+          try {
+            if (item.isDirectory()) {
+              // Create directory and recursively copy contents (no longer top level)
+              await fs.mkdir(destPath, { recursive: true });
+              await copyDirectoryContents(srcPath, destPath, path.join(relativePath, item.name), false);
+            } else {
+              // Copy file
+              await fs.copyFile(srcPath, destPath);
             }
-          } else if (stat.isFile()) {
-            // Copy the file
-            await fs.copyFile(srcPath, destPath);
+          } catch (error) {
+            if (error.code === 'ENOTSUP' || error.code === 'EPERM') {
+              console.warn(`Skipping file that cannot be copied: ${path.join(relativePath, item.name)} (${error.code})`);
+              continue;
+            } else {
+              throw error;
+            }
           }
         }
-      }
+      };
+      
+      await copyDirectoryContents(tempDir, folderPath);
+      
+      // Handle git hooks permissions if .git directory was imported
+      await this.handleGitHooksPermissions(folderPath);
       
       // Update the metadata with a new conversation ID to avoid conflicts
       metadata.conversationId = `conv_imported_${timestamp}`;
@@ -724,6 +742,56 @@ EXAMPLE OUTPUT:
       await fs.rmdir(dirPath).catch(() => {});
     } catch (error) {
       console.error(`Error deleting directory ${dirPath}:`, error);
+    }
+  }
+  
+  /**
+   * Handle git hooks permissions after import
+   * @param {string} folderPath - Path to the imported app folder
+   */
+  async handleGitHooksPermissions(folderPath) {
+    try {
+      const gitHooksPath = path.join(folderPath, '.git', 'hooks');
+      
+      // Check if .git/hooks directory exists
+      try {
+        await fs.access(gitHooksPath);
+      } catch (error) {
+        // No .git/hooks directory, nothing to do
+        return;
+      }
+      
+      console.log('Processing git hooks permissions...');
+      
+      // Read all files in the hooks directory
+      const hookFiles = await fs.readdir(gitHooksPath, { withFileTypes: true });
+      
+      for (const file of hookFiles) {
+        if (file.isFile()) {
+          const hookFilePath = path.join(gitHooksPath, file.name);
+          
+          try {
+            // Check if it's a hook file (no extension or common hook names)
+            const isHookFile = !file.name.includes('.') || 
+                              file.name.endsWith('.sample') ||
+                              ['pre-commit', 'post-commit', 'pre-push', 'post-receive', 
+                               'pre-receive', 'update', 'post-update', 'pre-rebase',
+                               'post-checkout', 'post-merge', 'pre-auto-gc'].includes(file.name);
+            
+            if (isHookFile && !file.name.endsWith('.sample')) {
+              // Make executable (755 permissions: rwxr-xr-x)
+              await fs.chmod(hookFilePath, 0o755);
+              console.log(`Set executable permissions for git hook: ${file.name}`);
+            }
+          } catch (error) {
+            console.warn(`Failed to set permissions for git hook ${file.name}:`, error.message);
+          }
+        }
+      }
+      
+      console.log('Git hooks permissions processing complete.');
+    } catch (error) {
+      console.warn('Error handling git hooks permissions:', error.message);
     }
   }
 }
