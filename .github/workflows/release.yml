@@ -142,6 +142,37 @@ jobs:
         run: |
           codesign --verify --deep --strict dist/mac-arm64/Lahat.app || { echo "Code signing verification failed"; exit 1; }
           spctl -a -vv -t install dist/mac-arm64/Lahat.app || { echo "Gatekeeper check failed"; exit 1; }
+
+      - name: Update package.json and latest-mac.yml in repository
+        if: matrix.os == 'macos-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract version for commit message
+          VERSION=${GITHUB_REF#refs/tags/v}
+          
+          # Copy generated latest-mac.yml to repo root
+          if [ -f "dist/latest-mac.yml" ]; then
+            cp dist/latest-mac.yml latest-mac.yml
+            echo "✅ Found and copied latest-mac.yml"
+          else
+            echo "❌ latest-mac.yml not found in dist/"
+            exit 1
+          fi
+          
+          # Configure git
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Check if there are any changes to commit
+          if git diff --quiet package.json latest-mac.yml; then
+            echo "No changes to package.json or latest-mac.yml"
+          else
+            git add package.json latest-mac.yml
+            git commit -m "Auto-update package.json and latest-mac.yml for release v${VERSION}"
+            git push
+            echo "✅ Committed updated package.json and latest-mac.yml"
+          fi
              
       - name: Remove temporary keychain
         if: matrix.os == 'macos-latest'
