@@ -106,8 +106,8 @@ function setupAutoUpdater() {
   autoUpdater.allowPrerelease = false;
   autoUpdater.allowDowngrade = true;
   
-  // Disable update checks in development mode (use both checks for robustness)
-  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+  // Disable update checks in development mode
+  if (process.env.NODE_ENV === 'development') {
     console.log('Auto-updater disabled in development mode');
     // Return early - don't set up update functionality in dev mode
     return;

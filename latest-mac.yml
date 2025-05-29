@@ -1,9 +1,11 @@
-version: 1.0.12
+version: 1.0.15
 files:
-  - url: Lahat-1.0.12-arm64.dmg
-    sha512: REPLACE_WITH_ACTUAL_SHA512_HASH
-    size: REPLACE_WITH_ACTUAL_FILE_SIZE
-    blockMapSize: REPLACE_WITH_ACTUAL_BLOCK_MAP_SIZE
-path: Lahat-1.0.12-arm64.dmg
-sha512: REPLACE_WITH_ACTUAL_SHA512_HASH
-releaseDate: '2025-04-03T20:37:00.000Z'
+  - url: Lahat-1.0.15.zip
+    sha512: bu/bBvB86wADPsCFuEVifS8aeCZybGkUQS3Sb00/Rufa6wLjWthfperP5BrR8WTTSif80ItBlMgWvqQWYJIhHg==
+    size: 107664677
+  - url: Lahat-1.0.15.dmg
+    sha512: 0rvxI6oBuhYephOVVU9kktQVY1IIVzI5sbVsvBc/s5nc8azAUFLQ+rA3h7t+5AIyfsf1bDun2ThDPX2TGXssmA==
+    size: 112183854
+path: Lahat-1.0.15.zip
+sha512: bu/bBvB86wADPsCFuEVifS8aeCZybGkUQS3Sb00/Rufa6wLjWthfperP5BrR8WTTSif80ItBlMgWvqQWYJIhHg==
+releaseDate: '2025-05-29T02:42:34.093Z'
