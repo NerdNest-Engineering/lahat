@@ -41,3 +41,8 @@ logs/
 # Generated app data
 **/generated-apps/
 agentic-tasks
+
+# Auto-updater files (generated during build)
+latest-mac.yml
+latest-linux.yml
+latest.yml
