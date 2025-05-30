@@ -10,7 +10,7 @@ Your app uses `electron-updater` to automatically check for and install updates 
 - ✅ Only runs in production mode (`NODE_ENV=production`)
 - ✅ Downloads updates automatically when available
 - ✅ Prompts user to install and restart
-- ✅ Syncs package.json version with git tags automatically
+- ✅ Creates automated PRs to sync package.json version with releases
 
 ## Quick Start
 
@@ -119,7 +119,15 @@ NODE_ENV=production npm start
 
 ### Common Issues
 
-#### 1. No Update Detected
+#### 1. Branch Protection Rules
+**Symptoms**: Release workflow fails with "Repository rule violations found"
+
+**Solutions**:
+- The new workflow creates PRs instead of direct commits
+- Check for automated PRs after releases are published
+- Merge the version sync PRs to keep package.json updated
+
+#### 2. No Update Detected
 **Symptoms**: Console shows "❌ No update available"
 
 **Solutions**:
@@ -174,11 +182,11 @@ autoUpdater.checkForUpdatesAndNotify()
 ### How Version Sync Works
 
 1. **You create a tag**: `git tag v1.0.0 && git push origin v1.0.0`
-2. **GitHub Actions triggers** and extracts version from tag
-3. **Updates package.json** to match the tag version
-4. **Builds the app** with the correct version
-5. **Commits the version change** back to the repository
-6. **Publishes the release** with proper version metadata
+2. **Release workflow triggers** and builds the app with the correct version
+3. **Publishes the release** with proper version metadata
+4. **Version sync workflow triggers** when release is published
+5. **Creates a PR** to update package.json to match the release version
+6. **You merge the PR** to keep the repository in sync
 
 ### Best Practices
 

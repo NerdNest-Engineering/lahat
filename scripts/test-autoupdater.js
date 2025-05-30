@@ -49,8 +49,32 @@ function incrementVersion(version, type = 'patch') {
 
 function createTestRelease(versionType = 'patch') {
   const currentVersion = getCurrentVersion();
-  const newVersion = incrementVersion(currentVersion, versionType);
-  const tagName = `v${newVersion}`;
+  let newVersion = incrementVersion(currentVersion, versionType);
+  let tagName = `v${newVersion}`;
+  
+  // Check if tag already exists and increment if needed
+  try {
+    const existingTags = execSync('git tag -l', { encoding: 'utf8' }).split('\n').filter(Boolean);
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (existingTags.includes(tagName) && attempts < maxAttempts) {
+      attempts++;
+      console.log(`⚠️  Tag ${tagName} already exists, incrementing...`);
+      newVersion = incrementVersion(newVersion, 'patch');
+      tagName = `v${newVersion}`;
+    }
+    
+    if (attempts >= maxAttempts) {
+      throw new Error('Could not find available tag name after 10 attempts');
+    }
+  } catch (error) {
+    if (!error.message.includes('Could not find available tag')) {
+      console.warn('Warning: Could not check existing tags:', error.message);
+    } else {
+      throw error;
+    }
+  }
   
   console.log(`🚀 Creating test release: ${tagName}`);
   console.log(`Current version: ${currentVersion} → New version: ${newVersion}`);
