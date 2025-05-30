@@ -21,8 +21,13 @@ if (process.platform === 'darwin') {
   process.env.IMK_DISABLE_WARNINGS = '1';
 }
 
-// Set app name
+// Set app name for consistency
 app.name = 'Lahat';
+
+// Set app user model ID for Windows
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.nerdnest.lahat');
+}
 
 /**
  * Initialize the application
@@ -85,18 +90,11 @@ function setupAutoUpdater() {
     return;
   }
   
-  // Configure auto-updater with simplified settings
+  // Configure auto-updater with standard settings
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.allowPrerelease = false;
   autoUpdater.allowDowngrade = false;
-  
-  // Enable dev update config for testing when in production mode but not packaged
-  // This allows testing updates while running from source
-  if (process.env.NODE_ENV === 'production') {
-    autoUpdater.forceDevUpdateConfig = true;
-    console.log('Enabled forceDevUpdateConfig for production testing');
-  }
   
   // Set up logging
   autoUpdater.logger = console;
@@ -104,12 +102,14 @@ function setupAutoUpdater() {
     autoUpdater.logger.transports.file.level = 'info';
   }
   
-  // Configure GitHub provider
+  // Configure GitHub provider - this is all that's needed for standard workflow
   autoUpdater.setFeedURL({
     provider: 'github',
     owner: 'NerdNest-Engineering',
     repo: 'lahat'
   });
+  
+  console.log('Auto-updater configured for GitHub releases');
   
   // Handle update events
   autoUpdater.on('update-downloaded', (info) => {
