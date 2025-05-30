@@ -14,7 +14,11 @@
     "dist-mac-alpha": "SKIP_NOTARIZATION=true electron-builder --mac --config.mac.notarize=false --config.mac.identity=null",
     "dist-win": "electron-builder --win",
     "dist-linux": "electron-builder --linux",
-    "dist-all": "electron-builder -mwl"
+    "dist-all": "electron-builder -mwl",
+    "test-updater": "node scripts/test-autoupdater.js",
+    "test-updater:build": "node scripts/test-autoupdater.js build",
+    "test-updater:release": "node scripts/test-autoupdater.js release",
+    "test-updater:help": "node scripts/test-autoupdater.js help"
   },
   "repository": {
     "type": "git",

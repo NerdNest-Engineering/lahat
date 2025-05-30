@@ -144,11 +144,17 @@ function setupAutoUpdater() {
   
   // Add event listeners for debugging
   autoUpdater.on('checking-for-update', () => {
-    console.log('Checking for update...');
+    console.log('🔍 Checking for update...');
+    console.log('Current version:', app.getVersion());
+    console.log('Feed URL:', autoUpdater.getFeedURL());
   });
   
   autoUpdater.on('update-available', (info) => {
-    console.log('Update available:', info.version);
+    console.log('✅ Update available:', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+      files: info.files?.map(f => f.url) || 'No files info'
+    });
     
     // Explicitly request download when update is detected
     autoUpdater.downloadUpdate().catch(err => {
@@ -157,11 +163,13 @@ function setupAutoUpdater() {
   });
   
   autoUpdater.on('update-not-available', (info) => {
-    console.log('Update not available. Current version:', info.version);
+    console.log('❌ No update available.');
+    console.log('Current version:', app.getVersion());
+    console.log('Latest version checked:', info?.version || 'Unknown');
   });
   
   autoUpdater.on('download-progress', (progressObj) => {
-    console.log(`Download progress: ${progressObj.percent.toFixed(2)}%`);
+    console.log(`📥 Download progress: ${progressObj.percent.toFixed(2)}% (${progressObj.transferred}/${progressObj.total} bytes)`);
   });
   
   // Register the before-quit event to properly handle application quit

@@ -35,7 +35,7 @@ jobs:
       - name: Clean dist directory
         run: rm -rf dist
       
-      - name: Set version from tag
+      - name: Set version from tag and sync to repo
         run: |
           # Extract version from tag (remove 'v' prefix)
           VERSION=${GITHUB_REF#refs/tags/v}
@@ -43,6 +43,15 @@ jobs:
           
           # Update version in package.json
           npm version $VERSION --no-git-tag-version --allow-same-version
+          
+          # Configure git for the commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Commit and push the version change back to repo
+          git add package.json
+          git commit -m "chore: sync package.json version to $VERSION [skip ci]"
+          git push origin HEAD:main
           
       - name: Check for required secrets
         if: matrix.os == 'macos-latest'
