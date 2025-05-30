@@ -13,12 +13,21 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv'; // For loading environment variables from .env file
 
-// Load environment variables with explicit path
-const result = dotenv.config();
-if (result.error) {
-  console.warn('Unable to load loading .env file, continuing...', result.error.message);
+// Only try to load .env file if we're not in a CI environment and the file exists
+const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+const envFileExists = fs.existsSync('.env');
+
+if (!isCI && envFileExists) {
+  const result = dotenv.config();
+  if (result.error) {
+    console.warn('Unable to load .env file:', result.error.message);
+  } else {
+    console.log('.env file loaded successfully');
+  }
+} else if (!isCI && !envFileExists) {
+  console.log('No .env file found, using environment variables');
 } else {
-  console.log('.env file loaded successfully');
+  console.log('Running in CI environment, using environment variables from secrets');
 }
 
 export default async function (params) {
