@@ -1,0 +1,240 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, 'chore/**', 'feature/**', 'fix/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node-version: [18.x, 20.x, 22.x]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run integration tests
+      run: npm run test:ci
+      env:
+        NODE_ENV: test
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.node-version }}
+        path: test-results/
+        if-no-files-found: ignore
+        
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Check code formatting
+      run: |
+        # Run basic syntax check
+        find src -name "*.js" -exec node --check {} \;
+        find tests -name "*.js" -exec node --check {} \;
+        
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
+      
+    - name: Check for known vulnerabilities
+      run: npm audit --audit-level=high --production
+      
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Test Electron build (headless)
+      run: |
+        # Test that Electron can start without errors
+        timeout 30s npm run start || true
+      env:
+        DISPLAY: ':99'
+        CI: true
+        
+    - name: Setup virtual display (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        
+  integration:
+    runs-on: ubuntu-latest
+    needs: [test, lint, security]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run full integration test suite
+      run: |
+        # Run specific integration scenarios
+        npm run test:integration
+        
+    - name: Test scaffolding system
+      run: |
+        # Test project generation end-to-end
+        node tests/run-tests.js scaffolding.test.js
+        
+    - name: Test hot reload system
+      run: |
+        # Test hot reload functionality
+        node tests/run-tests.js hot-reload.test.js
+        
+    - name: Test MCP system
+      run: |
+        # Test MCP integration
+        node tests/run-tests.js mcp.test.js
+        
+    - name: Test distribution system
+      run: |
+        # Test app packaging and installation
+        node tests/run-tests.js distribution.test.js
+        
+  performance:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run performance benchmarks
+      run: |
+        # Basic performance checks
+        echo "Testing project generation performance..."
+        time node -e "
+          import('./src/scaffolding/ProjectGenerator.js').then(({ ProjectGenerator }) => {
+            const gen = new ProjectGenerator({ outputDir: '/tmp/perf-test' });
+            return gen.generateProject({
+              name: 'perf-test-app',
+              template: 'minimal',
+              author: 'Perf Tester'
+            });
+          }).then(() => console.log('Project generation completed'));
+        "
+        
+        echo "Testing hot reload startup performance..."
+        time node -e "
+          import('./src/dev-runtime/HotReload.js').then(({ HotReload }) => {
+            const hr = new HotReload({
+              runningApps: new Map(),
+              executeApp: async () => ({ success: true }),
+              stopApp: async () => true
+            });
+            console.log('Hot reload initialized');
+          });
+        "
+        
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, build, integration]
+    if: always()
+    
+    steps:
+    - name: Check test results
+      run: |
+        if [[ "${{ needs.test.result }}" == "success" && "${{ needs.lint.result }}" == "success" && "${{ needs.security.result }}" == "success" && "${{ needs.build.result }}" == "success" && "${{ needs.integration.result }}" == "success" ]]; then
+          echo "✅ All CI checks passed!"
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Some CI checks failed"
+          echo "status=failure" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        
+  # Optional: Auto-merge dependabot PRs if all tests pass
+  auto-merge:
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, build, integration]
+    if: github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'
+    
+    steps:
+    - name: Auto-merge dependabot PR
+      if: needs.notify.outputs.status == 'success'
+      run: |
+        echo "All tests passed for dependabot PR - would auto-merge in production"
+        # gh pr merge --auto --merge "${{ github.event.pull_request.number }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

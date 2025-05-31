@@ -83,7 +83,7 @@ export class StandardMCP extends EventEmitter {
    * @param {Object} arguments - Tool arguments
    * @returns {Promise<any>} Tool result
    */
-  async callTool(name, arguments = {}) {
+  async callTool(name, args = {}) {
     this._ensureInitialized();
     
     const message = {
@@ -91,7 +91,7 @@ export class StandardMCP extends EventEmitter {
       method: 'tools/call',
       params: {
         name,
-        arguments
+        arguments: args
       }
     };
 
