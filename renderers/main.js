@@ -250,9 +250,7 @@ menuImportApp?.addEventListener('click', async () => {
 });
 
 menuCredentials?.addEventListener('click', () => {
-  // TODO: Open credentials manager window
-  console.log('Credentials manager not implemented yet');
-  alert('Credentials manager coming soon!');
+  window.electronAPI.openWindow('credential-manager');
 });
 
 menuApiSettings?.addEventListener('click', () => {

@@ -6,9 +6,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import extract from 'extract-zip';
+import { EventEmitter } from 'events';
 
-export class AppInstaller {
+export class AppInstaller extends EventEmitter {
   constructor(options = {}) {
+    super();
     this.options = {
       installDir: path.join(process.cwd(), 'installed-apps'),
       ...options

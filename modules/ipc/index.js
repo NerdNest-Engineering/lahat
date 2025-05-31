@@ -13,6 +13,7 @@ export * from './ipcHandler.js';
 export * from './apiHandlers.js';
 export * from './miniAppHandlers.js';
 export * from './windowHandlers.js';
+export * from './credentialHandlers.js';
 
 /**
  * Initialize all IPC handlers
@@ -23,6 +24,7 @@ export function initializeIpcHandlers() {
   const apiHandlers = require('./apiHandlers.js');
   const miniAppHandlers = require('./miniAppHandlers.js');
   const windowHandlers = require('./windowHandlers.js');
+  const credentialHandlers = require('./credentialHandlers.js');
   
   // Register API handlers
   apiHandlers.registerHandlers(ipcHandler);
@@ -32,6 +34,9 @@ export function initializeIpcHandlers() {
   
   // Register window handlers
   windowHandlers.registerHandlers(ipcHandler);
+  
+  // Register credential handlers
+  credentialHandlers.registerHandlers(ipcHandler);
   
   console.log('All IPC handlers registered');
   

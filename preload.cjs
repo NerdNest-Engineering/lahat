@@ -316,6 +316,48 @@ contextBridge.exposeInMainWorld(
       }
     },
     
+    // Credential management
+    saveCredential: async (credentialData) => {
+      try {
+        return await ipcRenderer.invoke('save-credential', credentialData);
+      } catch (error) {
+        console.error('Error saving credential:', error);
+        throw error;
+      }
+    },
+    loadCredentials: async () => {
+      try {
+        return await ipcRenderer.invoke('load-credentials');
+      } catch (error) {
+        console.error('Error loading credentials:', error);
+        throw error;
+      }
+    },
+    getCredentialValue: async (credentialId) => {
+      try {
+        return await ipcRenderer.invoke('get-credential-value', credentialId);
+      } catch (error) {
+        console.error('Error getting credential value:', error);
+        throw error;
+      }
+    },
+    deleteCredential: async (credentialId) => {
+      try {
+        return await ipcRenderer.invoke('delete-credential', credentialId);
+      } catch (error) {
+        console.error('Error deleting credential:', error);
+        throw error;
+      }
+    },
+    updateCredentialLastUsed: async (credentialId) => {
+      try {
+        return await ipcRenderer.invoke('update-credential-last-used', credentialId);
+      } catch (error) {
+        console.error('Error updating credential last used:', error);
+        throw error;
+      }
+    },
+    
     // Event listener cleanup methods
     removeListener: (channel, callback) => {
       ipcRenderer.removeListener(channel, callback);

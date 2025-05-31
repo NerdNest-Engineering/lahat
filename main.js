@@ -9,6 +9,7 @@ import * as apiHandlers from './modules/ipc/apiHandlers.js';
 import * as miniAppHandlers from './modules/ipc/miniAppHandlers.js';
 import * as windowHandlers from './modules/ipc/windowHandlers.js';
 import * as distributionHandlers from './modules/ipc/distributionHandlers.js';
+import * as credentialHandlers from './modules/ipc/credentialHandlers.js';
 import { ErrorHandler } from './modules/utils/errorHandler.js';
 // Import new island architecture
 import { DistributionManager } from './src/distribution/index.js';
@@ -73,6 +74,7 @@ async function initializeApp() {
     apiHandlers.registerHandlers();
     miniAppHandlers.registerHandlers();
     windowHandlers.registerHandlers();
+    credentialHandlers.registerHandlers();
     
     // Register distribution handlers and pass the distribution manager
     distributionHandlers.setDistributionManager(distributionManager);
