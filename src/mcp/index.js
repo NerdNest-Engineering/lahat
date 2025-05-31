@@ -3,6 +3,11 @@
  * Exports all MCP-related functionality
  */
 
+import { MCPRegistry } from './MCPRegistry.js';
+import { ServerManager } from './ServerManager.js';
+import { CapabilityMatcher } from './CapabilityMatcher.js';
+import { ServerProxy } from './ServerProxy.js';
+
 export { MCPRegistry } from './MCPRegistry.js';
 export { ServerManager } from './ServerManager.js';
 export { CapabilityMatcher } from './CapabilityMatcher.js';

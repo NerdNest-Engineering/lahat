@@ -159,7 +159,7 @@ export class StandardMCP extends EventEmitter {
    * @param {Object} arguments - Prompt arguments
    * @returns {Promise<Object>} Prompt content
    */
-  async getPrompt(name, arguments = {}) {
+  async getPrompt(name, args = {}) {
     this._ensureInitialized();
     
     const message = {
@@ -167,7 +167,7 @@ export class StandardMCP extends EventEmitter {
       method: 'prompts/get',
       params: {
         name,
-        arguments
+        arguments: args
       }
     };
 

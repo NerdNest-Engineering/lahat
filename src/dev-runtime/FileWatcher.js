@@ -178,28 +178,31 @@ export class FileWatcher extends EventEmitter {
    * @returns {boolean} Whether path matches pattern
    */
   _matchesGlob(filePath, pattern) {
-    // Handle the special case where ** should match zero or more path segments
+    // Simple glob to regex conversion
     let regexPattern = pattern;
     
-    // Replace ** with a pattern that matches zero or more path segments
-    regexPattern = regexPattern.replace(/\*\*/g, '(?:.*\\/)?');
+    // First escape dots and other special characters that aren't glob wildcards
+    regexPattern = regexPattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
     
-    // Replace * with pattern that matches any characters except path separator
+    // Handle ** first (must be done before single *)
+    regexPattern = regexPattern.replace(/\*\*/g, '__DOUBLESTAR__');
+    
+    // Handle single * (matches any characters except path separator)
     regexPattern = regexPattern.replace(/\*/g, '[^/]*');
     
-    // Replace ? with pattern that matches any single character except path separator
-    regexPattern = regexPattern.replace(/\?/g, '[^/]');
+    // Replace our placeholder with the correct ** pattern
+    regexPattern = regexPattern.replace(/__DOUBLESTAR__/g, '.*');
     
-    // Escape forward slashes
-    regexPattern = regexPattern.replace(/\//g, '\\/');
+    // Handle ? (matches any single character except path separator)
+    regexPattern = regexPattern.replace(/\?/g, '[^/]');
     
     // For patterns like **/*.js, also allow files in the root (without subdirectory)
     if (pattern.includes('**/')) {
       const rootPattern = pattern.replace('**/', '');
       const rootRegex = rootPattern
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
         .replace(/\*/g, '[^/]*')
-        .replace(/\?/g, '[^/]')
-        .replace(/\//g, '\\/');
+        .replace(/\?/g, '[^/]');
       
       const regex1 = new RegExp(`^${regexPattern}$`);
       const regex2 = new RegExp(`^${rootRegex}$`);

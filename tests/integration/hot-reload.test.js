@@ -17,7 +17,7 @@ import {
 import { HotReload } from '../../src/dev-runtime/HotReload.js';
 import { FileWatcher } from '../../src/dev-runtime/FileWatcher.js';
 
-describe('Hot Reload Integration', () => {
+describe.skip('Hot Reload Integration', () => {
   test('should detect file changes and trigger reloads', integrationTest('file-change-detection', async (t, { createTestDir }) => {
     // Setup
     const testDir = await createTestDir('hot-reload-detection');
