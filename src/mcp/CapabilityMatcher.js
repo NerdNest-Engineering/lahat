@@ -5,10 +5,23 @@
 
 import { EventEmitter } from 'events';
 
+// Capability categories for intelligent matching
+export const CAPABILITY_CATEGORIES = {
+  FILE_SYSTEM: ['file-read', 'file-write', 'file-list', 'file-watch', 'file-delete'],
+  DATABASE: ['db-query', 'db-execute', 'db-list-tables', 'db-schema'],
+  WEB: ['http-get', 'http-post', 'web-scrape', 'url-fetch'],
+  AI_TEXT: ['text-generate', 'text-complete', 'text-summarize', 'text-translate'],
+  AI_IMAGE: ['image-generate', 'image-analyze', 'image-edit'],
+  STORAGE: ['storage-get', 'storage-set', 'storage-list', 'storage-delete'],
+  SYSTEM: ['system-exec', 'system-notify', 'system-clipboard'],
+  APPS: ['app-launch', 'app-list', 'app-message', 'app-install']
+};
+
 export class CapabilityMatcher extends EventEmitter {
-  constructor(options = {}) {
+  constructor(registry, options = {}) {
     super();
     
+    this.registry = registry;
     this.options = {
       preferenceStrategy: 'performance', // 'performance', 'reliability', 'round-robin'
       cacheTimeout: 60000, // 1 minute
@@ -19,6 +32,14 @@ export class CapabilityMatcher extends EventEmitter {
     this.serverMetrics = new Map();
     this.routingRules = new Map();
     this.preferences = new Map();
+    
+    // Listen to registry events to invalidate cache
+    if (this.registry) {
+      this.registry.on('server:connected', () => this._clearAllCache());
+      this.registry.on('server:disconnected', () => this._clearAllCache());
+      this.registry.on('server:registered', () => this._clearAllCache());
+      this.registry.on('server:unregistered', () => this._clearAllCache());
+    }
   }
 
   /**
@@ -135,6 +156,160 @@ export class CapabilityMatcher extends EventEmitter {
   }
 
   /**
+   * Find capabilities by category
+   * @param {string} category - Category name (e.g., 'FILE_SYSTEM', 'AI_TEXT')
+   * @param {Object} requirements - Additional requirements
+   * @returns {Promise<Object>} Available capabilities by category
+   */
+  async findCapabilitiesByCategory(category, requirements = {}) {
+    const categoryCapabilities = CAPABILITY_CATEGORIES[category] || [];
+    const availableCapabilities = {};
+
+    for (const capability of categoryCapabilities) {
+      const servers = await this.findServersForCapability(capability, requirements);
+      if (servers.length > 0) {
+        availableCapabilities[capability] = {
+          servers: servers.length,
+          bestServer: servers[0],
+          allServers: servers
+        };
+      }
+    }
+
+    return availableCapabilities;
+  }
+
+  /**
+   * Get suggested capabilities based on current usage patterns
+   * @param {string} appId - App ID for context
+   * @returns {Promise<Array<Object>>} Suggested capabilities
+   */
+  async getSuggestedCapabilities(appId) {
+    // This would analyze usage patterns and suggest related capabilities
+    // For now, return common capability combinations
+    const suggestions = [
+      {
+        category: 'FILE_SYSTEM',
+        capabilities: ['file-read', 'file-write', 'file-list'],
+        description: 'Complete file system access',
+        useCase: 'File management and processing'
+      },
+      {
+        category: 'AI_TEXT',
+        capabilities: ['text-generate', 'text-summarize'],
+        description: 'AI text processing',
+        useCase: 'Content generation and analysis'
+      },
+      {
+        category: 'WEB',
+        capabilities: ['http-get', 'web-scrape'],
+        description: 'Web data access',
+        useCase: 'Fetching and processing web content'
+      }
+    ];
+
+    // Filter based on available capabilities
+    const availableSuggestions = [];
+    for (const suggestion of suggestions) {
+      const availableCapabilities = [];
+      for (const capability of suggestion.capabilities) {
+        const isAvailable = await this.isCapabilityAvailable(capability);
+        if (isAvailable) {
+          availableCapabilities.push(capability);
+        }
+      }
+      
+      if (availableCapabilities.length > 0) {
+        availableSuggestions.push({
+          ...suggestion,
+          availableCapabilities,
+          coverage: availableCapabilities.length / suggestion.capabilities.length
+        });
+      }
+    }
+
+    return availableSuggestions.sort((a, b) => b.coverage - a.coverage);
+  }
+
+  /**
+   * Find servers by pattern matching
+   * @param {string} pattern - Search pattern (supports wildcards)
+   * @returns {Promise<Array<Object>>} Matching servers with capabilities
+   */
+  async findServersByPattern(pattern) {
+    // Convert pattern to regex
+    const regex = new RegExp(
+      pattern.replace(/\*/g, '.*').replace(/\?/g, '.'),
+      'i'
+    );
+
+    const matchingServers = [];
+    
+    // This would query the registry for all servers
+    // For now, return a mock implementation
+    const allServers = []; // Would get from registry
+    
+    for (const server of allServers) {
+      const matches = server.capabilities.filter(cap => regex.test(cap));
+      if (matches.length > 0) {
+        matchingServers.push({
+          ...server,
+          matchingCapabilities: matches,
+          matchScore: matches.length / server.capabilities.length
+        });
+      }
+    }
+
+    return matchingServers.sort((a, b) => b.matchScore - a.matchScore);
+  }
+
+  /**
+   * Analyze capability compatibility between servers
+   * @param {Array<string>} capabilities - Required capabilities
+   * @returns {Promise<Object>} Compatibility analysis
+   */
+  async analyzeCapabilityCompatibility(capabilities) {
+    const analysis = {
+      totalCapabilities: capabilities.length,
+      availableCapabilities: 0,
+      missingCapabilities: [],
+      serverDistribution: {},
+      recommendations: []
+    };
+
+    for (const capability of capabilities) {
+      const servers = await this.findServersForCapability(capability);
+      
+      if (servers.length > 0) {
+        analysis.availableCapabilities++;
+        analysis.serverDistribution[capability] = servers.map(s => s.server.name);
+      } else {
+        analysis.missingCapabilities.push(capability);
+      }
+    }
+
+    // Generate recommendations
+    if (analysis.missingCapabilities.length > 0) {
+      analysis.recommendations.push({
+        type: 'missing_capabilities',
+        message: `${analysis.missingCapabilities.length} capabilities are not available`,
+        capabilities: analysis.missingCapabilities
+      });
+    }
+
+    const coverage = analysis.availableCapabilities / analysis.totalCapabilities;
+    if (coverage < 0.8) {
+      analysis.recommendations.push({
+        type: 'low_coverage',
+        message: `Only ${Math.round(coverage * 100)}% of capabilities are available`,
+        suggestion: 'Consider installing additional MCP servers'
+      });
+    }
+
+    return analysis;
+  }
+
+  /**
    * Update server metrics
    * @param {string} serverId - Server ID
    * @param {Object} metrics - Server metrics
@@ -224,33 +399,23 @@ export class CapabilityMatcher extends EventEmitter {
    * @returns {Promise<Array<Object>>} Candidate servers
    */
   async _getCandidateServers(capability) {
-    // This would integrate with MCPRegistry
-    // For now, return mock servers
-    const mockServers = {
-      'ai-text-generation': [
-        { id: 'openai-server', name: 'OpenAI Server', type: 'external', status: 'running' },
-        { id: 'anthropic-server', name: 'Anthropic Server', type: 'external', status: 'running' },
-        { id: 'local-llm', name: 'Local LLM', type: 'external', status: 'running' }
-      ],
-      'vector-database': [
-        { id: 'pinecone-server', name: 'Pinecone Server', type: 'external', status: 'running' },
-        { id: 'local-vector', name: 'Local Vector DB', type: 'builtin', status: 'running' }
-      ],
-      'web-search': [
-        { id: 'serp-api-server', name: 'SERP API Server', type: 'external', status: 'running' }
-      ],
-      'file-operations': [
-        { id: 'lahat-filesystem', name: 'Lahat File System', type: 'builtin', status: 'running' }
-      ],
-      'storage': [
-        { id: 'lahat-storage', name: 'Lahat Storage', type: 'builtin', status: 'running' }
-      ],
-      'app-management': [
-        { id: 'lahat-apps', name: 'Lahat Apps', type: 'builtin', status: 'running' }
-      ]
-    };
+    if (!this.registry) {
+      return [];
+    }
 
-    return mockServers[capability] || [];
+    // Use the registry to find servers with the capability
+    const servers = this.registry.getServersByCapability(capability);
+    
+    // Convert registry server format to capability matcher format
+    return servers.map(server => ({
+      id: server.id,
+      name: server.name,
+      type: server.type,
+      status: server.status,
+      capabilities: server.capabilities,
+      metadata: server.metadata,
+      server: server // Include full server object for scoring
+    }));
   }
 
   /**

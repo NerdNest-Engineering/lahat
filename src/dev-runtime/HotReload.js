@@ -304,12 +304,9 @@ export class HotReload extends EventEmitter {
    */
   async _reloadAppConfig(appPath) {
     try {
-      // Clear the config module from cache
-      const configPath = `${appPath}/lahat.config.js`;
-      delete require.cache[require.resolve(configPath)];
-      
-      // Re-import the config
-      const { default: config } = await import(`${configPath}?t=${Date.now()}`);
+      // Re-import the config with cache busting
+      const configPath = `file://${appPath}/lahat.config.js?t=${Date.now()}`;
+      const { default: config } = await import(configPath);
       return config;
     } catch (error) {
       console.warn('Failed to reload app config:', error);
@@ -322,12 +319,9 @@ export class HotReload extends EventEmitter {
    * @param {string} appPath - Path to the app directory
    */
   _clearModuleCache(appPath) {
-    // Clear all cached modules that are part of the app
-    for (const modulePath in require.cache) {
-      if (modulePath.startsWith(appPath)) {
-        delete require.cache[modulePath];
-      }
-    }
+    // In ES modules, we can't directly clear cache like with CommonJS
+    // The cache busting in import URLs handles this
+    console.log(`Module cache clearing simulated for: ${appPath}`);
   }
 
   /**

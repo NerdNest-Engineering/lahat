@@ -47,6 +47,7 @@
     "@anthropic-ai/sdk": "^0.38.0",
     "archiver": "^6.0.1",
     "archiver-utils": "^4.0.1",
+    "chokidar": "^4.0.3",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.3.9",
     "extract-zip": "^2.0.1",

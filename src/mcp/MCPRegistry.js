@@ -4,6 +4,10 @@
  */
 
 import { EventEmitter } from 'events';
+import { spawn } from 'child_process';
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
 
 export class MCPRegistry extends EventEmitter {
   constructor(options = {}) {

@@ -24,7 +24,7 @@ export class MCPManager {
     // Initialize components
     this.registry = new MCPRegistry();
     this.serverManager = new ServerManager();
-    this.capabilityMatcher = new CapabilityMatcher();
+    this.capabilityMatcher = new CapabilityMatcher(this.registry);
     this.serverProxy = new ServerProxy();
     
     // Set up dependencies
