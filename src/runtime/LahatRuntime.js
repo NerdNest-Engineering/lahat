@@ -32,7 +32,7 @@ export class LahatRuntime extends EventEmitter {
   _initializeAPIs() {
     return {
       lahat: new LahatAPI(this),
-      storage: new StorageAPI(this)
+      storage: new StorageAPI('platform') // Use 'platform' as default appId
     };
   }
 
