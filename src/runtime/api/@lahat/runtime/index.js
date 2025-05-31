@@ -3,6 +3,8 @@
  * Provides access to Lahat platform APIs
  */
 
+import { LahatAPI } from '../../LahatAPI.js';
+
 // Check if running in Lahat runtime environment
 const isLahatEnvironment = typeof global !== 'undefined' && 
                           (global.lahat || global.storage);
@@ -10,6 +12,11 @@ const isLahatEnvironment = typeof global !== 'undefined' &&
 if (!isLahatEnvironment) {
   console.warn('@lahat/runtime: Not running in Lahat environment. APIs will be mocked.');
 }
+
+/**
+ * Export the main LahatAPI class for advanced use cases
+ */
+export { LahatAPI };
 
 /**
  * Lahat platform API

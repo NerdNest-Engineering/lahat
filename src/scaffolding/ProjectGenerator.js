@@ -10,8 +10,8 @@ import os from 'os';
 export class ProjectGenerator {
   constructor(options = {}) {
     this.options = {
-      templatesDir: path.join(import.meta.url.replace('file://', ''), '../templates'),
-      outputDir: path.join(os.homedir(), 'LahatApps'),
+      templatesDir: path.join(path.dirname(import.meta.url.replace('file://', '')), 'templates'),
+      outputDir: path.join(os.homedir(), 'LahatProjects'),
       ...options
     };
   }
@@ -180,7 +180,10 @@ export class ProjectGenerator {
       } else {
         let content = await fs.readFile(sourcePath, 'utf8');
         content = this._processTemplate(content, variables);
-        await fs.writeFile(targetPath, content);
+        
+        // Remove .template extension from target filename
+        const finalTargetPath = targetPath.replace(/\.template$/, '');
+        await fs.writeFile(finalTargetPath, content);
       }
     }
   }
@@ -194,7 +197,15 @@ export class ProjectGenerator {
   _processTemplate(content, variables) {
     let processed = content;
     
-    for (const [key, value] of Object.entries(variables)) {
+    // Add computed variables
+    const allVariables = {
+      ...variables,
+      classname: this._toPascalCase(variables.name),
+      permissions: JSON.stringify(variables.permissions || ['lahat:storage']),
+      mcpRequirements: JSON.stringify(variables.mcpRequirements || [])
+    };
+    
+    for (const [key, value] of Object.entries(allVariables)) {
       const regex = new RegExp(`{{${key}}}`, 'g');
       processed = processed.replace(regex, value);
     }
@@ -672,5 +683,18 @@ When you're ready to share your app:
         features: ['MCP integration', 'AI capabilities', 'External services']
       }
     ];
+  }
+
+  /**
+   * Convert string to PascalCase for class names
+   * @param {string} str - String to convert
+   * @returns {string} PascalCase string
+   */
+  _toPascalCase(str) {
+    return str
+      .replace(/[^a-zA-Z0-9]/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('');
   }
 }

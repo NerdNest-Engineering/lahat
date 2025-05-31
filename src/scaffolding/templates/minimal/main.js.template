@@ -1,0 +1,100 @@
+/**
+ * {{name}} - A Lahat Mini App
+ * {{description}}
+ * 
+ * Created with Lahat v3.0 - MCP-Native Mini App Platform
+ */
+
+import { LahatAPI } from '@lahat/runtime';
+
+class {{classname}} {
+  constructor() {
+    this.lahat = new LahatAPI({
+      name: '{{name}}',
+      permissions: {{permissions}}
+    });
+    
+    this.storage = this.lahat.storage;
+    console.log('🚀 {{name}} started!');
+  }
+
+  /**
+   * Initialize the app
+   */
+  async init() {
+    try {
+      console.log('Initializing {{name}}...');
+      
+      // Your app initialization code goes here
+      await this.setupApp();
+      
+      console.log('✅ {{name}} initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize {{name}}:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Setup your app functionality here
+   */
+  async setupApp() {
+    // Example: Load saved data
+    const savedData = await this.storage.get('appData', {});
+    console.log('Loaded saved data:', savedData);
+    
+    // Example: Save some data
+    await this.storage.set('appData', {
+      lastStarted: new Date().toISOString(),
+      startCount: (savedData.startCount || 0) + 1
+    });
+    
+    // Your app logic goes here!
+    this.showWelcomeMessage();
+  }
+
+  /**
+   * Show a welcome message
+   */
+  showWelcomeMessage() {
+    console.log(`
+    🎉 Welcome to {{name}}!
+    
+    This is a minimal Lahat mini app template.
+    
+    Next steps:
+    1. Add your app logic to the setupApp() method
+    2. Use this.storage for persistent data
+    3. Explore Lahat APIs for more functionality
+    4. Package your app when ready: lahat package
+    `);
+  }
+
+  /**
+   * Cleanup when app shuts down
+   */
+  async shutdown() {
+    console.log('👋 {{name}} shutting down...');
+    // Cleanup code here
+  }
+}
+
+// Create and start the app
+const app = new {{classname}}();
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+  await app.shutdown();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await app.shutdown();
+  process.exit(0);
+});
+
+// Start the app
+app.init().catch(error => {
+  console.error('Failed to start app:', error);
+  process.exit(1);
+});
