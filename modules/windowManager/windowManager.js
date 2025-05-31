@@ -24,7 +24,7 @@ const DEFAULT_DIMENSIONS = {
   [WindowType.MAIN]: { width: 1200, height: 800 },
   [WindowType.API_SETUP]: { width: 600, height: 300 },
   [WindowType.APP_CREATION]: { width: 800, height: 600 },
-  [WindowType.CREDENTIAL_MANAGER]: { width: 900, height: 700 },
+  [WindowType.CREDENTIAL_MANAGER]: { width: 800, height: 600 },
   [WindowType.MINI_APP]: { width: 800, height: 600 }
 };
 
@@ -68,6 +68,7 @@ export function createWindow(type, options = {}) {
     titleBarStyle: 'hidden', // Changed from 'hiddenInset' to allow content to extend to edges
     backgroundColor: '#ffffff',
     icon: path.join(rootDir, 'assets/icons/lahat.png'),
+    resizable: true, // Make all windows resizable
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
