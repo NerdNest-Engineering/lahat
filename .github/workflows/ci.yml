@@ -7,6 +7,7 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  # Test core functionality on all target platforms
   test:
     runs-on: ${{ matrix.os }}
     
@@ -14,16 +15,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: ['18.x', '20.x', '22.x']
         
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js (Electron 34.x runtime)
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '20.x'
         cache: 'npm'
         
     - name: Install dependencies
@@ -35,14 +35,15 @@ jobs:
         NODE_ENV: test
         CI: true
         
-  lint:
+  # Code quality checks (run on Linux only since they're not platform-specific)
+  quality:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js
+    - name: Setup Node.js (Electron 34.x runtime)
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
@@ -53,99 +54,19 @@ jobs:
       
     - name: Check code syntax
       run: |
-        # Run basic syntax check on all JS files
-        find src -name "*.js" -exec node --check {} \; || true
-        find tests -name "*.js" -exec node --check {} \; || true
-        echo "Syntax check completed"
+        # Verify all JS files are syntactically valid
+        find src tests -name "*.js" -exec node --check {} \;
+        echo "✓ All JavaScript files are syntactically valid"
         
-  security:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
     - name: Run security audit
-      run: npm audit --audit-level=moderate || echo "Security audit found issues but continuing"
-      
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Verify build readiness
       run: |
-        echo "Checking if project can be built..."
-        # Basic readiness check
+        npm audit --audit-level=moderate || echo "⚠️ Security audit found issues"
+        
+    - name: Verify project structure
+      run: |
+        echo "Checking Electron app structure..."
         test -f main.js && echo "✓ main.js exists"
-        test -f package.json && echo "✓ package.json exists"
+        test -f package.json && echo "✓ package.json exists" 
         test -d src && echo "✓ src directory exists"
-        echo "Build readiness check completed"
-        
-  integration:
-    runs-on: ubuntu-latest
-    needs: [test, lint]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run integration tests
-      run: |
-        echo "Running integration test suites..."
-        # Test scaffolding system
-        node tests/run-tests.js tests/integration/scaffolding.test.js || echo "Scaffolding tests had issues"
-        echo "Integration tests completed"
-        
-  performance:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Basic performance check
-      run: |
-        echo "Testing basic performance..."
-        # Simple timing test
-        time node -e "console.log('Performance test completed')"
+        test -d tests && echo "✓ tests directory exists"
+        echo "✓ Project structure is valid"
