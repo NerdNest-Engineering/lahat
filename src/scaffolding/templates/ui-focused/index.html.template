@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} - Lahat App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>{{name}}</h1>
+            <p>{{description}}</p>
+        </header>
+
+        <main class="main-content">
+            <div class="card">
+                <h3>Welcome to your Lahat App!</h3>
+                <p>This is a UI-focused Lahat application with a modern, responsive design.</p>
+                <p>You can customize this interface by editing the HTML, CSS, and JavaScript files.</p>
+                
+                <div style="margin: 2rem 0;">
+                    <button class="button" onclick="handleButtonClick('primary')">Primary Action</button>
+                    <button class="button secondary" onclick="handleButtonClick('secondary')">Secondary Action</button>
+                    <button class="button success" onclick="handleButtonClick('success')">Success Action</button>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>Feature 1</h3>
+                    <p>Describe your app's first main feature here.</p>
+                    <div class="status success">Active</div>
+                </div>
+
+                <div class="card">
+                    <h3>Feature 2</h3>
+                    <p>Describe your app's second main feature here.</p>
+                    <div class="status warning">In Development</div>
+                </div>
+
+                <div class="card">
+                    <h3>Feature 3</h3>
+                    <p>Describe your app's third main feature here.</p>
+                    <div class="status">Coming Soon</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>App Information</h3>
+                <p><strong>Name:</strong> {{name}}</p>
+                <p><strong>Author:</strong> {{author}}</p>
+                <p><strong>Status:</strong> <span class="status success">Running</span></p>
+                <p><strong>Lahat API:</strong> <span id="api-status" class="status">Checking...</span></p>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Built with ❤️ using Lahat | Created by {{author}}</p>
+        </footer>
+    </div>
+
+    <script>
+        // Basic interactivity
+        function handleButtonClick(type) {
+            console.log(`${type} button clicked`);
+            
+            // Show a simple notification
+            const notification = document.createElement('div');
+            notification.textContent = `${type} action executed!`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--primary-color);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Check Lahat API status
+        function checkAPIStatus() {
+            const statusElement = document.getElementById('api-status');
+            
+            // Simulate API check (replace with actual Lahat API call)
+            setTimeout(() => {
+                statusElement.textContent = 'Connected';
+                statusElement.className = 'status success';
+            }, 1000);
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('{{name}} initialized');
+            checkAPIStatus();
+        });
+
+        // Add slide-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

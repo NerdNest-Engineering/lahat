@@ -11,6 +11,15 @@ const refreshAppsButton = document.getElementById('refresh-apps-button');
 const openAppDirectoryButton = document.getElementById('open-app-directory-button');
 const appList = document.getElementById('app-list');
 
+// New menu elements
+const menuCreateApp = document.getElementById('menu-create-app');
+const menuImportApp = document.getElementById('menu-import-app');
+const menuCredentials = document.getElementById('menu-credentials');
+const menuApiSettings = document.getElementById('menu-api-settings');
+const menuRefresh = document.getElementById('menu-refresh');
+const menuOpenDirectory = document.getElementById('menu-open-directory');
+const searchInput = document.getElementById('search-apps');
+
 // Initialize the app
 async function initializeApp() {
   console.log('Initializing app...');
@@ -49,8 +58,26 @@ function setupAppListEventListeners() {
 async function loadMiniApps() {
   try {
     console.log('Loading mini apps...');
-    const { apps } = await window.electronAPI.listMiniApps();
-    console.log('Loaded apps:', apps);
+    
+    // Try the new distribution API first
+    let apps = [];
+    try {
+      const distributionResult = await window.electronAPI.getInstalledApps();
+      if (distributionResult.success && distributionResult.apps) {
+        apps = distributionResult.apps;
+        console.log('Loaded apps from distribution manager:', apps);
+      }
+    } catch (error) {
+      console.warn('Distribution API not available, falling back to legacy API:', error);
+    }
+    
+    // Fallback to legacy API if no apps from distribution manager
+    if (!apps || apps.length === 0) {
+      const legacyResult = await window.electronAPI.listMiniApps();
+      apps = legacyResult.apps || [];
+      console.log('Loaded apps from legacy API:', apps);
+    }
+    
     console.log('Number of apps:', apps ? apps.length : 0);
     
     if (!appList) {
@@ -168,12 +195,12 @@ async function handleAppExport(event) {
   }
 }
 
-// Button Event Listeners
-createAppButton.addEventListener('click', () => {
+// Button Event Listeners (original buttons)
+createAppButton?.addEventListener('click', () => {
   window.electronAPI.openWindow('app-creation');
 });
 
-importAppButton.addEventListener('click', async () => {
+importAppButton?.addEventListener('click', async () => {
   try {
     const result = await window.electronAPI.importMiniApp();
     
@@ -188,19 +215,98 @@ importAppButton.addEventListener('click', async () => {
   }
 });
 
-apiSettingsButton.addEventListener('click', () => {
+apiSettingsButton?.addEventListener('click', () => {
   window.electronAPI.openWindow('api-setup');
 });
 
-refreshAppsButton.addEventListener('click', loadMiniApps);
+refreshAppsButton?.addEventListener('click', loadMiniApps);
 
-openAppDirectoryButton.addEventListener('click', async () => {
+openAppDirectoryButton?.addEventListener('click', async () => {
   try {
     await window.electronAPI.openAppDirectory();
   } catch (error) {
     console.error('Error opening app directory:', error);
   }
 });
+
+// New Menu Event Listeners
+menuCreateApp?.addEventListener('click', () => {
+  window.electronAPI.openWindow('app-creation');
+});
+
+menuImportApp?.addEventListener('click', async () => {
+  try {
+    const result = await window.electronAPI.importMiniApp();
+    
+    if (result.success) {
+      alert(`Mini app "${result.name}" imported successfully!`);
+      await loadMiniApps();
+    } else if (!result.canceled) {
+      alert(`Error importing mini app: ${result.error}`);
+    }
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+  }
+});
+
+menuCredentials?.addEventListener('click', () => {
+  window.electronAPI.openWindow('credential-manager');
+});
+
+menuApiSettings?.addEventListener('click', () => {
+  window.electronAPI.openWindow('api-setup');
+});
+
+menuRefresh?.addEventListener('click', loadMiniApps);
+
+menuOpenDirectory?.addEventListener('click', async () => {
+  try {
+    await window.electronAPI.openAppDirectory();
+  } catch (error) {
+    console.error('Error opening app directory:', error);
+  }
+});
+
+// Search functionality
+searchInput?.addEventListener('input', (event) => {
+  const query = event.target.value.toLowerCase().trim();
+  // TODO: Implement search filtering for app list
+  console.log('Search query:', query);
+});
+
+// Dropdown menu functionality
+function setupDropdownMenu() {
+  const dropdownButton = document.querySelector('[tabindex="0"][role="button"]');
+  const dropdownMenu = document.querySelector('ul[tabindex="0"]');
+  
+  if (!dropdownButton || !dropdownMenu) {
+    console.log('Dropdown elements not found');
+    return;
+  }
+  
+  let isOpen = false;
+  
+  // Toggle dropdown on button click
+  dropdownButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isOpen = !isOpen;
+    dropdownMenu.style.display = isOpen ? 'block' : 'none';
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!dropdownButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+      isOpen = false;
+      dropdownMenu.style.display = 'none';
+    }
+  });
+  
+  // Close dropdown when menu item is clicked
+  dropdownMenu.addEventListener('click', () => {
+    isOpen = false;
+    dropdownMenu.style.display = 'none';
+  });
+}
 
 // Listen for app updates from other windows
 window.electronAPI.onAppUpdated(() => {
@@ -266,3 +372,4 @@ function setupCommandPalette() {
 // Initialize the app
 initializeApp();
 setupCommandPalette();
+setupDropdownMenu();

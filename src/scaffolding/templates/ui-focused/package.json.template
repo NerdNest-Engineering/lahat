@@ -1,0 +1,36 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node --watch main.js",
+    "build": "node build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@lahat/runtime": "^1.0.0",
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.5"
+  },
+  "keywords": ["lahat", "mini-app", "ui"],
+  "author": "{{author}}",
+  "license": "MIT",
+  "lahat": {
+    "version": "3.0.0",
+    "template": "ui-focused",
+    "permissions": {{permissions}},
+    "mcpRequirements": {{mcpRequirements}},
+    "entry": "main.js",
+    "ui": {
+      "type": "web",
+      "port": 0,
+      "autoOpen": true
+    }
+  }
+}

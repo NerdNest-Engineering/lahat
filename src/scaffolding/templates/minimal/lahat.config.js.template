@@ -1,0 +1,47 @@
+/**
+ * Lahat Configuration for {{name}}
+ * This file defines app metadata and runtime settings
+ */
+
+export default {
+  // App metadata
+  app: {
+    name: '{{name}}',
+    version: '1.0.0',
+    description: '{{description}}',
+    author: '{{author}}',
+    entry: 'main.js'
+  },
+
+  // Runtime permissions
+  permissions: {{permissions}},
+
+  // MCP server requirements
+  mcp: {
+    required: {{mcpRequirements}},
+    optional: []
+  },
+
+  // Development settings
+  dev: {
+    hotReload: true,
+    autoRestart: true,
+    watchFiles: ['**/*.js', '**/*.json', '**/*.html', '**/*.css'],
+    ignoreFiles: ['node_modules/**', '.git/**', '*.log']
+  },
+
+  // Build settings
+  build: {
+    output: 'dist',
+    minify: false,
+    sourceMaps: true
+  },
+
+  // App lifecycle hooks
+  hooks: {
+    beforeStart: null,
+    afterStart: null,
+    beforeStop: null,
+    afterStop: null
+  }
+};

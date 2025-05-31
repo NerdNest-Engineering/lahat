@@ -1,0 +1,26 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node --watch main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@lahat/runtime": "^1.0.0"
+  },
+  "devDependencies": {},
+  "keywords": ["lahat", "mini-app"],
+  "author": "{{author}}",
+  "license": "MIT",
+  "lahat": {
+    "version": "3.0.0",
+    "template": "minimal",
+    "permissions": {{permissions}},
+    "mcpRequirements": {{mcpRequirements}},
+    "entry": "main.js"
+  }
+}
