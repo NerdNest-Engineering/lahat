@@ -3,6 +3,11 @@
  * Exports all distribution-related functionality
  */
 
+import { LahatPackager } from './LahatPackager.js';
+import { AppInstaller } from './AppInstaller.js';
+import { ProjectManager } from './ProjectManager.js';
+import { UpdateManager } from './UpdateManager.js';
+
 export { LahatPackager } from './LahatPackager.js';
 export { AppInstaller } from './AppInstaller.js';
 export { ProjectManager } from './ProjectManager.js';

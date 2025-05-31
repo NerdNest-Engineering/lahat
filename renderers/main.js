@@ -49,8 +49,26 @@ function setupAppListEventListeners() {
 async function loadMiniApps() {
   try {
     console.log('Loading mini apps...');
-    const { apps } = await window.electronAPI.listMiniApps();
-    console.log('Loaded apps:', apps);
+    
+    // Try the new distribution API first
+    let apps = [];
+    try {
+      const distributionResult = await window.electronAPI.getInstalledApps();
+      if (distributionResult.success && distributionResult.apps) {
+        apps = distributionResult.apps;
+        console.log('Loaded apps from distribution manager:', apps);
+      }
+    } catch (error) {
+      console.warn('Distribution API not available, falling back to legacy API:', error);
+    }
+    
+    // Fallback to legacy API if no apps from distribution manager
+    if (!apps || apps.length === 0) {
+      const legacyResult = await window.electronAPI.listMiniApps();
+      apps = legacyResult.apps || [];
+      console.log('Loaded apps from legacy API:', apps);
+    }
+    
     console.log('Number of apps:', apps ? apps.length : 0);
     
     if (!appList) {

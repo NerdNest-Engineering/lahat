@@ -7,7 +7,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { createReadStream } from 'fs';
-import { Extract } from 'unzipper';
+import extractZip from 'extract-zip';
 import { EventEmitter } from 'events';
 
 export class AppInstaller extends EventEmitter {
@@ -317,38 +317,35 @@ export class AppInstaller extends EventEmitter {
    * @returns {Promise<Object>} Package manifest
    */
   async _extractManifest(packagePath) {
-    return new Promise((resolve, reject) => {
-      let manifestFound = false;
+    try {
+      // Create temporary directory for extraction
+      const tempDir = path.join(os.tmpdir(), `lahat-manifest-${Date.now()}`);
+      await fs.mkdir(tempDir, { recursive: true });
       
-      createReadStream(packagePath)
-        .pipe(Extract({ path: '', filter: (entry) => entry.path === 'manifest.json' }))
-        .on('entry', async (entry) => {
-          if (entry.path === 'manifest.json') {
-            manifestFound = true;
-            try {
-              const chunks = [];
-              entry.on('data', (chunk) => chunks.push(chunk));
-              entry.on('end', () => {
-                try {
-                  const manifestContent = Buffer.concat(chunks).toString('utf8');
-                  const manifest = JSON.parse(manifestContent);
-                  resolve(manifest);
-                } catch (error) {
-                  reject(new Error(`Invalid manifest.json: ${error.message}`));
-                }
-              });
-            } catch (error) {
-              reject(error);
-            }
-          }
-        })
-        .on('finish', () => {
-          if (!manifestFound) {
-            reject(new Error('Package does not contain manifest.json'));
-          }
-        })
-        .on('error', reject);
-    });
+      try {
+        // Extract the entire package to temp directory
+        await extractZip(packagePath, { dir: tempDir });
+        
+        // Read manifest.json
+        const manifestPath = path.join(tempDir, 'manifest.json');
+        const manifestContent = await fs.readFile(manifestPath, 'utf8');
+        const manifest = JSON.parse(manifestContent);
+        
+        // Clean up temp directory
+        await fs.rm(tempDir, { recursive: true, force: true });
+        
+        return manifest;
+      } catch (error) {
+        // Clean up temp directory on error
+        await fs.rm(tempDir, { recursive: true, force: true });
+        throw error;
+      }
+    } catch (error) {
+      if (error.message.includes('ENOENT') && error.message.includes('manifest.json')) {
+        throw new Error('Package does not contain manifest.json');
+      }
+      throw new Error(`Failed to extract manifest: ${error.message}`);
+    }
   }
 
   /**
@@ -383,29 +380,31 @@ export class AppInstaller extends EventEmitter {
    * @returns {Promise<void>}
    */
   async _extractPackage(packagePath, installPath) {
-    return new Promise((resolve, reject) => {
-      let filesExtracted = 0;
+    try {
+      // Extract the entire package
+      await extractZip(packagePath, { dir: installPath });
       
-      createReadStream(packagePath)
-        .pipe(Extract({ 
-          path: installPath,
-          filter: (entry) => entry.path !== 'manifest.json' // Skip manifest, we already have it
-        }))
-        .on('entry', (entry) => {
-          if (entry.type === 'File') {
-            filesExtracted++;
-            this.emit('installation:progress', {
-              filesExtracted,
-              currentFile: entry.path
-            });
+      // Count extracted files for progress reporting
+      const countFiles = async (dirPath) => {
+        let count = 0;
+        const entries = await fs.readdir(dirPath, { withFileTypes: true });
+        
+        for (const entry of entries) {
+          if (entry.isFile()) {
+            count++;
+          } else if (entry.isDirectory()) {
+            count += await countFiles(path.join(dirPath, entry.name));
           }
-        })
-        .on('finish', () => {
-          this.emit('installation:extracted', { installPath, filesExtracted });
-          resolve();
-        })
-        .on('error', reject);
-    });
+        }
+        return count;
+      };
+      
+      const filesExtracted = await countFiles(installPath);
+      
+      this.emit('installation:extracted', { installPath, filesExtracted });
+    } catch (error) {
+      throw new Error(`Failed to extract package: ${error.message}`);
+    }
   }
 
   /**

@@ -250,6 +250,72 @@ contextBridge.exposeInMainWorld(
       ipcRenderer.on('title-description-chunk', (_event, chunk) => callback(chunk));
     },
     
+    // Distribution management (new island architecture)
+    getInstalledApps: async (filter = {}) => {
+      try {
+        return await ipcRenderer.invoke('get-installed-apps', filter);
+      } catch (error) {
+        console.error('Error getting installed apps:', error);
+        throw error;
+      }
+    },
+    installApp: async (packagePath, options = {}) => {
+      try {
+        return await ipcRenderer.invoke('install-app', packagePath, options);
+      } catch (error) {
+        console.error('Error installing app:', error);
+        throw error;
+      }
+    },
+    uninstallApp: async (appId, options = {}) => {
+      try {
+        return await ipcRenderer.invoke('uninstall-app', appId, options);
+      } catch (error) {
+        console.error('Error uninstalling app:', error);
+        throw error;
+      }
+    },
+    startApp: async (appId, options = {}) => {
+      try {
+        return await ipcRenderer.invoke('start-app', appId, options);
+      } catch (error) {
+        console.error('Error starting app:', error);
+        throw error;
+      }
+    },
+    stopApp: async (appId) => {
+      try {
+        return await ipcRenderer.invoke('stop-app', appId);
+      } catch (error) {
+        console.error('Error stopping app:', error);
+        throw error;
+      }
+    },
+    packageApp: async (projectPath, outputPath, options = {}) => {
+      try {
+        return await ipcRenderer.invoke('package-app', projectPath, outputPath, options);
+      } catch (error) {
+        console.error('Error packaging app:', error);
+        throw error;
+      }
+    },
+    getRunningApps: async () => {
+      try {
+        return await ipcRenderer.invoke('get-running-apps');
+      } catch (error) {
+        console.error('Error getting running apps:', error);
+        throw error;
+      }
+    },
+    searchApps: async (query, options = {}) => {
+      try {
+        return await ipcRenderer.invoke('search-apps', query, options);
+      } catch (error) {
+        console.error('Error searching apps:', error);
+        throw error;
+      }
+    },
+    
     // Event listener cleanup methods
     removeListener: (channel, callback) => {
       ipcRenderer.removeListener(channel, callback);
