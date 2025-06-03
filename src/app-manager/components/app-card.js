@@ -1,4 +1,4 @@
-import { BaseComponent } from '../../core/base-component.js';
+import { BaseComponent } from '../shared/base-component.js';
 
 /**
  * AppCard component - Apple-style launcher icon

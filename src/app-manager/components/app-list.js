@@ -1,5 +1,5 @@
-import { BaseComponent } from '../../core/base-component.js';
-import '../cards/app-card.js';
+import { BaseComponent } from '../shared/base-component.js';
+import './app-card.js';
 
 /**
  * @typedef {Object} AppData
@@ -35,6 +35,12 @@ export class AppList extends BaseComponent {
 
   /** @type {HTMLElement|null} */
   #noAppsMessageElement = null;
+
+  /** @type {AppData[]} */
+  #allApps = [];
+
+  /** @type {string} */
+  #currentSearchQuery = '';
 
   constructor() {
     super();
@@ -217,6 +223,24 @@ export class AppList extends BaseComponent {
   }
 
   /**
+   * Create the "no search results" message element
+   * @private
+   * @returns {HTMLElement} No search results message element
+   */
+  _createNoSearchResultsMessage() {
+    const element = document.createElement('div');
+    element.className = 'no-apps-message';
+    element.setAttribute('role', 'status');
+    element.setAttribute('aria-live', 'polite');
+    element.innerHTML = `
+      <h3>🔍 No apps found</h3>
+      <p>No apps match your search query "${this.#currentSearchQuery}".</p>
+      <p>Try a different search term or clear the search to see all apps.</p>
+    `;
+    return element;
+  }
+
+  /**
    * Cache DOM element references using BaseComponent helpers
    * @private
    */
@@ -344,6 +368,21 @@ export class AppList extends BaseComponent {
   }
 
   /**
+   * Show the "no search results" message by adding it to DOM
+   * @private
+   */
+  _showNoSearchResultsMessage() {
+    // Remove existing message if present
+    this._hideNoAppsMessage();
+    
+    // Create and insert the message element
+    this.#noAppsMessageElement = this._createNoSearchResultsMessage();
+    this.shadowRoot.insertBefore(this.#noAppsMessageElement, this._appListContainer);
+    
+    this._appListContainer.setAttribute('aria-label', `No search results for "${this.#currentSearchQuery}"`);
+  }
+
+  /**
    * Hide the "no apps" message by removing it from DOM
    * @private
    */
@@ -440,11 +479,42 @@ export class AppList extends BaseComponent {
   }
 
   /**
-   * Set the list of apps to display with enhanced loading states
-   * @param {AppData[]} apps - Array of app objects
-   * @returns {Promise<void>}
+   * Filter apps based on search query
+   * @param {AppData[]} apps - Array of app objects to filter
+   * @param {string} query - Search query
+   * @returns {AppData[]} Filtered apps
+   * @private
    */
-  async setApps(apps) {
+  _filterApps(apps, query) {
+    if (!query || !query.trim()) {
+      return apps;
+    }
+
+    const searchTerm = query.toLowerCase().trim();
+    return apps.filter(app => {
+      const name = (app.name || '').toLowerCase();
+      const description = (app.description || '').toLowerCase();
+      return name.includes(searchTerm) || description.includes(searchTerm);
+    });
+  }
+
+  /**
+   * Apply current search filter and update display
+   * @returns {Promise<void>}
+   * @private
+   */
+  async _applySearchFilter() {
+    const filteredApps = this._filterApps(this.#allApps, this.#currentSearchQuery);
+    await this._displayApps(filteredApps);
+  }
+
+  /**
+   * Display apps (internal method used by both setApps and search)
+   * @param {AppData[]} apps - Array of app objects to display
+   * @returns {Promise<void>}
+   * @private
+   */
+  async _displayApps(apps) {
     // Cancel any ongoing loading operation
     if (this.#loadingController) {
       this.#loadingController.abort();
@@ -460,7 +530,11 @@ export class AppList extends BaseComponent {
       if (signal.aborted) return;
       
       if (!apps?.length) {
-        this._showNoAppsMessage();
+        if (this.#currentSearchQuery) {
+          this._showNoSearchResultsMessage();
+        } else {
+          this._showNoAppsMessage();
+        }
         return;
       }
       
@@ -481,17 +555,36 @@ export class AppList extends BaseComponent {
       this._appListContainer.appendChild(fragment);
       
       // Update accessibility
-      this._appListContainer.setAttribute('aria-label', `App list with ${appCards.length} apps`);
+      const searchText = this.#currentSearchQuery ? ` (filtered by "${this.#currentSearchQuery}")` : '';
+      this._appListContainer.setAttribute('aria-label', `App list with ${appCards.length} apps${searchText}`);
       
     } catch (error) {
       if (!signal.aborted) {
-        this.handleError(new Error(`Failed to set apps: ${error.message}`));
+        this.handleError(new Error(`Failed to display apps: ${error.message}`));
       }
     } finally {
       if (!signal.aborted) {
         this._setLoadingState(false);
         this.#loadingController = null;
       }
+    }
+  }
+
+  /**
+   * Set the list of apps to display with enhanced loading states
+   * @param {AppData[]} apps - Array of app objects
+   * @returns {Promise<void>}
+   */
+  async setApps(apps) {
+    try {
+      // Store all apps for filtering
+      this.#allApps = Array.isArray(apps) ? [...apps] : [];
+      
+      // Apply current search filter to new apps
+      await this._applySearchFilter();
+      
+    } catch (error) {
+      this.handleError(new Error(`Failed to set apps: ${error.message}`));
     }
   }
 
@@ -504,23 +597,17 @@ export class AppList extends BaseComponent {
     try {
       this._validateAppData(app);
       
-      // Check if app already exists
-      const existingCard = this._appListContainer.querySelector(`app-card[app-id="${app.id}"]`);
-      if (existingCard) {
+      // Check if app already exists in the full list
+      const existingApp = this.#allApps.find(existingApp => existingApp.id === app.id);
+      if (existingApp) {
         throw new Error(`App with ID ${app.id} already exists`);
       }
       
-      this._hideNoAppsMessage();
+      // Add to full apps list
+      this.#allApps.push(app);
       
-      // Wait for app-card custom element to be defined
-      await customElements.whenDefined('app-card');
-      
-      const appCard = await this._createAppCard(app);
-      this._appListContainer.appendChild(appCard);
-      
-      // Update accessibility
-      const appCount = this._appListContainer.children.length;
-      this._appListContainer.setAttribute('aria-label', `App list with ${appCount} apps`);
+      // Re-apply search filter to update display
+      await this._applySearchFilter();
       
     } catch (error) {
       this.handleError(new Error(`Failed to add app: ${error.message}`));
@@ -531,27 +618,23 @@ export class AppList extends BaseComponent {
    * Remove an app from the list with cleanup
    * @param {string} appId - ID of the app to remove
    */
-  removeApp(appId) {
+  async removeApp(appId) {
     try {
       if (!appId || typeof appId !== 'string') {
         throw new Error('App ID must be a non-empty string');
       }
       
-      const appCard = this._appListContainer.querySelector(`app-card[app-id="${appId}"]`);
-      if (appCard) {
-        appCard.remove();
-        
-        // Remove from cache
-        this.#appCardCache.delete(appId);
-        
-        // Update accessibility and show message if empty
-        const appCount = this._appListContainer.children.length;
-        if (appCount === 0) {
-          this._showNoAppsMessage();
-        } else {
-          this._appListContainer.setAttribute('aria-label', `App list with ${appCount} apps`);
-        }
+      // Remove from full apps list
+      const appIndex = this.#allApps.findIndex(app => app.id === appId);
+      if (appIndex !== -1) {
+        this.#allApps.splice(appIndex, 1);
       }
+      
+      // Remove from cache
+      this.#appCardCache.delete(appId);
+      
+      // Re-apply search filter to update display
+      await this._applySearchFilter();
       
     } catch (error) {
       this.handleError(new Error(`Failed to remove app ${appId}: ${error.message}`));
@@ -562,24 +645,47 @@ export class AppList extends BaseComponent {
    * Update an existing app in the list
    * @param {AppData} app - Updated app object
    */
-  updateApp(app) {
+  async updateApp(app) {
     try {
       this._validateAppData(app);
       
-      const appCard = this._appListContainer.querySelector(`app-card[app-id="${app.id}"]`);
-      if (appCard) {
-        if (typeof appCard.setAppData !== 'function') {
-          throw new Error('app-card element does not support setAppData method');
-        }
-        appCard.setAppData(app);
-        
-        // Update cache
-        this.#appCardCache.set(app.id, appCard.cloneNode(true));
+      // Update in the full apps list
+      const appIndex = this.#allApps.findIndex(existingApp => existingApp.id === app.id);
+      if (appIndex !== -1) {
+        this.#allApps[appIndex] = { ...app };
       }
+      
+      // Update cache
+      this.#appCardCache.delete(app.id);
+      
+      // Re-apply search filter to update display
+      await this._applySearchFilter();
       
     } catch (error) {
       this.handleError(new Error(`Failed to update app ${app?.id}: ${error.message}`));
     }
+  }
+
+  /**
+   * Filter apps based on search query
+   * @param {string} query - Search query
+   * @returns {Promise<void>}
+   */
+  async searchApps(query) {
+    try {
+      this.#currentSearchQuery = query || '';
+      await this._applySearchFilter();
+    } catch (error) {
+      this.handleError(new Error(`Failed to search apps: ${error.message}`));
+    }
+  }
+
+  /**
+   * Clear search filter and show all apps
+   * @returns {Promise<void>}
+   */
+  async clearSearch() {
+    return this.searchApps('');
   }
 
   /**
@@ -609,6 +715,8 @@ export class AppList extends BaseComponent {
     }
     
     this.#appCardCache.clear();
+    this.#allApps = [];
+    this.#currentSearchQuery = '';
     this.#noAppsMessageElement = null;
   }
 }
