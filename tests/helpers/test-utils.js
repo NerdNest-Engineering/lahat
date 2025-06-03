@@ -346,19 +346,24 @@ export function integrationTest(testName, testFn) {
     const tempDirs = [];
     const cleanup = [];
     
-    // Helper to register cleanup functions
-    const addCleanup = (fn) => cleanup.push(fn);
-    
-    // Helper to create and track temp directories
+    // Create simple functions that don't capture complex closures
     const createTestDir = async (prefix) => {
       const dir = await createTempDir(prefix);
       tempDirs.push(dir);
       return dir;
     };
     
+    const addCleanup = (fn) => cleanup.push(fn);
+    
+    // Create a simple helper object without complex references
+    const helpers = {
+      createTestDir: createTestDir,
+      addCleanup: addCleanup
+    };
+    
     try {
       // Run the test with helpers
-      await testFn(t, { createTestDir, addCleanup });
+      await testFn(t, helpers);
     } finally {
       // Cleanup temp directories
       for (const dir of tempDirs) {
