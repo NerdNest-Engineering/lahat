@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import fs from 'fs';
+import { readFileSync } from 'fs';
 import store from './store.js';
 import * as windowManager from './modules/windowManager/index.js';
 import * as apiHandlers from './modules/ipc/apiHandlers.js';
@@ -16,6 +17,14 @@ const { autoUpdater } = electronUpdater;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Read version from package.json
+let packageJson = {};
+try {
+  packageJson = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+} catch (error) {
+  console.error('Failed to read package.json:', error);
+}
+
 // Disable IMK warnings on macOS
 if (process.platform === 'darwin') {
   process.env.IMK_DISABLE_WARNINGS = '1';
@@ -27,6 +36,17 @@ app.name = 'Lahat';
 // Set app user model ID for Windows
 if (process.platform === 'win32') {
   app.setAppUserModelId('com.nerdnest.lahat');
+}
+
+// Set app metadata for About panel (macOS)
+if (process.platform === 'darwin' && packageJson) {
+  app.setAboutPanelOptions({
+    applicationName: packageJson.name || 'Lahat',
+    applicationVersion: packageJson.version || '1.0.0',
+    version: packageJson.version || '1.0.0',
+    copyright: '© 2024 NerdNest LLC',
+    credits: packageJson.description || 'An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts.'
+  });
 }
 
 /**
