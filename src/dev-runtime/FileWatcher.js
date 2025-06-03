@@ -140,7 +140,19 @@ export class FileWatcher extends EventEmitter {
    * @returns {boolean} Whether file matches patterns
    */
   _matchesPatterns(filePath) {
-    const relativePath = path.relative(process.cwd(), filePath);
+    // Find the appropriate base path from watchPaths
+    let relativePath = filePath;
+    for (const watchPath of this.options.watchPaths) {
+      if (filePath.startsWith(watchPath)) {
+        relativePath = path.relative(watchPath, filePath);
+        break;
+      }
+    }
+    
+    // If we couldn't find a relative path, use the basename
+    if (relativePath === filePath) {
+      relativePath = path.basename(filePath);
+    }
     
     // Check ignore patterns first
     for (const ignorePattern of this.options.ignore) {
@@ -166,12 +178,37 @@ export class FileWatcher extends EventEmitter {
    * @returns {boolean} Whether path matches pattern
    */
   _matchesGlob(filePath, pattern) {
-    // Convert glob pattern to regex
-    const regexPattern = pattern
-      .replace(/\*\*/g, '.*')
-      .replace(/\*/g, '[^/]*')
-      .replace(/\?/g, '[^/]')
-      .replace(/\//g, '\\/');
+    // Simple glob to regex conversion
+    let regexPattern = pattern;
+    
+    // First escape dots and other special characters that aren't glob wildcards
+    regexPattern = regexPattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+    
+    // Handle ** first (must be done before single *)
+    regexPattern = regexPattern.replace(/\*\*/g, '__DOUBLESTAR__');
+    
+    // Handle single * (matches any characters except path separator)
+    regexPattern = regexPattern.replace(/\*/g, '[^/]*');
+    
+    // Replace our placeholder with the correct ** pattern
+    regexPattern = regexPattern.replace(/__DOUBLESTAR__/g, '.*');
+    
+    // Handle ? (matches any single character except path separator)
+    regexPattern = regexPattern.replace(/\?/g, '[^/]');
+    
+    // For patterns like **/*.js, also allow files in the root (without subdirectory)
+    if (pattern.includes('**/')) {
+      const rootPattern = pattern.replace('**/', '');
+      const rootRegex = rootPattern
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*/g, '[^/]*')
+        .replace(/\?/g, '[^/]');
+      
+      const regex1 = new RegExp(`^${regexPattern}$`);
+      const regex2 = new RegExp(`^${rootRegex}$`);
+      
+      return regex1.test(filePath) || regex2.test(filePath);
+    }
     
     const regex = new RegExp(`^${regexPattern}$`);
     return regex.test(filePath);
