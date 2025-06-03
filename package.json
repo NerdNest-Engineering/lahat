@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "lahat",
-  "version": "1.0.13",
+  "version": "1.0.15",
   "description": "An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts",
   "main": "main.js",
   "scripts": {
@@ -77,6 +77,8 @@
       ],
       "darkModeSupport": true,
       "artifactName": "${productName}-${version}.${ext}",
+      "bundleVersion": "${version}",
+      "bundleShortVersion": "${version}",
       "extendInfo": {
         "CFBundleIconFile": "lahat",
         "CFBundleDocumentTypes": [

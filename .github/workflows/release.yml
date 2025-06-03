@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
         
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -142,6 +145,8 @@ jobs:
         run: |
           codesign --verify --deep --strict dist/mac-arm64/Lahat.app || { echo "Code signing verification failed"; exit 1; }
           spctl -a -vv -t install dist/mac-arm64/Lahat.app || { echo "Gatekeeper check failed"; exit 1; }
+
+
              
       - name: Remove temporary keychain
         if: matrix.os == 'macos-latest'

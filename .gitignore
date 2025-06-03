@@ -21,6 +21,11 @@ release/
 *.exe
 *.dmg
 
+# Electron-updater build artifacts
+latest-*.yml
+*.blockmap
+dev-app-update.yml
+
 # Environment variables and secrets
 .env
 .env.local
