@@ -1,0 +1,24 @@
+{
+  "name": "@lahat/runtime",
+  "version": "3.0.0",
+  "description": "Lahat Runtime API for mini apps",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  },
+  "keywords": [
+    "lahat",
+    "runtime",
+    "mini-apps",
+    "api"
+  ],
+  "author": "Lahat Platform",
+  "license": "MIT",
+  "peerDependencies": {
+    "node": ">=18.0.0"
+  }
+}

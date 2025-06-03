@@ -1,0 +1,89 @@
+# {{name}}
+
+{{description}}
+
+## Overview
+
+This is a Lahat mini app created with the minimal template. It provides a basic Node.js structure for building your app functionality.
+
+## Getting Started
+
+### Development
+```bash
+# Run the app
+npm start
+
+# Run with auto-reload during development
+npm run dev
+```
+
+### Available APIs
+
+Your app has access to the Lahat Runtime API:
+
+```javascript
+import { LahatAPI } from '@lahat/runtime';
+
+const lahat = new LahatAPI({
+  name: '{{name}}',
+  permissions: {{permissions}}
+});
+
+// Persistent storage
+await lahat.storage.set('key', value);
+const data = await lahat.storage.get('key', defaultValue);
+
+// More APIs available - see Lahat documentation
+```
+
+### Permissions
+
+This app has been granted the following permissions:
+{{#each permissions}}
+- `{{this}}`
+{{/each}}
+
+### Project Structure
+
+```
+{{name}}/
+├── package.json     # Node.js project configuration
+├── main.js          # Your app entry point
+├── README.md        # This file
+└── src/             # Add your source files here
+```
+
+## Building and Sharing
+
+### Package for Distribution
+```bash
+# Create a .lahat package file
+lahat package
+
+# This creates {{name}}.lahat that others can install
+```
+
+### Install in Other Lahat Instances
+```bash
+# Others can install your app
+lahat install {{name}}.lahat
+```
+
+## Next Steps
+
+1. **Add Functionality**: Modify `main.js` to add your app logic
+2. **Use Storage**: Persist data using `lahat.storage` APIs
+3. **Add Dependencies**: Install npm packages as needed
+4. **Create UI**: Add HTML/CSS for user interfaces
+5. **Test**: Run `npm run dev` for development with auto-reload
+6. **Package**: Create `.lahat` file when ready to share
+
+## Documentation
+
+- [Lahat Runtime API](https://docs.lahat.dev/api/runtime)
+- [Mini App Development Guide](https://docs.lahat.dev/development)
+- [Packaging and Distribution](https://docs.lahat.dev/packaging)
+
+---
+
+*Created with Lahat v3.0 - MCP-Native Mini App Platform*

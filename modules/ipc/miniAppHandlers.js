@@ -8,6 +8,165 @@ import store from '../../store.js';
 import fs from 'fs/promises';
 
 /**
+ * Get the app storage path without requiring Claude client initialization
+ * @returns {string} - Path to the app storage directory
+ */
+function getAppStoragePath() {
+  return path.join(app.getPath('userData'), 'generated-apps');
+}
+
+/**
+ * Migrate old metadata format to new standardized format
+ * @param {Object} metadata - Old metadata object
+ * @param {string} metadataPath - Path to the metadata file
+ * @returns {Promise<Object>} - Migrated metadata object
+ */
+async function migrateMetadata(metadata, metadataPath) {
+  // Check if metadata is already in new format
+  if (metadata.appName && metadata.appDescription && metadata.createdAt) {
+    return metadata; // Already in new format
+  }
+  
+  console.log('Migrating metadata to new format:', metadataPath);
+  
+  // Create new standardized metadata
+  const migratedMetadata = {
+    appName: metadata.appName || metadata.name || 'Untitled App',
+    appDescription: metadata.appDescription || metadata.description || metadata.prompt || 'No description available',
+    createdAt: metadata.createdAt || metadata.created || new Date().toISOString(),
+    updatedAt: metadata.updatedAt || metadata.created || new Date().toISOString(),
+    conversationId: metadata.conversationId || `legacy_${Date.now()}`,
+    logo: metadata.logo || null,
+    versions: metadata.versions || [
+      {
+        timestamp: Date.now(),
+        filePath: 'index.html'
+      }
+    ]
+  };
+  
+  // Write the migrated metadata back to disk
+  try {
+    await fs.writeFile(metadataPath, JSON.stringify(migratedMetadata, null, 2));
+    console.log('Successfully migrated metadata:', metadataPath);
+  } catch (error) {
+    console.warn('Failed to write migrated metadata:', error);
+  }
+  
+  return migratedMetadata;
+}
+
+/**
+ * List apps from filesystem without requiring Claude client
+ * @returns {Promise<Array>} - Array of app objects
+ */
+async function listAppsFromFileSystem() {
+  try {
+    const appStoragePath = getAppStoragePath();
+    
+    // Ensure the directory exists
+    try {
+      await fs.access(appStoragePath);
+    } catch (error) {
+      // Directory doesn't exist, return empty array
+      return [];
+    }
+    
+    // Get all folders in the app storage directory
+    const items = await fs.readdir(appStoragePath, { withFileTypes: true });
+    const folders = items.filter(item => item.isDirectory()).map(item => item.name);
+    const apps = [];
+    
+    for (const folder of folders) {
+      const metadataPath = path.join(appStoragePath, folder, 'metadata.json');
+      
+      try {
+        // Check if metadata file exists
+        await fs.access(metadataPath);
+        
+        // Read and parse metadata
+        const metaContent = await fs.readFile(metadataPath, 'utf-8');
+        const rawMetadata = JSON.parse(metaContent);
+        
+        // Migrate metadata to new format if needed
+        const metadata = await migrateMetadata(rawMetadata, metadataPath);
+        
+        // Get the latest version file path
+        const latestVersion = metadata.versions[metadata.versions.length - 1];
+        const latestFilePath = path.join(appStoragePath, folder, latestVersion.filePath);
+        
+        // Get logo path if available
+        let logoPath = null;
+        if (metadata.logo && metadata.logo.filePath) {
+          logoPath = path.join(appStoragePath, folder, metadata.logo.filePath);
+        }
+        
+        apps.push({
+          id: folder,
+          name: metadata.appName,
+          description: metadata.appDescription,
+          filePath: latestFilePath,
+          logo: metadata.logo,
+          logoPath: logoPath,
+          createdAt: metadata.createdAt,
+          updatedAt: metadata.updatedAt,
+          versions: metadata.versions
+        });
+      } catch (error) {
+        // If metadata doesn't exist, try to find an HTML file directly
+        try {
+          const htmlFilePath = path.join(appStoragePath, folder, 'index.html');
+          await fs.access(htmlFilePath);
+          
+          // Get file stats for created date
+          const stats = await fs.stat(htmlFilePath);
+          
+          // Check for logo
+          let logoPath = null;
+          try {
+            const assetsDir = path.join(appStoragePath, folder, 'assets');
+            const assetItems = await fs.readdir(assetsDir);
+            const logoFile = assetItems.find(file => file.startsWith('logo.'));
+            if (logoFile) {
+              logoPath = path.join(assetsDir, logoFile);
+            }
+          } catch (e) {
+            // No assets directory or logo file
+          }
+          
+          // Create fallback app entry
+          apps.push({
+            id: folder,
+            name: folder.replace(/_/g, ' ').replace(/\d+$/, '').trim() || folder,
+            description: 'Legacy app (no metadata available)',
+            filePath: htmlFilePath,
+            logo: logoPath ? { filePath: `assets/${path.basename(logoPath)}` } : null,
+            logoPath: logoPath,
+            createdAt: stats.birthtime.toISOString(),
+            updatedAt: stats.mtime.toISOString(),
+            versions: [{
+              timestamp: stats.mtime.getTime(),
+              filePath: 'index.html'
+            }]
+          });
+        } catch (htmlError) {
+          console.warn(`No valid app found in ${folder}: ${htmlError.message}`);
+          // Skip this directory completely
+        }
+      }
+    }
+    
+    // Sort by updatedAt date (most recent first)
+    apps.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    
+    return apps;
+  } catch (error) {
+    console.error('Error listing apps from filesystem:', error);
+    return [];
+  }
+}
+
+/**
  * Mini App Handlers Module
  * Responsible for mini app generation and management IPC handlers
  */
@@ -20,7 +179,7 @@ import fs from 'fs/promises';
  */
 async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conversationId, logoPath }) {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    const claudeClient = await apiHandlers.getClaudeClient();
     if (!claudeClient) {
       return {
         success: false,
@@ -66,11 +225,12 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
       const htmlFilePath = path.join(folderPath, 'index.html');
       await fs.writeFile(htmlFilePath, htmlContent);
       
-      // Create metadata
+      // Create metadata in new standardized format
       const metadata = {
-        name: appName || 'Mini App',
-        created: new Date().toISOString(),
-        prompt,
+        appName: appName || 'Mini App',
+        appDescription: prompt,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         conversationId,
         logo: logoPath ? { filePath: logoPath } : null,
         versions: [
@@ -101,7 +261,7 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
     
     // Create a window for the app
     const windowResult = await miniAppManager.createMiniAppWindow(
-      savedApp.metadata.name,
+      savedApp.metadata.appName,
       htmlContent,
       savedApp.filePath,
       savedApp.metadata.conversationId
@@ -118,8 +278,8 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
     const recentApps = store.get('recentApps') || [];
     recentApps.unshift({
       id: savedApp.metadata.conversationId,
-      name: savedApp.metadata.name,
-      created: savedApp.metadata.created,
+      name: savedApp.metadata.appName,
+      created: savedApp.metadata.createdAt,
       filePath: savedApp.filePath
     });
     
@@ -133,7 +293,7 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
     return { 
       success: true,
       appId: savedApp.metadata.conversationId,
-      name: savedApp.metadata.name
+      name: savedApp.metadata.appName
     };
   } catch (error) {
     if (!event.sender.isDestroyed()) {
@@ -156,14 +316,8 @@ async function handleGenerateMiniApp(event, { prompt, appName, folderPath, conve
  */
 async function handleListMiniApps() {
   try {
-    // Allow read-only mode for listing apps
-    const claudeClient = apiHandlers.getClaudeClient(true);
-    if (!claudeClient) {
-      console.error('Failed to initialize Claude client in read-only mode');
-      return { apps: [] };
-    }
-    
-    const apps = await claudeClient.listGeneratedApps();
+    // List apps directly from filesystem without requiring Claude client
+    const apps = await listAppsFromFileSystem();
     return { apps };
   } catch (error) {
     console.error('Error listing mini apps:', error);
@@ -185,15 +339,7 @@ async function handleOpenMiniApp(event, { appId, filePath, name }) {
   console.log('handleOpenMiniApp called with:', { appId, filePath, name });
   
   try {
-    // Initialize Claude client in read-only mode if needed
-    if (!apiHandlers.getClaudeClient(true)) {
-      console.error('Failed to initialize Claude client in read-only mode');
-      return {
-        success: false,
-        error: 'Failed to initialize app environment. Please check your settings.'
-      };
-    }
-    
+    // No need for Claude client to open existing apps
     const result = await miniAppManager.openMiniApp(appId, filePath, name);
     return result;
   } catch (error) {
@@ -213,7 +359,7 @@ async function handleOpenMiniApp(event, { appId, filePath, name }) {
  */
 async function handleUpdateMiniApp(event, { appId, prompt }) {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    const claudeClient = await apiHandlers.getClaudeClient();
     if (!claudeClient) {
       return {
         success: false,
@@ -301,7 +447,7 @@ async function handleUpdateMiniApp(event, { appId, prompt }) {
  */
 async function handleDeleteMiniApp(event, { appId }) {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    const claudeClient = await apiHandlers.getClaudeClient();
     if (!claudeClient) {
       return {
         success: false,
@@ -338,15 +484,7 @@ async function handleDeleteMiniApp(event, { appId }) {
  */
 async function handleExportMiniApp(event, { appId, filePath }) {
   try {
-    // Allow read-only mode for exporting apps
-    const claudeClient = apiHandlers.getClaudeClient(true);
-    if (!claudeClient) {
-      console.error('Failed to initialize Claude client in read-only mode');
-      return {
-        success: false,
-        error: 'Failed to initialize app environment. Please check your settings.'
-      };
-    }
+    // No need for Claude client to export existing apps
     
     // Get the app name - first check if it's open in a window
     let appName = null;
@@ -370,7 +508,7 @@ async function handleExportMiniApp(event, { appId, filePath }) {
             const metadata = JSON.parse(metaContent);
             
             if (metadata.conversationId === appId) {
-              appName = metadata.name;
+              appName = metadata.appName || metadata.name;
               break;
             }
           } catch (error) {
@@ -422,15 +560,7 @@ async function handleExportMiniApp(event, { appId, filePath }) {
  */
 async function handleImportMiniApp(event) {
   try {
-    // Allow read-only mode for importing apps
-    const claudeClient = apiHandlers.getClaudeClient(true);
-    if (!claudeClient) {
-      console.error('Failed to initialize Claude client in read-only mode');
-      return {
-        success: false,
-        error: 'Failed to initialize app environment. Please check your settings.'
-      };
-    }
+    // No need for Claude client to import apps
     
     // Show open dialog
     const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -495,7 +625,7 @@ async function handleImportMiniApp(event) {
  */
 async function handleCreateAppFolder(event, { appName }) {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    const claudeClient = await apiHandlers.getClaudeClient();
     if (!claudeClient) {
       return {
         success: false,
@@ -538,7 +668,7 @@ async function handleCreateAppFolder(event, { appName }) {
  */
 async function handleGenerateTitleAndDescription(event, { input }) {
   try {
-    const claudeClient = apiHandlers.getClaudeClient();
+    const claudeClient = await apiHandlers.getClaudeClient();
     if (!claudeClient) {
       return {
         success: false,

@@ -24,7 +24,6 @@ export * from './ui/containers/app-management-section.js';
 
 // Modals
 export * from './ui/modals/app-details-modal.js';
-export * from './ui/modals/command-palette.js';
 
 /**
  * Initialize the component library
@@ -42,7 +41,6 @@ export function initializeComponentLibrary() {
   const AppList = require('./ui/containers/app-list.js').AppList;
   const AppManagementSection = require('./ui/containers/app-management-section.js').AppManagementSection;
   const AppDetailsModal = require('./ui/modals/app-details-modal.js').AppDetailsModal;
-  const CommandPalette = require('./ui/modals/command-palette.js').CommandPalette;
   
   // Register components with the registry
   registry.register('error-container', ErrorContainer);
@@ -51,7 +49,6 @@ export function initializeComponentLibrary() {
   registry.register('app-list', AppList);
   registry.register('app-management-section', AppManagementSection);
   registry.register('app-details-modal', AppDetailsModal);
-  registry.register('command-palette', CommandPalette);
   
   // Initialize the state manager with default values
   const { appState } = require('./core/state-manager.js');

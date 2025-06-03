@@ -6,7 +6,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import OpenAIClient from './openAIClient.js';
-import { getOpenAIKey } from '../security/keyManager.js';
+import { getCredentialValue } from '../ipc/apiHandlers.js';
 import logger from './logger.js';
 import { ErrorHandler } from './errorHandler.js';
 
@@ -20,13 +20,18 @@ export class LogoGenerator {
    * Initialize the OpenAI client
    * @private
    */
-  initializeClient() {
-    const apiKey = getOpenAIKey();
-    if (apiKey) {
-      this.openAIClient = new OpenAIClient(apiKey);
-      logger.info('Logo generator initialized with OpenAI client', {}, 'LogoGenerator');
-    } else {
-      logger.warn('OpenAI API key not found, logo generation will not be available', {}, 'LogoGenerator');
+  async initializeClient() {
+    try {
+      const apiKey = await getCredentialValue('openai');
+      if (apiKey) {
+        this.openAIClient = new OpenAIClient(apiKey);
+        logger.info('Logo generator initialized with OpenAI client', {}, 'LogoGenerator');
+      } else {
+        logger.warn('OpenAI API key not found, logo generation will not be available', {}, 'LogoGenerator');
+      }
+    } catch (error) {
+      logger.error('Failed to initialize OpenAI client', error, 'LogoGenerator');
+      this.openAIClient = null;
     }
   }
 
@@ -262,8 +267,8 @@ export class LogoGenerator {
   /**
    * Refresh the OpenAI client (useful when API key is updated)
    */
-  refreshClient() {
-    this.initializeClient();
+  async refreshClient() {
+    await this.initializeClient();
     logger.info('Logo generator client refreshed', {}, 'LogoGenerator');
   }
 }

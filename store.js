@@ -52,7 +52,7 @@ const schema = {
           height: { type: 'number' }
         }
       },
-      'api-setup': {
+      'credential-manager': {
         type: 'object',
         properties: {
           x: { type: 'number' },

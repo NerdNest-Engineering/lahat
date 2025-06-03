@@ -1,0 +1,284 @@
+/**
+ * {{name}} - A Lahat MCP-Enabled Mini App
+ * {{description}}
+ * 
+ * Created with Lahat v3.0 - MCP-Native Mini App Platform
+ */
+
+import { LahatAPI } from '@lahat/runtime';
+
+class {{classname}} {
+  constructor() {
+    this.lahat = new LahatAPI({
+      name: '{{name}}',
+      permissions: {{permissions}},
+      mcpRequirements: {{mcpRequirements}}
+    });
+    
+    this.storage = this.lahat.storage;
+    this.mcp = this.lahat.mcp;
+    this.availableServers = new Map();
+    
+    console.log('🚀 {{name}} starting with MCP integration...');
+  }
+
+  /**
+   * Initialize the app
+   */
+  async init() {
+    try {
+      console.log('Initializing {{name}}...');
+      
+      // Initialize MCP connections
+      await this.initializeMCP();
+      
+      // Setup your app functionality
+      await this.setupApp();
+      
+      console.log('✅ {{name}} initialized successfully');
+      this.showCapabilities();
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize {{name}}:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize MCP server connections
+   */
+  async initializeMCP() {
+    console.log('🔌 Initializing MCP connections...');
+    
+    try {
+      // Discover available MCP servers
+      const servers = await this.mcp.discoverServers();
+      console.log(`Found ${servers.length} MCP servers`);
+      
+      // Connect to required servers
+      for (const serverName of {{mcpRequirements}}) {
+        const server = servers.find(s => s.name === serverName);
+        if (server) {
+          try {
+            await this.mcp.connect(serverName);
+            this.availableServers.set(serverName, server);
+            console.log(`✅ Connected to MCP server: ${serverName}`);
+          } catch (error) {
+            console.warn(`⚠️ Failed to connect to required server ${serverName}:`, error);
+          }
+        } else {
+          console.warn(`⚠️ Required MCP server not found: ${serverName}`);
+        }
+      }
+      
+      // Connect to optional servers (best effort)
+      for (const server of servers) {
+        if (!{{mcpRequirements}}.includes(server.name)) {
+          try {
+            await this.mcp.connect(server.name);
+            this.availableServers.set(server.name, server);
+            console.log(`✅ Connected to optional MCP server: ${server.name}`);
+          } catch (error) {
+            console.log(`ℹ️ Optional server ${server.name} not available:`, error.message);
+          }
+        }
+      }
+      
+      // Set up event listeners for MCP events
+      this.mcp.on('server_connected', (serverName) => {
+        console.log(`🔌 MCP server connected: ${serverName}`);
+      });
+      
+      this.mcp.on('server_disconnected', (serverName) => {
+        console.log(`🔌 MCP server disconnected: ${serverName}`);
+        this.availableServers.delete(serverName);
+      });
+      
+      this.mcp.on('capability_available', (serverName, capability) => {
+        console.log(`🔧 New capability available from ${serverName}: ${capability}`);
+      });
+      
+    } catch (error) {
+      console.warn('⚠️ MCP initialization failed:', error);
+      console.log('Continuing without MCP capabilities...');
+    }
+  }
+
+  /**
+   * Setup your app functionality here
+   */
+  async setupApp() {
+    // Load saved data
+    const savedData = await this.storage.get('appData', {
+      mcpUsageStats: {},
+      lastStarted: null,
+      startCount: 0
+    });
+    
+    // Update stats
+    savedData.lastStarted = new Date().toISOString();
+    savedData.startCount = (savedData.startCount || 0) + 1;
+    
+    await this.storage.set('appData', savedData);
+    
+    // Your app logic here - this example demonstrates MCP usage
+    await this.demonstrateMCPUsage();
+  }
+
+  /**
+   * Demonstrate MCP server usage
+   */
+  async demonstrateMCPUsage() {
+    console.log('\n🔧 Demonstrating MCP capabilities...\n');
+    
+    // Example: Use a file system server if available
+    if (this.availableServers.has('filesystem')) {
+      try {
+        const result = await this.mcp.call('filesystem', 'list_directory', { path: '.' });
+        console.log('📁 Current directory contents (via MCP filesystem):', result);
+      } catch (error) {
+        console.warn('Failed to list directory via MCP:', error);
+      }
+    }
+    
+    // Example: Use a weather server if available
+    if (this.availableServers.has('weather')) {
+      try {
+        const weather = await this.mcp.call('weather', 'get_current_weather', { 
+          location: 'San Francisco, CA' 
+        });
+        console.log('🌤️ Current weather (via MCP weather):', weather);
+      } catch (error) {
+        console.warn('Failed to get weather via MCP:', error);
+      }
+    }
+    
+    // Example: Use a database server if available
+    if (this.availableServers.has('database')) {
+      try {
+        const tables = await this.mcp.call('database', 'list_tables');
+        console.log('🗄️ Available database tables (via MCP database):', tables);
+      } catch (error) {
+        console.warn('Failed to list database tables via MCP:', error);
+      }
+    }
+    
+    // Example: Generic capability matching
+    const textCapabilities = await this.mcp.findCapabilities('text');
+    if (textCapabilities.length > 0) {
+      console.log(`📝 Found ${textCapabilities.length} text processing capabilities`);
+      textCapabilities.forEach(cap => {
+        console.log(`  - ${cap.serverName}: ${cap.name}`);
+      });
+    }
+    
+    const webCapabilities = await this.mcp.findCapabilities('web');
+    if (webCapabilities.length > 0) {
+      console.log(`🌐 Found ${webCapabilities.length} web capabilities`);
+      webCapabilities.forEach(cap => {
+        console.log(`  - ${cap.serverName}: ${cap.name}`);
+      });
+    }
+  }
+
+  /**
+   * Show available MCP capabilities
+   */
+  showCapabilities() {
+    console.log('\n🎯 Available MCP Capabilities:\n');
+    
+    if (this.availableServers.size === 0) {
+      console.log('  No MCP servers connected');
+      console.log('  Your app will run with local functionality only');
+    } else {
+      for (const [serverName, server] of this.availableServers) {
+        console.log(`📡 ${serverName}:`);
+        if (server.capabilities && server.capabilities.length > 0) {
+          server.capabilities.forEach(cap => {
+            console.log(`  - ${cap.name}: ${cap.description || 'No description'}`);
+          });
+        } else {
+          console.log('  - No specific capabilities listed');
+        }
+      }
+    }
+    
+    console.log(`
+🎉 {{name}} is ready!
+
+Next steps:
+1. Modify the demonstrateMCPUsage() method to use MCP servers for your needs
+2. Add error handling for when MCP servers are unavailable
+3. Implement fallback functionality for offline operation
+4. Use this.mcp.call() to invoke MCP server capabilities
+5. Use this.mcp.findCapabilities() to discover available features
+
+MCP Documentation: https://docs.anthropic.com/mcp
+    `);
+  }
+
+  /**
+   * Helper method to safely call MCP servers with fallback
+   */
+  async callMCPSafely(serverName, method, params = {}, fallback = null) {
+    try {
+      if (!this.availableServers.has(serverName)) {
+        if (fallback) {
+          console.log(`Server ${serverName} not available, using fallback`);
+          return await fallback();
+        }
+        throw new Error(`MCP server ${serverName} not available`);
+      }
+      
+      return await this.mcp.call(serverName, method, params);
+    } catch (error) {
+      console.warn(`MCP call failed: ${serverName}.${method}`, error);
+      
+      if (fallback) {
+        console.log('Using fallback implementation');
+        return await fallback();
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Cleanup when app shuts down
+   */
+  async shutdown() {
+    console.log('👋 {{name}} shutting down...');
+    
+    // Disconnect from MCP servers
+    for (const serverName of this.availableServers.keys()) {
+      try {
+        await this.mcp.disconnect(serverName);
+        console.log(`Disconnected from MCP server: ${serverName}`);
+      } catch (error) {
+        console.warn(`Error disconnecting from ${serverName}:`, error);
+      }
+    }
+    
+    // Your cleanup code here
+  }
+}
+
+// Create and start the app
+const app = new {{classname}}();
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+  await app.shutdown();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await app.shutdown();
+  process.exit(0);
+});
+
+// Start the app
+app.init().catch(error => {
+  console.error('Failed to start app:', error);
+  process.exit(1);
+});

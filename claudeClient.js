@@ -191,8 +191,8 @@ EXAMPLE OUTPUT:
       }
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-opus-4-20250514',
-        max_tokens: 64000,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
         system: this.systemPrompt,
         messages,
         stream: true
