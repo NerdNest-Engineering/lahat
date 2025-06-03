@@ -10,8 +10,8 @@ const __dirname = path.dirname(__filename);
 export const WindowType = {
   MAIN: 'main',
   MAIN_WEB_COMPONENTS: 'main-web-components', // New window type for web components version
-  API_SETUP: 'api-setup',
   APP_CREATION: 'app-creation',
+  CREDENTIAL_MANAGER: 'credential-manager',
   MINI_APP: 'mini-app'
 };
 
@@ -22,8 +22,8 @@ const windows = new Map();
 const DEFAULT_DIMENSIONS = {
   [WindowType.MAIN]: { width: 1200, height: 800 },
   [WindowType.MAIN_WEB_COMPONENTS]: { width: 1200, height: 800 }, // Same dimensions as main
-  [WindowType.API_SETUP]: { width: 600, height: 300 },
   [WindowType.APP_CREATION]: { width: 800, height: 600 },
+  [WindowType.CREDENTIAL_MANAGER]: { width: 800, height: 600 },
   [WindowType.MINI_APP]: { width: 800, height: 600 }
 };
 
@@ -31,8 +31,8 @@ const DEFAULT_DIMENSIONS = {
 const WINDOW_HTML = {
   [WindowType.MAIN]: 'main.html',
   [WindowType.MAIN_WEB_COMPONENTS]: 'main-web-components.html', // New HTML file
-  [WindowType.API_SETUP]: 'api-setup.html',
-  [WindowType.APP_CREATION]: 'app-creation.html',
+  [WindowType.APP_CREATION]: 'src/app-creator/app-creation.html',
+  [WindowType.CREDENTIAL_MANAGER]: 'src/credentials/credential-manager.html',
   [WindowType.MINI_APP]: null // Mini apps use dynamic content
 };
 
@@ -40,8 +40,8 @@ const WINDOW_HTML = {
 const WINDOW_PRELOAD = {
   [WindowType.MAIN]: 'preload.cjs',
   [WindowType.MAIN_WEB_COMPONENTS]: 'preload.cjs', // Same preload script
-  [WindowType.API_SETUP]: 'preload.cjs',
   [WindowType.APP_CREATION]: 'preload.cjs',
+  [WindowType.CREDENTIAL_MANAGER]: 'preload.cjs',
   [WindowType.MINI_APP]: 'miniAppPreload.cjs'
 };
 

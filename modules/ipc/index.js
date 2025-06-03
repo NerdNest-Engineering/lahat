@@ -13,27 +13,37 @@ export * from './ipcHandler.js';
 export * from './apiHandlers.js';
 export * from './miniAppHandlers.js';
 export * from './windowHandlers.js';
+export * from './credentialHandlers.js';
+export * from './appCreationHandlers.js';
 
 /**
  * Initialize all IPC handlers
  * This function should be called once at application startup
  */
 export function initializeIpcHandlers() {
-  const { ipcHandler } = require('./ipcHandler.js');
-  const apiHandlers = require('./apiHandlers.js');
-  const miniAppHandlers = require('./miniAppHandlers.js');
-  const windowHandlers = require('./windowHandlers.js');
-  
-  // Register API handlers
-  apiHandlers.registerHandlers(ipcHandler);
-  
-  // Register mini app handlers
-  miniAppHandlers.registerHandlers(ipcHandler);
-  
-  // Register window handlers
-  windowHandlers.registerHandlers(ipcHandler);
-  
-  console.log('All IPC handlers registered');
-  
-  return ipcHandler;
+  // Import ES modules dynamically
+  import('./ipcHandler.js').then(({ ipcHandler }) => {
+    import('./apiHandlers.js').then(apiHandlers => {
+      apiHandlers.registerHandlers(ipcHandler);
+    });
+    
+    import('./miniAppHandlers.js').then(miniAppHandlers => {
+      miniAppHandlers.registerHandlers(ipcHandler);
+    });
+    
+    import('./windowHandlers.js').then(windowHandlers => {
+      windowHandlers.registerHandlers(ipcHandler);
+    });
+    
+    import('./credentialHandlers.js').then(credentialHandlers => {
+      credentialHandlers.registerHandlers(ipcHandler);
+    });
+    
+    import('./appCreationHandlers.js').then(appCreationHandlers => {
+      appCreationHandlers.registerHandlers(ipcHandler);
+    });
+    
+    console.log('All IPC handlers registered');
+    return ipcHandler;
+  });
 }

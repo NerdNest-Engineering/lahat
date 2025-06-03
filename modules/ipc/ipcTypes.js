@@ -40,6 +40,21 @@ export const IpcChannels = {
   GET_WINDOW_PARAMS: 'get-window-params',
   NOTIFY_APP_UPDATED: 'notify-app-updated',
   
+  // Distribution management (new island architecture)
+  GET_INSTALLED_APPS: 'get-installed-apps',
+  INSTALL_APP: 'install-app',
+  UNINSTALL_APP: 'uninstall-app',
+  START_APP: 'start-app',
+  STOP_APP: 'stop-app',
+  UPDATE_APP: 'update-app',
+  PACKAGE_APP: 'package-app',
+  VALIDATE_PACKAGE: 'validate-package',
+  GET_PACKAGE_METADATA: 'get-package-metadata',
+  CHECK_FOR_UPDATES: 'check-for-updates',
+  GET_UPDATE_STATUS: 'get-update-status',
+  SEARCH_APPS: 'search-apps',
+  GET_RUNNING_APPS: 'get-running-apps',
+  
   // Events
   GENERATION_STATUS: 'generation-status',
   GENERATION_CHUNK: 'generation-chunk',
@@ -74,8 +89,8 @@ export const GenerationStatus = {
 export const WindowTypes = {
   MAIN: 'main',
   MAIN_WEB_COMPONENTS: 'main-web-components',
-  API_SETUP: 'api-setup',
   APP_CREATION: 'app-creation',
+  CREDENTIAL_MANAGER: 'credential-manager',
   MINI_APP: 'mini-app'
 };
 

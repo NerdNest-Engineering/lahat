@@ -3,7 +3,8 @@ import ClaudeClient from '../../claudeClient.js';
 import store from '../../store.js';
 import { IpcChannels, createSuccessResponse, createErrorResponse } from './ipcTypes.js';
 import { ErrorHandler } from '../utils/errorHandler.js';
-import keyManager from '../security/keyManager.js';
+import { CredentialManager } from '../../src/credentials/CredentialManager.js';
+import keyManager from '../security/keyManager.js'; // Keep for migration
 import logoGenerator from '../utils/logoGenerator.js';
 import logger from '../utils/logger.js';
 
@@ -12,30 +13,165 @@ import logger from '../utils/logger.js';
  * Responsible for API key management and Claude client initialization
  */
 
+// Initialize the credential manager
+const credentialManager = new CredentialManager();
+
+// Migration flag to track if we've migrated credentials
+let migrationCompleted = false;
+
 // Claude client instance
 let claudeClient = null;
+
+/**
+ * Migrate credentials from old keyManager to new CredentialManager
+ * @returns {Promise<boolean>} - True if migration completed successfully
+ */
+async function migrateCredentials() {
+  if (migrationCompleted) {
+    return true;
+  }
+
+  try {
+    logger.info('Starting credential migration from keyManager to CredentialManager', {}, 'migrateCredentials');
+    
+    const oldCredentials = {};
+    
+    // Check for Claude API key
+    if (keyManager.hasApiKey()) {
+      const claudeKey = keyManager.getApiKey();
+      if (claudeKey) {
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const environment = isDevelopment ? 'development' : 'production';
+        oldCredentials[`claude_api_key_${environment}`] = claudeKey;
+      }
+    }
+    
+    // Check for OpenAI API key  
+    if (keyManager.hasOpenAIKey()) {
+      const openaiKey = keyManager.getOpenAIKey();
+      if (openaiKey) {
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const environment = isDevelopment ? 'development' : 'production';
+        oldCredentials[`openai_api_key_${environment}`] = openaiKey;
+      }
+    }
+    
+    // Migrate credentials if any exist
+    if (Object.keys(oldCredentials).length > 0) {
+      logger.info('Migrating credentials to new CredentialManager', { count: Object.keys(oldCredentials).length }, 'migrateCredentials');
+      await credentialManager.migrateCredentials(oldCredentials);
+      logger.info('Credential migration completed successfully', {}, 'migrateCredentials');
+    } else {
+      logger.info('No credentials found to migrate', {}, 'migrateCredentials');
+    }
+    
+    migrationCompleted = true;
+    return true;
+  } catch (error) {
+    logger.error('Failed to migrate credentials', error, 'migrateCredentials');
+    migrationCompleted = true; // Don't keep retrying
+    return false;
+  }
+}
+
+/**
+ * Get the appropriate credential name based on environment
+ * @param {string} service - Service name (claude, openai)
+ * @returns {string} - Credential name
+ */
+function getCredentialName(service) {
+  // Use 'development' as default since most usage is in development mode
+  // This matches the browser-side detection in credential-manager.js
+  const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+  const environment = isDevelopment ? 'development' : 'default';
+  console.log(`[CREDENTIAL-NAME] Service: ${service}, NODE_ENV: ${process.env.NODE_ENV}, Environment: ${environment}, Final name: ${service}.${environment}`);
+  return `${service}.${environment}`;
+}
+
+/**
+ * Get a credential value from the credential system (with lastUsed tracking)
+ * @param {string} service - Service name (claude, openai)
+ * @returns {Promise<string|null>} - Credential value or null
+ */
+async function getCredentialValue(service) {
+  try {
+    const credentialName = getCredentialName(service);
+    console.log(`[GET-CREDENTIAL] Looking for credential with name: ${credentialName}`);
+    
+    // First, try to find the credential by name in the metadata
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const { app } = await import('electron');
+    
+    const credentialsMetadataPath = path.join(app.getPath('userData'), 'credentials-metadata.json');
+    
+    try {
+      const data = await fs.readFile(credentialsMetadataPath, 'utf8');
+      const metadataList = JSON.parse(data);
+      
+      // Find credential by name
+      const credential = metadataList.find(c => c.name === credentialName);
+      
+      if (credential) {
+        console.log(`[GET-CREDENTIAL] Found credential in metadata with ID: ${credential.id}`);
+        
+        // Use the proper credential handler to get value AND update lastUsed
+        const { handleGetCredentialValue } = await import('./credentialHandlers.js');
+        const result = await handleGetCredentialValue({}, credential.id);
+        
+        if (result.success && result.value) {
+          const value = result.value.value || result.value.password || null;
+          console.log(`[GET-CREDENTIAL] Retrieved value exists: ${value !== null}, lastUsed updated`);
+          return value;
+        } else {
+          console.log(`[GET-CREDENTIAL] Failed to get credential value: ${result.error}`);
+          return null;
+        }
+      } else {
+        console.log(`[GET-CREDENTIAL] No credential found with name: ${credentialName}`);
+        return null;
+      }
+    } catch (fileError) {
+      console.log(`[GET-CREDENTIAL] No credentials metadata file found: ${fileError.message}`);
+      return null;
+    }
+  } catch (error) {
+    console.log(`[GET-CREDENTIAL] Failed to get ${service} credential: ${error.message}`);
+    return null;
+  }
+}
 
 /**
  * Initialize Claude client
  * @param {boolean} readOnlyMode - Whether to initialize in read-only mode
  * @returns {boolean} - True if initialized successfully
  */
-export function initializeClaudeClient(readOnlyMode = false) {
-  const apiKey = keyManager.getApiKey();
-  
+export async function initializeClaudeClient(readOnlyMode = false) {
   try {
+    // Ensure migration is completed first
+    await migrateCredentials();
+    
+    // Get API key from keytar-based credential system
+    const apiKey = await getCredentialValue('claude');
+    console.log(`[CLAUDE-INIT] API key retrieved: ${apiKey ? 'YES' : 'NO'}, Length: ${apiKey ? apiKey.length : 0}, ReadOnly: ${readOnlyMode}`);
+    
     // Initialize with API key if available, otherwise in read-only mode
     if (apiKey) {
       claudeClient = new ClaudeClient(apiKey);
+      console.log(`[CLAUDE-INIT] Claude client initialized with API key successfully`);
       logger.info('App storage directory initialized with API key', { path: claudeClient.appStoragePath }, 'ClaudeClient');
       return true;
     } else if (readOnlyMode) {
       // Initialize in read-only mode (null API key)
       claudeClient = new ClaudeClient(null);
+      console.log(`[CLAUDE-INIT] Claude client initialized in read-only mode`);
       logger.info('App storage directory initialized in read-only mode', { path: claudeClient.appStoragePath }, 'ClaudeClient');
       return true;
+    } else {
+      console.log(`[CLAUDE-INIT] No API key found and read-only mode not enabled`);
     }
   } catch (error) {
+    console.log(`[CLAUDE-INIT] Failed to initialize: ${error.message}`);
     logger.error('Failed to initialize Claude client', error, 'initializeClaudeClient');
     ErrorHandler.logError('initializeClaudeClient', error);
     return false;
@@ -47,16 +183,16 @@ export function initializeClaudeClient(readOnlyMode = false) {
 /**
  * Get the Claude client instance
  * @param {boolean} allowReadOnly - Whether to allow read-only mode if no API key is available
- * @returns {ClaudeClient|null} - Claude client instance or null if not initialized
+ * @returns {Promise<ClaudeClient|null>} - Claude client instance or null if not initialized
  */
-export function getClaudeClient(allowReadOnly = false) {
+export async function getClaudeClient(allowReadOnly = false) {
   if (!claudeClient) {
     // Try to initialize with API key first
-    const initialized = initializeClaudeClient();
+    const initialized = await initializeClaudeClient();
     
     // If initialization failed and read-only mode is allowed, try again in read-only mode
     if (!initialized && allowReadOnly) {
-      const readOnlyInitialized = initializeClaudeClient(true);
+      const readOnlyInitialized = await initializeClaudeClient(true);
       if (!readOnlyInitialized) {
         return null;
       }
@@ -76,24 +212,66 @@ export function getClaudeClient(allowReadOnly = false) {
  */
 async function handleSetApiKey(event, apiKey) {
   try {
+    // Ensure migration is completed first
+    await migrateCredentials();
+    
+    const credentialName = getCredentialName('claude');
+    
     // Check if we're deleting the key (empty string)
     if (!apiKey || apiKey.trim() === '') {
-      // Delete the API key
-      const deleted = keyManager.deleteApiKey();
+      // Find and delete the credential using the credential manager IPC system
+      const credentialValue = await getCredentialValue('claude');
+      if (credentialValue) {
+        // Find the credential ID and delete it
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const { app } = await import('electron');
+        
+        const credentialsMetadataPath = path.join(app.getPath('userData'), 'credentials-metadata.json');
+        
+        try {
+          const data = await fs.readFile(credentialsMetadataPath, 'utf8');
+          const metadataList = JSON.parse(data);
+          const credential = metadataList.find(c => c.name === credentialName);
+          
+          if (credential) {
+            // Use the credential manager's delete handler
+            const { handleDeleteCredential } = await import('./credentialHandlers.js');
+            await handleDeleteCredential(event, credential.id);
+          }
+        } catch (fileError) {
+          console.log(`[SET-API-KEY] No metadata file to update: ${fileError.message}`);
+        }
+      }
       
       // Clear the Claude client
       claudeClient = null;
       
-      return createSuccessResponse({ deleted, securelyStored: false });
+      return createSuccessResponse({ deleted: true, securelyStored: false });
     }
     
-    // Store the API key securely
-    const securelyStored = await keyManager.securelyStoreApiKey(apiKey);
+    // Store using the credential manager IPC system
+    const credentialData = {
+      id: 'claude_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+      name: credentialName,
+      displayName: 'Claude API Key',
+      type: 'anthropic',
+      description: 'Claude API key for app generation',
+      value: apiKey,
+      createdAt: new Date().toISOString(),
+      lastUsed: null
+    };
     
-    // Initialize Claude client with the new API key
-    claudeClient = new ClaudeClient(apiKey);
+    const { handleSaveCredential } = await import('./credentialHandlers.js');
+    const result = await handleSaveCredential(event, credentialData);
     
-    return createSuccessResponse({ securelyStored });
+    if (result.success) {
+      // Initialize Claude client with the new API key
+      claudeClient = new ClaudeClient(apiKey);
+      return createSuccessResponse({ securelyStored: true });
+    } else {
+      throw new Error(`Failed to save credential: ${result.error}`);
+    }
   } catch (error) {
     logger.error('Failed to set Claude API key', error, 'handleSetApiKey');
     ErrorHandler.logError('handleSetApiKey', error);
@@ -107,13 +285,28 @@ async function handleSetApiKey(event, apiKey) {
  */
 async function handleCheckApiKey() {
   try {
-    const hasApiKey = keyManager.hasApiKey();
+    // Ensure migration is completed first
+    await migrateCredentials();
+    
+    const credentialName = getCredentialName('claude');
+    console.log(`[API-CHECK] Looking for credential with name: ${credentialName}`);
+    
+    // Check if credential exists
+    const apiKey = await getCredentialValue('claude');
+    const hasApiKey = apiKey !== null;
+    
+    console.log(`[API-CHECK] Credential found: ${hasApiKey}`);
+    if (hasApiKey) {
+      console.log(`[API-CHECK] Claude API key length: ${apiKey.length} characters`);
+    }
+    
     // We don't send the actual API key back for security reasons
     return createSuccessResponse({ 
       hasApiKey,
-      isSecurelyStored: store.has('encryptedApiKey')
+      isSecurelyStored: hasApiKey // New credential manager always stores securely
     });
   } catch (error) {
+    console.log(`[API-CHECK] Error checking credential: ${error.message}`);
     logger.error('Failed to check Claude API key', error, 'handleCheckApiKey');
     ErrorHandler.logError('handleCheckApiKey', error);
     return createErrorResponse(error, 'check-api-key');
@@ -128,24 +321,66 @@ async function handleCheckApiKey() {
  */
 async function handleSetOpenAIApiKey(event, apiKey) {
   try {
+    // Ensure migration is completed first
+    await migrateCredentials();
+    
+    const credentialName = getCredentialName('openai');
+    
     // Check if we're deleting the key (empty string)
     if (!apiKey || apiKey.trim() === '') {
-      // Delete the API key
-      const deleted = keyManager.deleteOpenAIKey();
+      // Find and delete the credential using the credential manager IPC system
+      const credentialValue = await getCredentialValue('openai');
+      if (credentialValue) {
+        // Find the credential ID and delete it
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const { app } = await import('electron');
+        
+        const credentialsMetadataPath = path.join(app.getPath('userData'), 'credentials-metadata.json');
+        
+        try {
+          const data = await fs.readFile(credentialsMetadataPath, 'utf8');
+          const metadataList = JSON.parse(data);
+          const credential = metadataList.find(c => c.name === credentialName);
+          
+          if (credential) {
+            // Use the credential manager's delete handler
+            const { handleDeleteCredential } = await import('./credentialHandlers.js');
+            await handleDeleteCredential(event, credential.id);
+          }
+        } catch (fileError) {
+          console.log(`[SET-OPENAI-KEY] No metadata file to update: ${fileError.message}`);
+        }
+      }
       
       // Refresh the logo generator client
-      logoGenerator.refreshClient();
+      await logoGenerator.refreshClient();
       
-      return createSuccessResponse({ deleted, securelyStored: false });
+      return createSuccessResponse({ deleted: true, securelyStored: false });
     }
     
-    // Store the OpenAI API key securely
-    const securelyStored = await keyManager.securelyStoreOpenAIKey(apiKey);
+    // Store using the credential manager IPC system
+    const credentialData = {
+      id: 'openai_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+      name: credentialName,
+      displayName: 'OpenAI API Key',
+      type: 'openai',
+      description: 'OpenAI API key for logo generation',
+      value: apiKey,
+      createdAt: new Date().toISOString(),
+      lastUsed: null
+    };
     
-    // Refresh the logo generator client
-    logoGenerator.refreshClient();
+    const { handleSaveCredential } = await import('./credentialHandlers.js');
+    const result = await handleSaveCredential(event, credentialData);
     
-    return createSuccessResponse({ securelyStored });
+    if (result.success) {
+      // Refresh the logo generator client
+      await logoGenerator.refreshClient();
+      return createSuccessResponse({ securelyStored: true });
+    } else {
+      throw new Error(`Failed to save credential: ${result.error}`);
+    }
   } catch (error) {
     logger.error('Failed to set OpenAI API key', error, 'handleSetOpenAIApiKey');
     ErrorHandler.logError('handleSetOpenAIApiKey', error);
@@ -159,11 +394,25 @@ async function handleSetOpenAIApiKey(event, apiKey) {
  */
 async function handleCheckOpenAIApiKey() {
   try {
-    const hasOpenAIKey = keyManager.hasOpenAIKey();
+    // Ensure migration is completed first
+    await migrateCredentials();
+    
+    const credentialName = getCredentialName('openai');
+    console.log(`[API-CHECK] Looking for OpenAI credential with name: ${credentialName}`);
+    
+    // Check if credential exists
+    const apiKey = await getCredentialValue('openai');
+    const hasOpenAIKey = apiKey !== null;
+    
+    console.log(`[API-CHECK] OpenAI credential found: ${hasOpenAIKey}`);
+    if (hasOpenAIKey) {
+      console.log(`[API-CHECK] OpenAI API key length: ${apiKey.length} characters`);
+    }
+    
     // We don't send the actual API key back for security reasons
     return createSuccessResponse({ 
       hasOpenAIKey,
-      isSecurelyStored: store.has('encryptedOpenAIKey')
+      isSecurelyStored: hasOpenAIKey // New credential manager always stores securely
     });
   } catch (error) {
     logger.error('Failed to check OpenAI API key', error, 'handleCheckOpenAIApiKey');
@@ -178,10 +427,40 @@ async function handleCheckOpenAIApiKey() {
  */
 async function handleDeleteOpenAIApiKey() {
   try {
-    const deleted = keyManager.deleteOpenAIKey();
+    // Ensure migration is completed first
+    await migrateCredentials();
+    
+    const credentialName = getCredentialName('openai');
+    
+    // Find and delete the credential using the credential manager IPC system
+    let deleted = false;
+    const credentialValue = await getCredentialValue('openai');
+    if (credentialValue) {
+      // Find the credential ID and delete it
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const { app } = await import('electron');
+      
+      const credentialsMetadataPath = path.join(app.getPath('userData'), 'credentials-metadata.json');
+      
+      try {
+        const data = await fs.readFile(credentialsMetadataPath, 'utf8');
+        const metadataList = JSON.parse(data);
+        const credential = metadataList.find(c => c.name === credentialName);
+        
+        if (credential) {
+          // Use the credential manager's delete handler
+          const { handleDeleteCredential } = await import('./credentialHandlers.js');
+          const result = await handleDeleteCredential({}, credential.id);
+          deleted = result.success;
+        }
+      } catch (fileError) {
+        console.log(`[DELETE-OPENAI-KEY] No metadata file to update: ${fileError.message}`);
+      }
+    }
     
     // Refresh the logo generator client
-    logoGenerator.refreshClient();
+    await logoGenerator.refreshClient();
     
     return createSuccessResponse({ deleted });
   } catch (error) {
@@ -286,7 +565,7 @@ async function handleOpenAppDirectory() {
   try {
     if (!claudeClient) {
       // Allow read-only mode for opening app directory
-      const initialized = initializeClaudeClient(true);
+      const initialized = await initializeClaudeClient(true);
       if (!initialized) {
         return createErrorResponse(
           'Failed to initialize app directory access.',
@@ -302,6 +581,11 @@ async function handleOpenAppDirectory() {
     return createErrorResponse(error, 'open-app-directory');
   }
 }
+
+/**
+ * Export credential value getter for use by other modules
+ */
+export { getCredentialValue };
 
 /**
  * Register API-related IPC handlers

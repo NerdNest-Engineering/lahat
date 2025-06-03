@@ -10,8 +10,8 @@ const rootDir = path.join(__dirname, '../../');
 // Window types
 export const WindowType = {
   MAIN: 'main',
-  API_SETUP: 'api-setup',
   APP_CREATION: 'app-creation',
+  CREDENTIAL_MANAGER: 'credential-manager',
   MINI_APP: 'mini-app'
 };
 
@@ -21,24 +21,24 @@ const windows = new Map();
 // Default window dimensions
 const DEFAULT_DIMENSIONS = {
   [WindowType.MAIN]: { width: 1200, height: 800 },
-  [WindowType.API_SETUP]: { width: 600, height: 300 },
   [WindowType.APP_CREATION]: { width: 800, height: 600 },
+  [WindowType.CREDENTIAL_MANAGER]: { width: 800, height: 600 },
   [WindowType.MINI_APP]: { width: 800, height: 600 }
 };
 
 // Window HTML files
 const WINDOW_HTML = {
   [WindowType.MAIN]: 'main.html',
-  [WindowType.API_SETUP]: 'api-setup.html',
-  [WindowType.APP_CREATION]: 'app-creation.html',
+  [WindowType.APP_CREATION]: 'src/app-creator/app-creation.html',
+  [WindowType.CREDENTIAL_MANAGER]: 'src/credentials/credential-manager.html',
   [WindowType.MINI_APP]: null // Mini apps use dynamic content
 };
 
 // Window preload scripts
 const WINDOW_PRELOAD = {
   [WindowType.MAIN]: 'preload.cjs',
-  [WindowType.API_SETUP]: 'preload.cjs',
   [WindowType.APP_CREATION]: 'preload.cjs',
+  [WindowType.CREDENTIAL_MANAGER]: 'preload.cjs',
   [WindowType.MINI_APP]: 'miniAppPreload.cjs'
 };
 
@@ -64,6 +64,7 @@ export function createWindow(type, options = {}) {
     titleBarStyle: 'hidden', // Changed from 'hiddenInset' to allow content to extend to edges
     backgroundColor: '#ffffff',
     icon: path.join(rootDir, 'assets/icons/lahat.png'),
+    resizable: true, // Make all windows resizable
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
