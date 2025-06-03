@@ -9,7 +9,13 @@ import * as windowManager from './modules/windowManager/index.js';
 import * as apiHandlers from './modules/ipc/apiHandlers.js';
 import * as miniAppHandlers from './modules/ipc/miniAppHandlers.js';
 import * as windowHandlers from './modules/ipc/windowHandlers.js';
+import * as distributionHandlers from './modules/ipc/distributionHandlers.js';
+import * as credentialHandlers from './modules/ipc/credentialHandlers.js';
+import * as appCreationHandlers from './modules/ipc/appCreationHandlers.js';
+import { registerImportHandlers } from './src/app-importer/ipc/ImportHandlers.js';
 import { ErrorHandler } from './modules/utils/errorHandler.js';
+// Import new island architecture
+import { DistributionManager } from './src/distribution/index.js';
 // Import CommonJS module correctly
 import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
@@ -17,13 +23,21 @@ const { autoUpdater } = electronUpdater;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read version from package.json
+// Load package.json
 let packageJson = {};
 try {
   packageJson = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
 } catch (error) {
   console.error('Failed to read package.json:', error);
 }
+
+
+// Initialize distribution manager
+const distributionManager = new DistributionManager({
+  autoCleanup: true,
+  autoUpdates: false, // Handled separately by electron-updater
+  maxConcurrentOperations: 3
+});
 
 // Disable IMK warnings on macOS
 if (process.platform === 'darwin') {
@@ -51,7 +65,7 @@ if (process.platform === 'darwin' && packageJson) {
 /**
  * Initialize the application
  */
-function initializeApp() {
+async function initializeApp() {
   console.log('Initializing application...');
   
   try {
@@ -72,6 +86,9 @@ function initializeApp() {
     
 
     
+    // Initialize distribution manager
+    await distributionManager.start();
+    
     // Initialize window manager
     windowManager.initializeWindowManager();
     
@@ -79,6 +96,13 @@ function initializeApp() {
     apiHandlers.registerHandlers();
     miniAppHandlers.registerHandlers();
     windowHandlers.registerHandlers();
+    credentialHandlers.registerHandlers();
+    appCreationHandlers.registerHandlers();
+    registerImportHandlers();
+    
+    // Register distribution handlers and pass the distribution manager
+    distributionHandlers.setDistributionManager(distributionManager);
+    distributionHandlers.registerHandlers();
     
     // Initialize Claude client
     apiHandlers.initializeClaudeClient();
@@ -193,8 +217,13 @@ function setupAutoUpdater() {
 }
 
 // Application lifecycle events - simplified
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
   console.log('Application before-quit event');
+  try {
+    await distributionManager.stop();
+  } catch (error) {
+    console.error('Error stopping distribution manager:', error);
+  }
 });
 
 /**
@@ -210,31 +239,19 @@ async function handleLahatFileOpen(filePath) {
   }
   
   try {
-    // Get the Claude client in read-only mode
-    const claudeClient = apiHandlers.getClaudeClient(true);
-    if (!claudeClient) {
-      console.error('Failed to initialize Claude client in read-only mode');
-      
-      // Show error dialog to the user
-      dialog.showErrorBox(
-        'API Key Required',
-        'Cannot open .lahat file: Claude API key not set. Please set your API key in settings.'
-      );
-      
-      return;
-    }
+    // Use new distribution manager to install the app
+    const result = await distributionManager.installApp(filePath, {
+      allowOverwrite: true
+    });
     
-    // Import the app package
-    const result = await claudeClient.importMiniAppPackage(filePath);
-    
-    if (result.success) {
+    if (result && result.id) {
       // Update recent apps list
       const recentApps = store.get('recentApps') || [];
       recentApps.unshift({
-        id: result.appId,
-        name: result.name,
+        id: result.id,
+        name: result.manifest.app.name,
         created: new Date().toISOString(),
-        filePath: result.filePath
+        filePath: result.installPath
       });
       
       // Keep only the 10 most recent apps
@@ -254,19 +271,29 @@ async function handleLahatFileOpen(filePath) {
         mainWindow.webContents.send('refresh-app-list');
       }
       
-      // Then open the mini app
-      setTimeout(() => {
-        import('./modules/miniAppManager.js').then(miniAppManager => {
-          miniAppManager.openMiniApp(result.appId, result.filePath, result.name);
-        });
-      }, 1000);
+      // Show success dialog
+      dialog.showMessageBox(windowManager.getWindow(windowManager.WindowType.MAIN), {
+        type: 'info',
+        buttons: ['OK', 'Start App'],
+        title: 'App Installed',
+        message: `Successfully installed ${result.manifest.app.name}`,
+        detail: `Version: ${result.manifest.app.version}\nInstalled to: ${result.installPath}`
+      }).then(dialogResult => {
+        if (dialogResult.response === 1) {
+          // Start the app
+          distributionManager.startApp(result.id).catch(error => {
+            console.error('Failed to start app:', error);
+            dialog.showErrorBox('Start Failed', `Failed to start app: ${error.message}`);
+          });
+        }
+      });
     } else {
-      console.error('Failed to import .lahat file:', result.error);
+      console.error('Failed to install .lahat file: Invalid result');
       
       // Show error dialog
       dialog.showErrorBox(
-        'Import Failed',
-        `Failed to import the Lahat app: ${result.error}`
+        'Install Failed',
+        'Failed to install the Lahat app: Invalid installation result'
       );
     }
   } catch (error) {
@@ -274,14 +301,14 @@ async function handleLahatFileOpen(filePath) {
     
     // Show error dialog
     dialog.showErrorBox(
-      'Import Error',
-      `An error occurred while importing the Lahat app: ${error.message}`
+      'Install Error',
+      `An error occurred while installing the Lahat app: ${error.message}`
     );
   }
 }
 
-app.whenReady().then(() => {
-  initializeApp();
+app.whenReady().then(async () => {
+  await initializeApp();
   
   // Set up file association handling for .lahat files
   // This handles files opened from Finder/Explorer after the app is already running

@@ -1,5 +1,57 @@
 /* Main Window Specific Styles */
 
+/* Custom styles to replace DaisyUI classes */
+.search-container {
+  position: relative;
+  display: inline-block;
+}
+
+.search-input {
+  padding: 12px 40px 12px 16px;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  background: white;
+  color: #202124;
+  font-size: 14px;
+  width: 320px;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  pointer-events: none;
+  font-size: 16px;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown ul {
+  position: absolute;
+  bottom: 72px;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  margin: 0;
+  list-style: none;
+  width: 200px;
+  z-index: 100;
+}
+
 /* App Controls Header */
 .app-controls-header {
   display: flex;

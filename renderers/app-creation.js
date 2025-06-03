@@ -1,5 +1,5 @@
 // Import all app creation components
-import '../components/ui/app-creation/index.js';
+import '../src/app-creator/index.js';
 
 // Import error handling components
 import '../components/core/error-handling/error-container.js';

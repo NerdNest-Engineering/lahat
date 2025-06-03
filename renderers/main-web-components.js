@@ -29,7 +29,7 @@ class AppController {
     });
     
     this.appManagementSection.addEventListener('open-api-settings', () => {
-      window.electronAPI.openWindow('api-setup');
+      window.electronAPI.openWindow('credential-manager');
     });
     
     this.appManagementSection.addEventListener('refresh-apps', () => {
