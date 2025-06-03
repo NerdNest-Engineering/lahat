@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .app-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .data-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .data-section h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f2f6;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .websocket-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: left;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-entry.sent {
+            color: #3498db;
+        }
+        
+        .log-entry.received {
+            color: #2ecc71;
+        }
+        
+        .log-entry.error {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="app-icon">🚀</div>
+            <h1>{{name}}</h1>
+            <p class="description">{{description}}</p>
+        </div>
+        
+        <div id="status" class="status disconnected">
+            Connecting to server...
+        </div>
+        
+        <div class="controls">
+            <button onclick="pingServer()">Ping Server</button>
+            <button onclick="loadData()">Load Data</button>
+            <button onclick="saveData()">Save Data</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div class="data-section">
+            <h3>App Data</h3>
+            <textarea id="dataTextarea" placeholder="Your app data (JSON format)...">
+{
+  "message": "Hello from {{name}}!",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "counter": 0
+}
+            </textarea>
+        </div>
+        
+        <div class="data-section">
+            <h3>WebSocket Log</h3>
+            <div id="log" class="websocket-log">
+                <div class="log-entry">Initializing connection...</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Built with Lahat v3.0 - MCP-Native Mini App Platform</p>
+            <p>Author: {{author}}</p>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isConnected = false;
+        
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+        const dataTextarea = document.getElementById('dataTextarea');
+        
+        // Initialize WebSocket connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            addLog(`Connecting to ${wsUrl}...`, 'info');
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                isConnected = true;
+                updateStatus('Connected to {{name}}', true);
+                addLog('WebSocket connection established', 'received');
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const message = JSON.parse(event.data);
+                    handleWebSocketMessage(message);
+                    addLog(`Received: ${JSON.stringify(message)}`, 'received');
+                } catch (error) {
+                    addLog(`Error parsing message: ${error.message}`, 'error');
+                }
+            };
+            
+            ws.onclose = function() {
+                isConnected = false;
+                updateStatus('Disconnected from server', false);
+                addLog('WebSocket connection closed', 'error');
+                
+                // Attempt to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                addLog(`WebSocket error: ${error}`, 'error');
+            };
+        }
+        
+        // Handle incoming WebSocket messages
+        function handleWebSocketMessage(message) {
+            switch (message.type) {
+                case 'welcome':
+                    updateStatus(message.message, true);
+                    break;
+                    
+                case 'data':
+                    dataTextarea.value = JSON.stringify(message.data, null, 2);
+                    break;
+                    
+                case 'dataSaved':
+                    addLog('Data saved successfully', 'received');
+                    break;
+                    
+                case 'dataUpdated':
+                    dataTextarea.value = JSON.stringify(message.data, null, 2);
+                    addLog('Data updated by another client', 'received');
+                    break;
+                    
+                case 'pong':
+                    addLog(`Pong received at ${message.timestamp}`, 'received');
+                    break;
+                    
+                case 'error':
+                    addLog(`Server error: ${message.message}`, 'error');
+                    break;
+                    
+                default:
+                    addLog(`Unknown message type: ${message.type}`, 'error');
+            }
+        }
+        
+        // Send message via WebSocket
+        function sendMessage(message) {
+            if (ws && isConnected) {
+                ws.send(JSON.stringify(message));
+                addLog(`Sent: ${JSON.stringify(message)}`, 'sent');
+            } else {
+                addLog('Not connected to server', 'error');
+            }
+        }
+        
+        // Update connection status
+        function updateStatus(message, connected) {
+            statusEl.textContent = message;
+            statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
+        }
+        
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logEl.appendChild(logEntry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        // Button handlers
+        function pingServer() {
+            sendMessage({ type: 'ping' });
+        }
+        
+        function loadData() {
+            sendMessage({ type: 'getData' });
+        }
+        
+        function saveData() {
+            try {
+                const data = JSON.parse(dataTextarea.value);
+                sendMessage({ type: 'saveData', data });
+            } catch (error) {
+                addLog(`Invalid JSON: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearLog() {
+            logEl.innerHTML = '';
+        }
+        
+        // Initialize the app
+        connectWebSocket();
+        
+        // Load initial data from REST API
+        fetch('/api/data')
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && Object.keys(result.data).length > 0) {
+                    dataTextarea.value = JSON.stringify(result.data, null, 2);
+                }
+            })
+            .catch(error => {
+                addLog(`Failed to load initial data: ${error.message}`, 'error');
+            });
+    </script>
+</body>
+</html>

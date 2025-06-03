@@ -8,9 +8,10 @@ import path from 'path';
 import os from 'os';
 
 export class StorageAPI {
-  constructor(runtime) {
-    this.runtime = runtime;
+  constructor(appId) {
+    this.appId = appId;
     this.storageDir = path.join(os.homedir(), '.lahat', 'storage');
+    this.appStorageDir = path.join(this.storageDir, appId);
     this._ensureStorageDir();
   }
 
@@ -19,10 +20,72 @@ export class StorageAPI {
    */
   async _ensureStorageDir() {
     try {
-      await fs.mkdir(this.storageDir, { recursive: true });
+      await fs.mkdir(this.appStorageDir, { recursive: true });
     } catch (error) {
       console.error('Failed to create storage directory:', error);
     }
+  }
+
+  /**
+   * Store data for this app
+   * @param {string} key - Storage key
+   * @param {any} value - Value to store
+   * @returns {Promise<void>}
+   */
+  async set(key, value) {
+    return this.setForApp(this.appId, key, value);
+  }
+
+  /**
+   * Retrieve data for this app
+   * @param {string} key - Storage key
+   * @param {any} defaultValue - Default value if key doesn't exist
+   * @returns {Promise<any>} Stored value or default
+   */
+  async get(key, defaultValue = null) {
+    return this.getForApp(this.appId, key, defaultValue);
+  }
+
+  /**
+   * Check if key exists for this app
+   * @param {string} key - Storage key
+   * @returns {Promise<boolean>} Whether key exists
+   */
+  async has(key) {
+    return this.hasForApp(this.appId, key);
+  }
+
+  /**
+   * Delete data for this app
+   * @param {string} key - Storage key
+   * @returns {Promise<boolean>} Whether key was deleted
+   */
+  async delete(key) {
+    return this.deleteForApp(this.appId, key);
+  }
+
+  /**
+   * List all keys for this app
+   * @returns {Promise<Array<string>>} List of storage keys
+   */
+  async keys() {
+    return this.keysForApp(this.appId);
+  }
+
+  /**
+   * Clear all storage for this app
+   * @returns {Promise<void>}
+   */
+  async clear() {
+    return this.clearForApp(this.appId);
+  }
+
+  /**
+   * Get storage size for this app
+   * @returns {Promise<number>} Storage size in bytes
+   */
+  async getSize() {
+    return this.getSizeForApp(this.appId);
   }
 
   /**
@@ -50,7 +113,7 @@ export class StorageAPI {
    * @param {any} value - Value to store
    * @returns {Promise<void>}
    */
-  async set(appId, key, value) {
+  async setForApp(appId, key, value) {
     try {
       await this._ensureAppStorageDir(appId);
       
@@ -70,7 +133,7 @@ export class StorageAPI {
    * @param {any} defaultValue - Default value if key doesn't exist
    * @returns {Promise<any>} Stored value or default
    */
-  async get(appId, key, defaultValue = null) {
+  async getForApp(appId, key, defaultValue = null) {
     try {
       const filePath = path.join(this._getAppStoragePath(appId), `${key}.json`);
       const data = await fs.readFile(filePath, 'utf8');
@@ -89,7 +152,7 @@ export class StorageAPI {
    * @param {string} key - Storage key
    * @returns {Promise<boolean>} Whether key exists
    */
-  async has(appId, key) {
+  async hasForApp(appId, key) {
     try {
       const filePath = path.join(this._getAppStoragePath(appId), `${key}.json`);
       await fs.access(filePath);
@@ -105,7 +168,7 @@ export class StorageAPI {
    * @param {string} key - Storage key
    * @returns {Promise<boolean>} Whether key was deleted
    */
-  async delete(appId, key) {
+  async deleteForApp(appId, key) {
     try {
       const filePath = path.join(this._getAppStoragePath(appId), `${key}.json`);
       await fs.unlink(filePath);
@@ -123,7 +186,7 @@ export class StorageAPI {
    * @param {string} appId - App identifier
    * @returns {Promise<Array<string>>} List of storage keys
    */
-  async keys(appId) {
+  async keysForApp(appId) {
     try {
       const appStoragePath = this._getAppStoragePath(appId);
       const files = await fs.readdir(appStoragePath);
@@ -144,7 +207,7 @@ export class StorageAPI {
    * @param {string} appId - App identifier
    * @returns {Promise<void>}
    */
-  async clear(appId) {
+  async clearForApp(appId) {
     try {
       const appStoragePath = this._getAppStoragePath(appId);
       const files = await fs.readdir(appStoragePath);
@@ -164,7 +227,7 @@ export class StorageAPI {
    * @param {string} appId - App identifier
    * @returns {Promise<number>} Storage size in bytes
    */
-  async getSize(appId) {
+  async getSizeForApp(appId) {
     try {
       const appStoragePath = this._getAppStoragePath(appId);
       const files = await fs.readdir(appStoragePath);
@@ -192,13 +255,13 @@ export class StorageAPI {
    */
   createAppStorage(appId) {
     return {
-      set: (key, value) => this.set(appId, key, value),
-      get: (key, defaultValue) => this.get(appId, key, defaultValue),
-      has: (key) => this.has(appId, key),
-      delete: (key) => this.delete(appId, key),
-      keys: () => this.keys(appId),
-      clear: () => this.clear(appId),
-      getSize: () => this.getSize(appId)
+      set: (key, value) => this.setForApp(appId, key, value),
+      get: (key, defaultValue) => this.getForApp(appId, key, defaultValue),
+      has: (key) => this.hasForApp(appId, key),
+      delete: (key) => this.deleteForApp(appId, key),
+      keys: () => this.keysForApp(appId),
+      clear: () => this.clearForApp(appId),
+      getSize: () => this.getSizeForApp(appId)
     };
   }
 }

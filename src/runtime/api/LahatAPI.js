@@ -3,8 +3,30 @@
  * Provides access to platform features and services
  */
 
+import { StorageAPI } from './StorageAPI.js';
+
 export class LahatAPI {
-  constructor(runtime) {
+  constructor(options = {}) {
+    this.options = {
+      name: 'Unnamed App',
+      version: '1.0.0',
+      permissions: ['lahat:storage'],
+      mcpRequirements: [],
+      ...options
+    };
+    
+    this.appId = this._generateAppId();
+    this.runtime = null; // Set by runtime when app is executed
+    
+    // Initialize storage with app-specific namespace
+    this.storage = new StorageAPI(this.appId);
+  }
+  
+  /**
+   * Set runtime context (called by Lahat runtime)
+   * @param {Object} runtime - Runtime instance
+   */
+  _setRuntime(runtime) {
     this.runtime = runtime;
   }
 
@@ -16,8 +38,11 @@ export class LahatAPI {
     return {
       name: 'Lahat',
       version: '3.0.0',
-      mode: this.runtime.options.mode,
-      apis: ['storage', 'mcp', 'events']
+      mode: this.runtime?.options?.mode || 'development',
+      apis: ['storage', 'mcp', 'events', 'system'],
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch
     };
   }
 
@@ -27,7 +52,11 @@ export class LahatAPI {
    * @param {any} data - Event data
    */
   emit(eventName, data) {
-    this.runtime.emit(`app:${eventName}`, data);
+    if (this.runtime) {
+      this.runtime.emit(`app:${eventName}`, data);
+    } else {
+      console.log(`[${this.appId}] Event: ${eventName}`, data);
+    }
   }
 
   /**
@@ -53,51 +82,159 @@ export class LahatAPI {
    * @returns {Object} Current app information
    */
   getCurrentApp() {
-    // This would be set in the execution context
     return {
-      id: this._getCurrentAppId(),
-      name: this._getCurrentAppName(),
-      version: this._getCurrentAppVersion()
+      id: this.appId,
+      name: this.options.name,
+      version: this.options.version,
+      permissions: this.options.permissions,
+      mcpRequirements: this.options.mcpRequirements
     };
   }
 
   /**
-   * Access MCP (Model Context Protocol) servers
+   * Get MCP interface for this app
    * @returns {Object} MCP interface
    */
-  getMCP() {
+  get mcp() {
     return {
       /**
-       * List available MCP servers
+       * Discover available MCP servers
        * @returns {Promise<Array>} Available MCP servers
        */
-      listServers: async () => {
-        // This will be implemented when MCP island is built
-        return [];
+      discoverServers: async () => {
+        // Mock implementation - will be connected to MCP registry
+        return [
+          { name: 'filesystem', capabilities: ['read_file', 'write_file', 'list_directory'] },
+          { name: 'weather', capabilities: ['get_current_weather', 'get_forecast'] },
+          { name: 'database', capabilities: ['query', 'list_tables', 'execute'] }
+        ];
+      },
+
+      /**
+       * Connect to an MCP server
+       * @param {string} serverName - Name of the MCP server
+       * @returns {Promise<boolean>} Connection success
+       */
+      connect: async (serverName) => {
+        console.log(`[${this.appId}] Connecting to MCP server: ${serverName}`);
+        // Mock implementation
+        return true;
+      },
+
+      /**
+       * Disconnect from an MCP server
+       * @param {string} serverName - Name of the MCP server
+       * @returns {Promise<boolean>} Disconnection success
+       */
+      disconnect: async (serverName) => {
+        console.log(`[${this.appId}] Disconnecting from MCP server: ${serverName}`);
+        return true;
       },
 
       /**
        * Call an MCP server capability
        * @param {string} serverName - Name of the MCP server
-       * @param {string} capability - Capability to call
-       * @param {Object} params - Parameters for the capability
+       * @param {string} method - Method to call
+       * @param {Object} params - Parameters for the method
        * @returns {Promise<any>} Result from MCP server
        */
-      call: async (serverName, capability, params) => {
-        // This will be implemented when MCP island is built
-        console.log(`MCP call requested: ${serverName}.${capability}`, params);
-        throw new Error('MCP integration not yet implemented');
+      call: async (serverName, method, params = {}) => {
+        console.log(`[${this.appId}] MCP call: ${serverName}.${method}`, params);
+        
+        // Mock responses for demo
+        if (serverName === 'filesystem' && method === 'list_directory') {
+          return ['file1.txt', 'file2.js', 'folder1/'];
+        }
+        if (serverName === 'weather' && method === 'get_current_weather') {
+          return { temperature: 72, condition: 'sunny', humidity: 45 };
+        }
+        
+        throw new Error(`MCP server ${serverName} not available or method ${method} not found`);
       },
 
       /**
-       * Check if MCP server is available
-       * @param {string} serverName - Name of the MCP server
-       * @returns {Promise<boolean>} Whether server is available
+       * Find capabilities matching a pattern
+       * @param {string} pattern - Pattern to match
+       * @returns {Promise<Array>} Matching capabilities
        */
-      isAvailable: async (serverName) => {
-        // This will be implemented when MCP island is built
-        console.log(`MCP availability check: ${serverName}`);
-        return false;
+      findCapabilities: async (pattern) => {
+        // Mock implementation
+        const servers = await this.mcp.discoverServers();
+        const matches = [];
+        
+        for (const server of servers) {
+          for (const capability of server.capabilities) {
+            if (capability.includes(pattern)) {
+              matches.push({
+                serverName: server.name,
+                name: capability,
+                description: `${capability} capability from ${server.name}`
+              });
+            }
+          }
+        }
+        
+        return matches;
+      },
+
+      /**
+       * Listen for MCP events
+       * @param {string} event - Event name
+       * @param {Function} callback - Event handler
+       */
+      on: (event, callback) => {
+        // Events: server_connected, server_disconnected, capability_available
+        console.log(`[${this.appId}] Listening for MCP event: ${event}`);
+      }
+    };
+  }
+
+  /**
+   * Get system interface for this app
+   * @returns {Object} System interface
+   */
+  get system() {
+    return {
+      /**
+       * Open URL in default browser
+       * @param {string} url - URL to open
+       * @returns {Promise<void>}
+       */
+      openURL: async (url) => {
+        console.log(`[${this.appId}] Opening URL: ${url}`);
+        // In real implementation, this would use Electron's shell.openExternal
+      },
+
+      /**
+       * Show notification
+       * @param {string} title - Notification title
+       * @param {string} body - Notification body
+       * @param {Object} options - Notification options
+       * @returns {Promise<void>}
+       */
+      notify: async (title, body, options = {}) => {
+        console.log(`[${this.appId}] Notification: ${title} - ${body}`, options);
+      },
+
+      /**
+       * Get environment information
+       * @returns {Object} Environment info
+       */
+      getEnvironment: () => ({
+        platform: process.platform,
+        arch: process.arch,
+        nodeVersion: process.version,
+        cwd: process.cwd(),
+        env: process.env.NODE_ENV || 'development'
+      }),
+
+      /**
+       * Exit the app
+       * @param {number} code - Exit code
+       */
+      exit: (code = 0) => {
+        console.log(`[${this.appId}] Exiting with code: ${code}`);
+        process.exit(code);
       }
     };
   }
@@ -149,10 +286,10 @@ export class LahatAPI {
    */
   getLogger() {
     return {
-      debug: (message, ...args) => console.debug(`[${this._getCurrentAppId()}]`, message, ...args),
-      info: (message, ...args) => console.info(`[${this._getCurrentAppId()}]`, message, ...args),
-      warn: (message, ...args) => console.warn(`[${this._getCurrentAppId()}]`, message, ...args),
-      error: (message, ...args) => console.error(`[${this._getCurrentAppId()}]`, message, ...args)
+      debug: (message, ...args) => console.debug(`[${this.appId}]`, message, ...args),
+      info: (message, ...args) => console.info(`[${this.appId}]`, message, ...args),
+      warn: (message, ...args) => console.warn(`[${this.appId}]`, message, ...args),
+      error: (message, ...args) => console.error(`[${this.appId}]`, message, ...args)
     };
   }
 
@@ -196,18 +333,15 @@ export class LahatAPI {
   }
 
   // Private helper methods
-  _getCurrentAppId() {
-    // This would be set from the execution context
-    return 'unknown';
-  }
-
-  _getCurrentAppName() {
-    // This would be set from the execution context
-    return 'Unknown App';
-  }
-
-  _getCurrentAppVersion() {
-    // This would be set from the execution context
-    return '1.0.0';
+  
+  /**
+   * Generate unique app ID
+   * @returns {string} Unique app ID
+   */
+  _generateAppId() {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 8);
+    const name = this.options.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return `${name}-${timestamp}-${random}`;
   }
 }
