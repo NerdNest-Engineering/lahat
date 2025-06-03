@@ -121,7 +121,7 @@ src/
 │       └── ServiceAdvertiser.js # Advertise capabilities to network
 ```
 
-### 3.2 UI Migration to DaisyUI Island
+### 3.2 UI Enhancement Island
 ```
 src/
 ├── ui/
@@ -174,7 +174,7 @@ src/
 - Test network effects
 
 ### Week 5: UI/UX Polish
-- Complete DaisyUI migration
+- Complete custom UI styling and enhancements
 - Optimize performance
 - Create comprehensive documentation
 - Prepare for user testing
