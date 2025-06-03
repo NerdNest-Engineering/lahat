@@ -45,7 +45,6 @@ if (process.platform === 'darwin' && packageJson) {
     applicationVersion: packageJson.version || '1.0.0',
     version: packageJson.version || '1.0.0',
     copyright: '© 2024 NerdNest LLC',
-    credits: packageJson.description || 'An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts.'
   });
 }
 
