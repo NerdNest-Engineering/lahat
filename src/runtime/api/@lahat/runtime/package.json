@@ -17,7 +17,7 @@
     "api"
   ],
   "author": "Lahat Platform",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "peerDependencies": {
     "node": ">=18.0.0"
   }
