@@ -12,6 +12,9 @@ on:
 
 jobs:
   claude-review:
+    # Skip draft PRs to avoid unnecessary runs and save GitHub Actions minutes
+    if: github.event.pull_request.draft == false
+
     # Optional: Filter by PR author
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||
@@ -19,10 +22,12 @@ jobs:
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
     
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Prevent runaway jobs from consuming excessive resources
     permissions:
       contents: read
-      pull-requests: write
-      issues: write
+      # Write permissions required for GitHub App to post review comments
+      pull-requests: write  # Needed to create PR review comments
+      issues: write         # Needed for issue comments and reactions
       id-token: write
     
     steps:
