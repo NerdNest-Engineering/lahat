@@ -169,7 +169,7 @@ We welcome contributions! See our [Contributing Guide](https://github.com/NerdNe
 
 ## 📝 License
 
-Apache License 2.0 - See [LICENSE](https://github.com/NerdNest-Engineering/lahat/blob/main/LICENSE.md) for details.
+Business Source License 1.1 - See [LICENSE](https://github.com/NerdNest-Engineering/lahat/blob/main/LICENSE.md) for details.
 
 ---
 
