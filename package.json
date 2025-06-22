@@ -115,6 +115,9 @@
         ]
       }
     },
+    "dmg": {
+      "title": "${productName} ${version}"
+    },
     "afterSign": "scripts/notarize.js",
     "win": {
       "icon": "assets/icons/lahat.ico",
