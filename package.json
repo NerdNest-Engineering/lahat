@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "lahat",
-  "version": "1.0.17",
+  "version": "1.0.21",
   "description": "An Electron application that integrates with Claude to generate mini desktop applications based on natural language prompts",
   "main": "main.js",
   "scripts": {
@@ -114,6 +114,9 @@
           }
         ]
       }
+    },
+    "dmg": {
+      "title": "${productName} ${version}"
     },
     "afterSign": "scripts/notarize.js",
     "win": {
